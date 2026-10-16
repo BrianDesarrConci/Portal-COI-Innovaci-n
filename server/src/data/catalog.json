@@ -1,0 +1,2071 @@
+{
+  "BASE": {
+    "clients": {
+      "bbva": {
+        "name": "BBVA",
+        "desc": "Banco BBVA Colombia"
+      },
+      "colfondos": {
+        "name": "Colfondos",
+        "desc": "Fondo de pensiones y cesantías"
+      },
+      "proteccion": {
+        "name": "Protección",
+        "desc": "Fondo de pensiones y cesantías"
+      },
+      "porvenir": {
+        "name": "Porvenir",
+        "desc": "Fondo de pensiones y cesantías"
+      },
+      "bancolombia": {
+        "name": "Bancolombia",
+        "desc": "Corresponsal Indega"
+      },
+      "agrario": {
+        "name": "Banco Agrario",
+        "desc": "Red Banco Agrario Más Cerca"
+      },
+      "popular": {
+        "name": "Banco Popular",
+        "desc": "Oficinas y extensiones de caja"
+      },
+      "snr": {
+        "name": "SNR",
+        "desc": "Superintendencia de Notariado y Registro"
+      },
+      "bogota": {
+        "name": "Banco de Bogotá",
+        "desc": "Extensiones de caja"
+      },
+      "occidente": {
+        "name": "Banco de Occidente",
+        "desc": "Oficinas con apertura reportada"
+      },
+      "davivienda": {
+        "name": "Davivienda",
+        "desc": "Operación y servicio VUS"
+      },
+      "fincomercio": {
+        "name": "Fincomercio",
+        "desc": "Oficinas operadas por Reval"
+      },
+      "citibank": {
+        "name": "Citibank",
+        "desc": "Red de oficinas"
+      },
+      "cajasocial": {
+        "name": "Banco Caja Social",
+        "desc": "Requerimientos y bolsas de envío"
+      },
+      "coopcentral": {
+        "name": "Coopcentral",
+        "desc": "Requerimientos puntuales"
+      },
+      "union": {
+        "name": "Banco Unión",
+        "desc": "Corresponsal Western Union"
+      }
+    },
+    "acts": [
+      {
+        "n": 1,
+        "a": "monica",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Validación diaria de soportes de apertura y cierre de 31 oficinas (8 urbanas manuales con Excel de cuadre); más de 800 imágenes al mes",
+        "f": "Diaria, antes de 11:00 a. m.",
+        "m": "N1",
+        "p": "T1"
+      },
+      {
+        "n": 2,
+        "a": "monica",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Archivo de cuadre de oficinas e indicadores enviado a BBVA por Conciliación",
+        "f": "Diaria",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 3,
+        "a": "monica",
+        "c": [
+          "colfondos"
+        ],
+        "cl": "Colfondos",
+        "d": "Telegestoría: validación de cartas de cesantías en PTR Plus; correo al empleador hasta tres veces al día; rechazo al superar 5 días hábiles",
+        "f": "Diaria, 5 a 6 cartas",
+        "m": "N1",
+        "p": "T1"
+      },
+      {
+        "n": 4,
+        "a": "monica",
+        "c": [],
+        "cl": "Varios",
+        "d": "Gestión diaria de PQR descargadas del aplicativo de Tecnología",
+        "f": "Diaria",
+        "m": "N3",
+        "p": "T2"
+      },
+      {
+        "n": 5,
+        "a": "monica",
+        "c": [],
+        "cl": "Varios",
+        "d": "Gestión de correo y novedades del turno (sobrecupos, llegada de transportadora)",
+        "f": "Diaria",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 6,
+        "a": "lina",
+        "c": [],
+        "cl": "Varios",
+        "d": "PQR por código QR: ampliación de información (máx. 3 veces), Drive compartido, respuesta del líder",
+        "f": "Continua; reporte el día 1",
+        "m": "N3",
+        "p": "T2"
+      },
+      {
+        "n": 7,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Alertamiento TDV",
+        "f": "Continua",
+        "m": "N4",
+        "p": "T5"
+      },
+      {
+        "n": 8,
+        "a": "lina",
+        "c": [
+          "bancolombia"
+        ],
+        "cl": "Bancolombia",
+        "d": "Reclamaciones y malas prácticas (plazo de 5 días hábiles)",
+        "f": "Semanal, viernes",
+        "m": "G1",
+        "p": "T3"
+      },
+      {
+        "n": 9,
+        "a": "lina",
+        "c": [],
+        "cl": "Varios",
+        "d": "Conciliación y soportes contables",
+        "f": "Por confirmar",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 10,
+        "a": "lina",
+        "c": [],
+        "cl": "Varios",
+        "d": "Torre de control: aperturas, cierres y disponibilidad de oficinas (unas 8 novedades diarias)",
+        "f": "Diaria",
+        "m": "N7",
+        "p": "T11"
+      },
+      {
+        "n": 11,
+        "a": "lina",
+        "c": [],
+        "cl": "Varios",
+        "d": "Malas prácticas y fraccionamientos reportados al líder",
+        "f": "Semanal, viernes",
+        "m": "G1",
+        "p": "T3"
+      },
+      {
+        "n": 12,
+        "a": "lina",
+        "c": [],
+        "cl": "Varios",
+        "d": "Revisión de ANS y validación de formulario",
+        "f": "Por confirmar",
+        "m": "N0",
+        "p": "P0"
+      },
+      {
+        "n": 13,
+        "a": "lina",
+        "c": [],
+        "cl": "Varios",
+        "d": "Derechos de petición y tutelas remitidos a Jurídica; base, indicadores y respuestas",
+        "f": "Por evento",
+        "m": "N3",
+        "p": "T2"
+      },
+      {
+        "n": 14,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Revisión de consignaciones, soportes y recaudos para conciliación",
+        "f": "Diaria",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 15,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Actas de recepción y cierre de oficina: inventario, entrega, destrucciones",
+        "f": "Por evento",
+        "m": "N7",
+        "p": "T11"
+      },
+      {
+        "n": 16,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Reporte mensual de recaudo, TRX, TDV, saldos y sobrecupos; indicador mensual",
+        "f": "Mensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 17,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Base de recaudo manual (CSV) tipificada contra directorio de códigos",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 18,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Reporte de facturación, horas extra y complementarios",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 19,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Indicadores de comité (32 oficinas) y acta mensual de ANS",
+        "f": "Mensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 20,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Excesos de efectivo y sistema de alarma (grupos de WhatsApp)",
+        "f": "Diaria",
+        "m": "N4",
+        "p": "T5"
+      },
+      {
+        "n": 21,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Solicitudes de cambio de clave y requerimientos diarios",
+        "f": "Diaria",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 22,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Programación de fines de semana y reporte de aperturas (correo y WhatsApp)",
+        "f": "Semanal",
+        "m": "N4",
+        "p": "T5"
+      },
+      {
+        "n": 23,
+        "a": "lina",
+        "c": [
+          "bbva"
+        ],
+        "cl": "BBVA",
+        "d": "Reunión semanal con el banco (insumos, precintos, mantenimientos); soportes Aranda; digitalización quincenal de consignaciones",
+        "f": "Semanal, martes",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 24,
+        "a": "lina",
+        "c": [],
+        "cl": "Oficinas",
+        "d": "Solicitud de papelería",
+        "f": "Por evento",
+        "m": "G2",
+        "p": "T3"
+      },
+      {
+        "n": 25,
+        "a": "lina",
+        "c": [
+          "agrario"
+        ],
+        "cl": "Banco Agrario",
+        "d": "Certificaciones mensuales de infraestructura y publicidad",
+        "f": "Mensual",
+        "m": "G5",
+        "p": "T6"
+      },
+      {
+        "n": 26,
+        "a": "lina",
+        "c": [
+          "agrario"
+        ],
+        "cl": "Banco Agrario",
+        "d": "Fotos de validación (fachada, tarifario, vista interna) y resolución de tarifarios",
+        "f": "Por evento",
+        "m": "N1",
+        "p": "T1"
+      },
+      {
+        "n": 27,
+        "a": "lina",
+        "c": [
+          "agrario"
+        ],
+        "cl": "Banco Agrario",
+        "d": "Cálculo de papelería bancaria",
+        "f": "Bimensual",
+        "m": "G2",
+        "p": "T3"
+      },
+      {
+        "n": 28,
+        "a": "lina",
+        "c": [
+          "popular",
+          "snr"
+        ],
+        "cl": "Banco Popular y SNR",
+        "d": "Facturación con validación de novedades por los líderes",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 29,
+        "a": "lina",
+        "c": [
+          "bancolombia"
+        ],
+        "cl": "Indega",
+        "d": "Facturación según programación mensual",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 30,
+        "a": "lina",
+        "c": [
+          "bancolombia"
+        ],
+        "cl": "Indega",
+        "d": "Reporte diario de transacciones",
+        "f": "Diaria",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 31,
+        "a": "lina",
+        "c": [
+          "bogota"
+        ],
+        "cl": "Banco de Bogotá",
+        "d": "Excesos de efectivo",
+        "f": "Por evento",
+        "m": "N4",
+        "p": "T5"
+      },
+      {
+        "n": 32,
+        "a": "jully",
+        "c": [
+          "bbva",
+          "bancolombia"
+        ],
+        "cl": "BBVA e Indega",
+        "d": "Informe mensual de planta y notificación de ingresos (un correo por oficina)",
+        "f": "Mensual",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 33,
+        "a": "jully",
+        "c": [],
+        "cl": "Interno",
+        "d": "Parafiscales y formatos",
+        "f": "Mensual",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 34,
+        "a": "jully",
+        "c": [],
+        "cl": "Red transaccional",
+        "d": "Actualización de directorios (Protección, Porvenir, Davivienda, AV Villas)",
+        "f": "Mensual",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 35,
+        "a": "jully",
+        "c": [],
+        "cl": "Interno",
+        "d": "Granja de usuarios: ingresos y retiros, asignación de backups",
+        "f": "Semanal, lunes",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 36,
+        "a": "jully",
+        "c": [],
+        "cl": "Varios",
+        "d": "Creación y retiro de usuarios (Reconocer, BBVA, Banco Agrario)",
+        "f": "Por evento",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 37,
+        "a": "jully",
+        "c": [],
+        "cl": "Varios",
+        "d": "Control de cheques en 11 o 12 oficinas y conciliación de cheques",
+        "f": "Mensual",
+        "m": "G4",
+        "p": "T6"
+      },
+      {
+        "n": 38,
+        "a": "jully",
+        "c": [
+          "bbva",
+          "fincomercio"
+        ],
+        "cl": "BBVA, Fincomercio, Itaú",
+        "d": "Consolidado de arqueos (Excel con macros)",
+        "f": "Mensual",
+        "m": "G4",
+        "p": "T6"
+      },
+      {
+        "n": 39,
+        "a": "jully",
+        "c": [],
+        "cl": "Interno",
+        "d": "Correo de ingresos a funcionarios generado en Workspace Studio",
+        "f": "Mensual",
+        "m": "G6",
+        "p": "T3"
+      },
+      {
+        "n": 40,
+        "a": "yesica",
+        "c": [
+          "agrario"
+        ],
+        "cl": "Banco Agrario",
+        "d": "Punteo electrónico: formulario de operación, precinto y guía; seguimiento de tulas",
+        "f": "Semanal",
+        "m": "G5",
+        "p": "T6"
+      },
+      {
+        "n": 41,
+        "a": "yesica",
+        "c": [
+          "agrario"
+        ],
+        "cl": "Banco Agrario",
+        "d": "Reporte de novedades de oficina y evidencias fotográficas",
+        "f": "Por evento",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 42,
+        "a": "yesica",
+        "c": [
+          "agrario"
+        ],
+        "cl": "Banco Agrario",
+        "d": "Anexo mensual de calificación: actas y socialización con Recursos Físicos",
+        "f": "Mensual",
+        "m": "G5",
+        "p": "T6"
+      },
+      {
+        "n": 43,
+        "a": "yesica",
+        "c": [
+          "popular"
+        ],
+        "cl": "Banco Popular",
+        "d": "Seguimiento de adecuaciones y arreglos locativos",
+        "f": "Por evento",
+        "m": "N7",
+        "p": "T11"
+      },
+      {
+        "n": 44,
+        "a": "yesica",
+        "c": [
+          "popular"
+        ],
+        "cl": "Banco Popular",
+        "d": "Recepción de solicitudes y novedades por un solo canal",
+        "f": "Continua",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 45,
+        "a": "yesica",
+        "c": [
+          "popular"
+        ],
+        "cl": "Banco Popular",
+        "d": "Reporte de transportadora (formulario diario) a Milena",
+        "f": "Semanal, lunes",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 46,
+        "a": "yesica",
+        "c": [
+          "popular"
+        ],
+        "cl": "Banco Popular",
+        "d": "Cifras de comité, partidas pendientes y acta de reunión",
+        "f": "Mensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 47,
+        "a": "yesica",
+        "c": [
+          "popular"
+        ],
+        "cl": "Banco Popular",
+        "d": "Revisión de PQR y solicitudes de video",
+        "f": "Por evento",
+        "m": "N3",
+        "p": "T2"
+      },
+      {
+        "n": 48,
+        "a": "yesica",
+        "c": [
+          "popular"
+        ],
+        "cl": "Banco Popular",
+        "d": "Reporte de cambio de personal",
+        "f": "Por evento",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 49,
+        "a": "yesica",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Cruce diario de cierres contra biometría (Reconocer y Olimpia) antes de 11:00 a. m.",
+        "f": "Diaria",
+        "m": "N8",
+        "p": "T10"
+      },
+      {
+        "n": 50,
+        "a": "yesica",
+        "c": [
+          "occidente"
+        ],
+        "cl": "Banco de Occidente",
+        "d": "Reporte de aperturas de 6 oficinas por WhatsApp antes de 11:00 a. m.",
+        "f": "Diaria",
+        "m": "N7",
+        "p": "T11"
+      },
+      {
+        "n": 51,
+        "a": "yesica",
+        "c": [
+          "davivienda"
+        ],
+        "cl": "Davivienda",
+        "d": "Generación de CTL y facturación con cruce sistema–Drive",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 52,
+        "a": "yesica",
+        "c": [
+          "occidente"
+        ],
+        "cl": "Banco de Occidente",
+        "d": "Monitoreo de llegadas tarde y planes de acción",
+        "f": "Diaria",
+        "m": "N4",
+        "p": "T5"
+      },
+      {
+        "n": 53,
+        "a": "yesica",
+        "c": [
+          "davivienda"
+        ],
+        "cl": "Davivienda",
+        "d": "Conciliación de datáfonos y seguimiento de caídas",
+        "f": "Diaria",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 54,
+        "a": "yesica",
+        "c": [
+          "davivienda"
+        ],
+        "cl": "Davivienda",
+        "d": "Reembolsos",
+        "f": "Por evento",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 55,
+        "a": "maira",
+        "c": [
+          "davivienda"
+        ],
+        "cl": "Davivienda (VUS)",
+        "d": "Novedades de transportadora VATCO de 19 oficinas por grupo de WhatsApp, hasta las 7:00 p. m.",
+        "f": "Diaria",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 56,
+        "a": "yesica",
+        "c": [
+          "davivienda"
+        ],
+        "cl": "Davivienda",
+        "d": "Cifras, acta y socialización con líderes; informe semestral",
+        "f": "Mensual y semestral",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 57,
+        "a": "yesica",
+        "c": [],
+        "cl": "Varios",
+        "d": "Pedidos de papelería",
+        "f": "Mensual, 1.ª semana",
+        "m": "G2",
+        "p": "T3"
+      },
+      {
+        "n": 58,
+        "a": "yesica",
+        "c": [
+          "porvenir",
+          "citibank"
+        ],
+        "cl": "Porvenir y City",
+        "d": "Custodia de cheques y zunchos; arqueo con Control Interno; ingreso de BO de cheques",
+        "f": "Por evento",
+        "m": "G4",
+        "p": "T6"
+      },
+      {
+        "n": 59,
+        "a": "yesica",
+        "c": [
+          "snr",
+          "citibank"
+        ],
+        "cl": "SNR y Citibank",
+        "d": "Informe de transacciones y cifras",
+        "f": "Mensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 60,
+        "a": "yesica",
+        "c": [
+          "colfondos",
+          "proteccion"
+        ],
+        "cl": "Colfondos y Protección",
+        "d": "Revisión de documentos de cesantías (tres documentos por transacción); Nexus no valida todo",
+        "f": "Diaria",
+        "m": "N1",
+        "p": "T1"
+      },
+      {
+        "n": 61,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Anulaciones del día por VPN (ANS de 15 minutos) e indicador de anulaciones",
+        "f": "Diaria",
+        "m": "N8",
+        "p": "T10"
+      },
+      {
+        "n": 62,
+        "a": "monica",
+        "c": [],
+        "cl": "Varios",
+        "d": "Encuestas de satisfacción: descarga quincenal y consolidado el día 1",
+        "f": "Quincenal y mensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 63,
+        "a": "jully",
+        "c": [
+          "bogota",
+          "popular",
+          "coopcentral"
+        ],
+        "cl": "Bogotá, Popular, Coopcentral",
+        "d": "Planta de cajeros: usuarios por eliminar, mantener o ingresar",
+        "f": "Quincenal y semanal",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 64,
+        "a": "jully",
+        "c": [
+          "porvenir"
+        ],
+        "cl": "Porvenir",
+        "d": "Órdenes de no pago",
+        "f": "Por evento",
+        "m": "G4",
+        "p": "T6"
+      },
+      {
+        "n": 65,
+        "a": "jully",
+        "c": [
+          "proteccion",
+          "colfondos"
+        ],
+        "cl": "Protección y Colfondos",
+        "d": "Anulaciones de transacciones en PTR",
+        "f": "Por evento",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 66,
+        "a": "jully",
+        "c": [],
+        "cl": "Varios",
+        "d": "Consultas de cajeros y líderes (cesantías, cartas, NIT, cheques)",
+        "f": "Por evento",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 67,
+        "a": "jully",
+        "c": [
+          "porvenir",
+          "davivienda"
+        ],
+        "cl": "Porvenir y Davivienda",
+        "d": "Proyección y solicitud de cheques de temporada",
+        "f": "Anual",
+        "m": "G4",
+        "p": "T6"
+      },
+      {
+        "n": 68,
+        "a": "yesica",
+        "c": [
+          "colfondos"
+        ],
+        "cl": "Colfondos",
+        "d": "Base 1000 de novedades de cesantías y consolidado semanal a líderes",
+        "f": "Semanal, viernes",
+        "m": "N1",
+        "p": "T1"
+      },
+      {
+        "n": 69,
+        "a": "yesica",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Productos no conformes (PNC): respuestas y soportes de los líderes",
+        "f": "Mensual",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 70,
+        "a": "yesica",
+        "c": [
+          "davivienda"
+        ],
+        "cl": "Davivienda",
+        "d": "Descuentos vehiculares y generación de facturas",
+        "f": "Por evento",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 71,
+        "a": "yesica",
+        "c": [
+          "agrario"
+        ],
+        "cl": "Banco Agrario",
+        "d": "Pendientes 2025 sin guía de envío y solicitudes del banco",
+        "f": "Continua",
+        "m": "G5",
+        "p": "T6"
+      },
+      {
+        "n": 72,
+        "a": "gerencia",
+        "c": [],
+        "cl": "Interno",
+        "d": "Base de actividades diarias e indicadores por tarea",
+        "f": "Mensual",
+        "m": "N0",
+        "p": "P0"
+      },
+      {
+        "n": 73,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Cierre diario de 12 oficinas (lunes a sábado): descarga por VPN de cierre, anulaciones y declaraciones de efectivo; macro de conciliación; informe nocturno al cliente",
+        "f": "Diaria, tras el cierre de 6:00 p. m.",
+        "m": "N8",
+        "p": "T10"
+      },
+      {
+        "n": 74,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Validación de declaraciones de efectivo mayores a 5 millones (firma, huella, usuario del cajero, origen de fondos, cédula) y carga al Drive compartido con el cliente; unas 28 al día",
+        "f": "Diaria",
+        "m": "N1",
+        "p": "T1"
+      },
+      {
+        "n": 75,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Boletería de Finco Ticket: conteo diario y cruce con la validación biométrica del día siguiente",
+        "f": "Diaria",
+        "m": "N8",
+        "p": "T10"
+      },
+      {
+        "n": 76,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Control de retiros sobre política (4 millones nacional, 9 millones Bogotá) y muestreo de soportes de oficinas nacionales (consecutivo, huella, firma, biometría)",
+        "f": "Diaria",
+        "m": "N1",
+        "p": "T1"
+      },
+      {
+        "n": 77,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Provisiones: consulta de saldos de bóveda de 12 oficinas en el aplicativo del banco, formulario de cajeros y cartas generadas; envío antes de 11:30 a. m.",
+        "f": "Diaria, antes de 11:30 a. m.",
+        "m": "N8",
+        "p": "T10"
+      },
+      {
+        "n": 78,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Excesos de efectivo y solicitud de transportadora según cupo y póliza de cada oficina; recolección de efectivo deteriorado",
+        "f": "Diaria",
+        "m": "N4",
+        "p": "T5"
+      },
+      {
+        "n": 79,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Reconfirmación de recolección de cheques en canje de 6 oficinas de Bogotá, por WhatsApp al mensajero del cliente",
+        "f": "Diaria",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 80,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Cambio de cajeros de agencia en el aplicativo del banco (reemplazos y traslados)",
+        "f": "Por evento",
+        "m": "N8",
+        "p": "T10"
+      },
+      {
+        "n": 81,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Cuentas de cobro mensuales por faltantes: seguimiento con Tesorería y Diferencias",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 82,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Requerimientos del cliente y solicitud de videos (aplicativo de seguridad; 4 oficinas sin cámaras en línea)",
+        "f": "Por evento, ~3 días",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 83,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Consolidado mensual de pruebas de alarma (3 oficinas monitoreadas por el cliente, 9 por Seguridad)",
+        "f": "Mensual",
+        "m": "N4",
+        "p": "T5"
+      },
+      {
+        "n": 84,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Reporte semanal de planta activa y novedades; control de usuarios por cajero y solicitudes de creación",
+        "f": "Semanal",
+        "m": "G3",
+        "p": "T6"
+      },
+      {
+        "n": 85,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Facturación mensual con novedades (horas extra, adiciones de tiempo)",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 86,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Auditorías mensuales obligatorias de 12 oficinas: cronograma, lista de chequeo y soportes en Drive, envío al cliente y videos solicitados",
+        "f": "Mensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 87,
+        "a": "maira",
+        "c": [
+          "fincomercio"
+        ],
+        "cl": "Fincomercio",
+        "d": "Cifras de comité y tablero de gestión (anulaciones, PNC, provisiones, faltantes y sobrantes)",
+        "f": "Mensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 88,
+        "a": "maira",
+        "c": [
+          "cajasocial"
+        ],
+        "cl": "Banco Caja Social",
+        "d": "Requerimientos, pedidos de bolsas de envío y facturación mensual",
+        "f": "Mensual y por evento",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 89,
+        "a": "maira",
+        "c": [
+          "coopcentral"
+        ],
+        "cl": "Coopcentral",
+        "d": "Requerimientos puntuales gestionados con los líderes",
+        "f": "Por evento",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 90,
+        "a": "maira",
+        "c": [
+          "citibank"
+        ],
+        "cl": "Citibank",
+        "d": "Requerimientos de 46 oficinas y facturación mensual sobre las horas extra liquidadas por el líder",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 91,
+        "a": "maira",
+        "c": [
+          "bogota"
+        ],
+        "cl": "Banco de Bogotá",
+        "d": "Facturación mensual de 50 oficinas (extensiones de caja) con novedades; descuentos por falta de supernumerarios",
+        "f": "Mensual",
+        "m": "N6",
+        "p": "T9"
+      },
+      {
+        "n": 92,
+        "a": "maira",
+        "c": [
+          "bogota"
+        ],
+        "cl": "Banco de Bogotá",
+        "d": "Diferencias operativas: solicitud del líder, autorización de la Gerencia y débito a cuenta con Tesorería y Diferencias",
+        "f": "Por evento",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 93,
+        "a": "maira",
+        "c": [
+          "bogota"
+        ],
+        "cl": "Banco de Bogotá",
+        "d": "Alistamiento de comité bimensual con las cifras del banco",
+        "f": "Bimensual",
+        "m": "N5",
+        "p": "T8"
+      },
+      {
+        "n": 94,
+        "a": "maira",
+        "c": [
+          "bogota"
+        ],
+        "cl": "Banco de Bogotá",
+        "d": "Instalación de PTR en 50 oficinas (detenida por acceso y cuentas)",
+        "f": "Proyecto",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 95,
+        "a": "maira",
+        "c": [
+          "union"
+        ],
+        "cl": "Banco Unión (Western Union)",
+        "d": "Corrección de giros radicada al banco con copia al líder",
+        "f": "Por evento",
+        "m": "N2",
+        "p": "T4"
+      },
+      {
+        "n": 96,
+        "a": "hernan",
+        "c": [],
+        "cl": "Todos los negocios (PTR)",
+        "d": "Reporte de transacciones en vivo: tableros del portal alimentados directamente desde la base MySQL de PTR, en reemplazo de la extracción manual de Oracle a hojas de cálculo",
+        "f": "Continua",
+        "m": "N9",
+        "p": "T7"
+      },
+      {
+        "n": 97,
+        "a": "hernan",
+        "c": [],
+        "cl": "Interno",
+        "d": "Gestión de solicitudes, proyectos y reportería bajo demanda a través de TRAZA",
+        "f": "Continua",
+        "m": "TRAZA",
+        "p": "T7"
+      },
+      {
+        "n": 98,
+        "a": "hernan",
+        "c": [
+          "bancolombia"
+        ],
+        "cl": "Bancolombia",
+        "d": "Actualización diaria del tablero Bancolombia (Oracle y Power BI) con los archivos de Andrés; ajustes de metas por solicitud de regionales (unas cuatro al mes)",
+        "f": "Diaria",
+        "m": "Se mantiene",
+        "p": "M"
+      },
+      {
+        "n": 99,
+        "a": "hernan",
+        "c": [
+          "bancolombia"
+        ],
+        "cl": "Bancolombia y VUS",
+        "d": "Control de apertura de oficinas: extracción de Oracle en cada corte, correo a líderes y justificación en COI; pendiente de aprobación de la Dirección",
+        "f": "Diaria",
+        "m": "Se mantiene",
+        "p": "M"
+      },
+      {
+        "n": 100,
+        "a": "hernan",
+        "c": [],
+        "cl": "Interno",
+        "d": "Administración de accesos a Oracle (autenticación en dos pasos, perfiles compartidos, grupo de soporte)",
+        "f": "Diaria",
+        "m": "Se mantiene",
+        "p": "M"
+      },
+      {
+        "n": 101,
+        "a": "hernan",
+        "c": [],
+        "cl": "Mi ATM",
+        "d": "Carga diaria de archivos y actualización mensual de metas del tablero de cajeros automáticos",
+        "f": "Diaria y mensual",
+        "m": "Se mantiene",
+        "p": "M"
+      },
+      {
+        "n": 102,
+        "a": "hernan",
+        "c": [
+          "bancolombia"
+        ],
+        "cl": "Bancolombia",
+        "d": "Tres informes mensuales (transacciones por oficina, por cajero con comisiones y por línea de negocio) y tablero de facturación para Natalia y Vanessa",
+        "f": "Mensual, día 1",
+        "m": "Se mantiene",
+        "p": "M"
+      },
+      {
+        "n": 103,
+        "a": "hernan",
+        "c": [
+          "agrario",
+          "snr",
+          "davivienda"
+        ],
+        "cl": "Banco Agrario, AV Villas, cesantías, SNR y ORIP, Davivienda",
+        "d": "Reportería transaccional bajo demanda desde Oracle",
+        "f": "Por evento",
+        "m": "Se mantiene",
+        "p": "M"
+      },
+      {
+        "n": 104,
+        "a": "hernan",
+        "c": [],
+        "cl": "Interno",
+        "d": "Soporte y mejoras de COI (arqueos y granja de usuarios)",
+        "f": "Continua",
+        "m": "Se mantiene",
+        "p": "M"
+      }
+    ]
+  },
+  "analysts": [
+    {
+      "id": "monica",
+      "name": "Mónica Rodríguez",
+      "role": "Analista de Apoyo al Negocio",
+      "focus": "BBVA, cesantías y PQR",
+      "initials": "MR",
+      "baseHours": 7.7
+    },
+    {
+      "id": "lina",
+      "name": "Lina Miranda",
+      "role": "Analista de Apoyo al Negocio",
+      "focus": "BBVA, Banco Agrario, Indega y reportería",
+      "initials": "LM",
+      "baseHours": 8.5
+    },
+    {
+      "id": "jully",
+      "name": "Jully Ríos",
+      "role": "Analista de Apoyo al Negocio",
+      "focus": "Personal, usuarios, cheques y arqueos",
+      "initials": "JR",
+      "baseHours": 6.4
+    },
+    {
+      "id": "yesica",
+      "name": "Yesica Valencia",
+      "role": "Analista de Apoyo al Negocio",
+      "focus": "Banco Agrario, Banco Popular, Davivienda y Occidente",
+      "initials": "YV",
+      "baseHours": 8.2
+    },
+    {
+      "id": "maira",
+      "name": "Maira García",
+      "role": "Analista de Apoyo al Negocio",
+      "focus": "Fincomercio, Banco de Bogotá y Citibank",
+      "initials": "MG",
+      "baseHours": 9.5
+    },
+    {
+      "id": "hernan",
+      "name": "Hernán Dimate",
+      "role": "Analista de datos",
+      "focus": "Analítica transaccional y tableros",
+      "initials": "HD",
+      "baseHours": 8
+    }
+  ],
+  "processes": [
+    {
+      "id": "T1",
+      "name": "Validación documental",
+      "module": "N1",
+      "view": "validacion",
+      "tech": "Node.js, n8n e inteligencia artificial",
+      "summary": "Soportes de BBVA, cartas de cesantías, fotografías del Banco Agrario y declaraciones de efectivo de Fincomercio revisados por el sistema antes de llegar a la analista."
+    },
+    {
+      "id": "T2",
+      "name": "PQR, reclamaciones y encuestas",
+      "module": "N3",
+      "view": "pqr",
+      "tech": "React y Node.js",
+      "summary": "Radicación por código QR, ampliaciones controladas, respuesta del líder, escalamiento a Jurídica y consolidado de encuestas."
+    },
+    {
+      "id": "T3",
+      "name": "Gestión interna",
+      "module": "G1 G2 G6",
+      "view": "interno",
+      "tech": "Apps Script embebido",
+      "summary": "Malas prácticas, papelería y correo mensual de ingresos generados desde el portal."
+    },
+    {
+      "id": "T4",
+      "name": "Novedades y requerimientos",
+      "module": "N2",
+      "view": "novedades",
+      "tech": "React, Node.js y n8n",
+      "summary": "Un solo canal con los bancos: correo, Aranda, formularios y transportadora, cada caso con responsable y acuerdo de servicio."
+    },
+    {
+      "id": "T5",
+      "name": "Alertas operativas",
+      "module": "N4",
+      "view": "alertas",
+      "tech": "Node.js y n8n",
+      "summary": "Excesos de efectivo, alertamiento TDV, programación de fines de semana, llegadas tarde y caídas de datáfono."
+    },
+    {
+      "id": "T6",
+      "name": "Personal, usuarios y valores",
+      "module": "G3 G4 G5",
+      "view": "interno",
+      "tech": "Apps Script embebido",
+      "summary": "Granja de usuarios, planta de cajeros, cheques, arqueos desde COI y punteo de tulas del Banco Agrario."
+    },
+    {
+      "id": "T7",
+      "name": "Analítica transaccional",
+      "module": "N9 TRAZA",
+      "view": "ptr",
+      "tech": "Node.js sobre MySQL de PTR",
+      "summary": "Transacciones del día en vivo desde la base de PTR y solicitudes de analítica gestionadas en TRAZA."
+    },
+    {
+      "id": "T8",
+      "name": "Reportería y comités",
+      "module": "N5",
+      "view": "reporteria",
+      "tech": "Node.js",
+      "summary": "Cifras, indicadores y actas de comité generadas desde los datos del portal."
+    },
+    {
+      "id": "T9",
+      "name": "Facturación y conciliación",
+      "module": "N6",
+      "view": "facturacion",
+      "tech": "Node.js",
+      "summary": "Facturación con novedades validadas por los líderes, CTL, datáfonos, reembolsos y partidas con código."
+    },
+    {
+      "id": "T10",
+      "name": "Operación diaria de Fincomercio",
+      "module": "N8",
+      "view": "fincomercio",
+      "tech": "React y Node.js",
+      "summary": "Provisiones, cierre de 12 oficinas, boletería, informe nocturno y cronómetro de anulaciones."
+    },
+    {
+      "id": "T11",
+      "name": "Ciclo de vida de oficinas",
+      "module": "N7",
+      "view": "oficinas",
+      "tech": "React y Node.js",
+      "summary": "Aperturas, cierres, disponibilidad, actas y adecuaciones en una sola torre de control."
+    }
+  ],
+  "clientExtra": {
+    "bbva": {
+      "offices": 32,
+      "owners": [
+        "monica",
+        "lina",
+        "jully"
+      ],
+      "ans": "v4.2",
+      "ansDate": "2026-09-01",
+      "score": [
+        4.1,
+        4.2,
+        4,
+        4.3,
+        4.5,
+        4.6
+      ],
+      "clauses": [
+        [
+          "Validación de soportes de apertura y cierre",
+          "Antes de 11:00 a. m.",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Indicadores y acta de comité mensual",
+          "Primera semana del mes",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Atención de requerimientos diarios",
+          "24 horas hábiles",
+          "95 %",
+          "97,8 %"
+        ],
+        [
+          "Gestión de excesos de efectivo",
+          "Mismo día",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "colfondos": {
+      "offices": null,
+      "owners": [
+        "monica",
+        "yesica",
+        "jully"
+      ],
+      "ans": "v2.1",
+      "ansDate": "2026-06-19",
+      "score": [
+        3.6,
+        3.4,
+        3.2,
+        3.9,
+        4.3,
+        4.5
+      ],
+      "clauses": [
+        [
+          "Validación de cartas de cesantías",
+          "5 días hábiles",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Contacto con el empleador",
+          "Día 2",
+          "100 %",
+          "98,9 %"
+        ],
+        [
+          "Cierre de base 1000 de novedades",
+          "Semanal",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "proteccion": {
+      "offices": null,
+      "owners": [
+        "monica",
+        "jully"
+      ],
+      "ans": "v1.4",
+      "ansDate": "2026-03-10",
+      "score": [
+        4.2,
+        4.2,
+        4.3,
+        4.3,
+        4.4,
+        4.5
+      ],
+      "clauses": [
+        [
+          "Validación de documentos escaneados",
+          "5 días hábiles",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Anulaciones pendientes de activación",
+          "Mismo día",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "porvenir": {
+      "offices": null,
+      "owners": [
+        "jully",
+        "yesica"
+      ],
+      "ans": "v1.2",
+      "ansDate": "2025-11-20",
+      "score": [
+        4,
+        4.1,
+        4.1,
+        4.2,
+        4.2,
+        4.3
+      ],
+      "clauses": [
+        [
+          "Órdenes de no pago",
+          "48 horas",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Custodia y arqueo de cheques",
+          "Mensual",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "bancolombia": {
+      "offices": null,
+      "owners": [
+        "lina",
+        "jully",
+        "hernan"
+      ],
+      "ans": "v3.0",
+      "ansDate": "2026-01-15",
+      "score": [
+        4.3,
+        4.3,
+        4.4,
+        4.4,
+        4.5,
+        4.6
+      ],
+      "clauses": [
+        [
+          "Reporte diario de transacciones",
+          "9:00 a. m.",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Malas prácticas y reclamaciones",
+          "5 días hábiles",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Facturación mensual",
+          "Día 5",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "agrario": {
+      "offices": null,
+      "owners": [
+        "yesica",
+        "lina"
+      ],
+      "ans": "v2.3",
+      "ansDate": "2026-07-01",
+      "score": [
+        3.8,
+        3.9,
+        3.7,
+        4.1,
+        4.3,
+        4.4
+      ],
+      "clauses": [
+        [
+          "Certificaciones de infraestructura y publicidad",
+          "Mensual",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Punteo de tulas con guía",
+          "Semanal",
+          "100 %",
+          "99,2 %"
+        ],
+        [
+          "Anexo de calificación",
+          "Día 3",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "popular": {
+      "offices": null,
+      "owners": [
+        "yesica",
+        "lina"
+      ],
+      "ans": "v3.1",
+      "ansDate": "2026-05-04",
+      "score": [
+        3.5,
+        3.6,
+        3.8,
+        4,
+        4.2,
+        4.3
+      ],
+      "clauses": [
+        [
+          "Reporte de transportadora",
+          "Lunes",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Cifras de comité",
+          "Primera semana",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Gestión de adecuaciones locativas",
+          "30 días",
+          "90 %",
+          "93,5 %"
+        ]
+      ]
+    },
+    "snr": {
+      "offices": null,
+      "owners": [
+        "lina",
+        "yesica"
+      ],
+      "ans": "v1.1",
+      "ansDate": "2025-10-01",
+      "score": [
+        4.4,
+        4.4,
+        4.5,
+        4.5,
+        4.6,
+        4.6
+      ],
+      "clauses": [
+        [
+          "Facturación con novedades validadas",
+          "Día 5",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Informe de transacciones",
+          "Mensual",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "bogota": {
+      "offices": 50,
+      "owners": [
+        "maira",
+        "jully",
+        "lina"
+      ],
+      "ans": "v2.0",
+      "ansDate": "2026-08-12",
+      "score": [
+        3.9,
+        3.8,
+        4,
+        4.1,
+        4.3,
+        4.4
+      ],
+      "clauses": [
+        [
+          "Cobertura de supernumerarios",
+          "100 % de los días",
+          "100 %",
+          "99,4 %"
+        ],
+        [
+          "Diferencias operativas",
+          "24 horas",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Comité bimensual",
+          "Según calendario",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "occidente": {
+      "offices": 6,
+      "owners": [
+        "yesica"
+      ],
+      "ans": "v1.3",
+      "ansDate": "2026-02-20",
+      "score": [
+        4,
+        4.1,
+        4.2,
+        4.2,
+        4.3,
+        4.5
+      ],
+      "clauses": [
+        [
+          "Reporte de aperturas",
+          "Antes de 11:00 a. m.",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Apertura a tiempo",
+          "7:30 a. m.",
+          "98 %",
+          "98,7 %"
+        ]
+      ]
+    },
+    "davivienda": {
+      "offices": 19,
+      "owners": [
+        "yesica",
+        "maira"
+      ],
+      "ans": "v2.2",
+      "ansDate": "2026-04-30",
+      "score": [
+        4.1,
+        4,
+        4.2,
+        4.3,
+        4.4,
+        4.5
+      ],
+      "clauses": [
+        [
+          "Novedades de transportadora",
+          "Hasta 7:00 p. m.",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Conciliación de datáfonos",
+          "Diaria",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Acta y socialización con líderes",
+          "Mensual",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "fincomercio": {
+      "offices": 12,
+      "owners": [
+        "maira",
+        "yesica"
+      ],
+      "ans": "v3.4",
+      "ansDate": "2026-09-15",
+      "score": [
+        3.7,
+        3.9,
+        4,
+        4.2,
+        4.4,
+        4.6
+      ],
+      "clauses": [
+        [
+          "Anulaciones",
+          "15 minutos",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Provisiones",
+          "Antes de 11:30 a. m.",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Informe de cierre",
+          "Mismo día",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Validación de declaraciones de efectivo",
+          "Mismo día",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "citibank": {
+      "offices": 46,
+      "owners": [
+        "maira"
+      ],
+      "ans": "v1.5",
+      "ansDate": "2026-01-08",
+      "score": [
+        4.3,
+        4.3,
+        4.4,
+        4.4,
+        4.4,
+        4.5
+      ],
+      "clauses": [
+        [
+          "Requerimientos de oficinas",
+          "48 horas",
+          "95 %",
+          "98,1 %"
+        ],
+        [
+          "Facturación de horas extra",
+          "Día 5",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "cajasocial": {
+      "offices": null,
+      "owners": [
+        "maira"
+      ],
+      "ans": "v1.0",
+      "ansDate": "2025-12-01",
+      "score": [
+        4.2,
+        4.2,
+        4.2,
+        4.3,
+        4.3,
+        4.4
+      ],
+      "clauses": [
+        [
+          "Pedidos de bolsas de envío",
+          "72 horas",
+          "100 %",
+          "100 %"
+        ],
+        [
+          "Facturación mensual",
+          "Día 5",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "coopcentral": {
+      "offices": null,
+      "owners": [
+        "maira",
+        "jully"
+      ],
+      "ans": "v1.1",
+      "ansDate": "2026-03-02",
+      "score": [
+        4.1,
+        4.2,
+        4.2,
+        4.2,
+        4.3,
+        4.4
+      ],
+      "clauses": [
+        [
+          "Requerimientos puntuales",
+          "48 horas",
+          "95 %",
+          "100 %"
+        ],
+        [
+          "Planta de cajeros",
+          "Semanal",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    },
+    "union": {
+      "offices": null,
+      "owners": [
+        "maira"
+      ],
+      "ans": "v1.0",
+      "ansDate": "2026-05-18",
+      "score": [
+        4.4,
+        4.4,
+        4.5,
+        4.5,
+        4.5,
+        4.6
+      ],
+      "clauses": [
+        [
+          "Corrección de giros",
+          "24 horas",
+          "100 %",
+          "100 %"
+        ]
+      ]
+    }
+  },
+  "ansHistory": {
+    "default": [
+      [
+        "Actualización de indicadores y anexos",
+        0
+      ],
+      [
+        "Ajuste de horarios y ventanas de servicio",
+        1
+      ],
+      [
+        "Versión inicial firmada",
+        2
+      ]
+    ]
+  },
+  "months": [
+    "may",
+    "jun",
+    "jul",
+    "ago",
+    "sep",
+    "oct"
+  ],
+  "pulse": [
+    {
+      "t": "08:00",
+      "label": "Apertura de oficinas BBVA",
+      "owner": "lina",
+      "view": "oficinas"
+    },
+    {
+      "t": "08:30",
+      "label": "Corte de aperturas y llegadas tarde",
+      "owner": "yesica",
+      "view": "alertas"
+    },
+    {
+      "t": "09:00",
+      "label": "Reporte diario de transacciones Indega",
+      "owner": "lina",
+      "view": "reporteria"
+    },
+    {
+      "t": "10:00",
+      "label": "Correos a empleadores, primer ciclo",
+      "owner": "monica",
+      "view": "validacion"
+    },
+    {
+      "t": "11:00",
+      "label": "Soportes BBVA y biometría Fincomercio",
+      "owner": "monica",
+      "view": "validacion",
+      "critical": true
+    },
+    {
+      "t": "11:30",
+      "label": "Provisiones Fincomercio",
+      "owner": "maira",
+      "view": "fincomercio",
+      "critical": true
+    },
+    {
+      "t": "14:00",
+      "label": "Correos a empleadores, segundo ciclo",
+      "owner": "monica",
+      "view": "validacion"
+    },
+    {
+      "t": "17:30",
+      "label": "Programación de fines de semana BBVA",
+      "owner": "lina",
+      "view": "alertas"
+    },
+    {
+      "t": "18:00",
+      "label": "Cierre de la última oficina",
+      "owner": "maira",
+      "view": "oficinas",
+      "critical": true
+    },
+    {
+      "t": "18:30",
+      "label": "Novedades de transportadora Davivienda",
+      "owner": "maira",
+      "view": "novedades"
+    },
+    {
+      "t": "19:30",
+      "label": "Informe nocturno Fincomercio",
+      "owner": "maira",
+      "view": "fincomercio"
+    }
+  ]
+}

@@ -1,0 +1,1175 @@
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     COI, demo de la versión final.
+     Navegación interna (sin cambiar la URL) para que funcione
+     dentro del iframe de Apps Script.
+     ========================================================= */
+  const D = window.DEMO;
+  if (!D) {
+    document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:40px;color:#242A54"><h2>No se cargaron los datos de demostración</h2><p>Verifique que el archivo Data exista con ese nombre exacto y que Index lo incluya antes de App.</p></div>';
+    return;
+  }
+
+  /* ================= Utilidades ================= */
+  const $ = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+  const fmt = (n, d) => Number(n).toLocaleString('es-CO', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  const pct = (n, d) => fmt(n, d === undefined ? 1 : d) + ' %';
+  const money = (n) => '$ ' + fmt(n);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function rng(seed) { let a = seed >>> 0; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const DAYS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const longDate = (d) => DAYS[d.getDay()] + ' ' + d.getDate() + ' de ' + MONTHS[d.getMonth()] + ' de ' + d.getFullYear();
+  const shortDate = (iso) => { const d = new Date(iso + 'T12:00:00'); return d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0, 3) + ' ' + d.getFullYear(); };
+  function demoNow() { const n = new Date(); const m = n.getHours() * 60 + n.getMinutes(); if (m < 8 * 60 + 30 || m > 19 * 60 + 20) n.setHours(15, 40, 0, 0); return n; }
+  const toMin = (t) => { const p = t.split(':').map(Number); return p[0] * 60 + p[1]; };
+  const hhmm = (min) => { const h = Math.floor(min / 60), m = min % 60; return (h > 12 ? h - 12 : h) + ':' + String(m).padStart(2, '0') + (h >= 12 ? ' p. m.' : ' a. m.'); };
+
+  /* ================= Iconos de línea ================= */
+  const P = {
+    home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 010 6.8"/><path d="M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>',
+    layers: '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+    building: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/>',
+    filecheck: '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M9 14l2 2 4-4"/>',
+    inbox: '<path d="M3 13l3-8h12l3 8"/><path d="M3 13v6h18v-6h-5l-1.5 2h-5L8 13z"/>',
+    message: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+    bell: '<path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/>',
+    chart: '<path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/>',
+    receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    store: '<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9h16v1a3 3 0 01-5.3 2 3 3 0 01-5.4 0A3 3 0 014 10z"/><path d="M5 12v8h14v-8"/><path d="M10 20v-4h4v4"/>',
+    pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+    box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+    flow: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 6h7M6 8.5V14a4 4 0 004 4h5.5"/>',
+    list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
+    flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    alert: '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.5"/>',
+    chevron: '<path d="M9 6l6 6-6 6"/>',
+    back: '<path d="M15 6l-6 6 6 6"/>',
+    download: '<path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    chat: '<path d="M20 12a8 8 0 01-11.6 7.1L4 20l1-4.2A8 8 0 1120 12z"/>',
+    form: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    ticket: '<path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10"/>',
+    eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    shield: '<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>',
+    sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+    lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+    upload: '<path d="M12 20V9"/><path d="M7 14l5-5 5 5"/><path d="M4 4h16"/>',
+    file: '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>',
+    star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z"/>',
+    pen: '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>',
+    package: '<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M8 6l8 4M12 12v8M4 8l8 4 8-4"/>',
+    wallet: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h5M3 9h18"/>',
+    usercheck: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5 1.4 0 2.7.3 3.8 1"/><path d="M15 18l2 2 4-4"/>',
+    send: '<path d="M21 3L3 10.5l7 3 3 7z"/><path d="M10 13.5L21 3"/>',
+    warn: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/>'
+  };
+  const ic = (name, cls) => '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (P[name] || '') + '</svg>';
+
+  /* ================= Modelo derivado ================= */
+  const acts = D.BASE.acts;
+  const clients = D.BASE.clients;
+  const AN = {}; D.analysts.forEach((a, i) => { AN[a.id] = Object.assign({ color: i % 6 }, a); });
+  const PR = {}; D.processes.forEach((p) => { PR[p.id] = p; });
+  const MODULE_VIEW = { N1: 'validacion', N2: 'novedades', N3: 'pqr', N4: 'alertas', N5: 'reporteria', N6: 'facturacion', N7: 'oficinas', N8: 'fincomercio', N9: 'ptr', G1: 'malas', G2: 'papeleria', G3: 'usuarios', G4: 'cheques', G5: 'agrario', G6: 'ingresos', TRAZA: 'traza', N0: 'inicio' };
+  const PROC_VIEW = { T1: 'validacion', T2: 'pqr', T3: 'malas', T4: 'novedades', T5: 'alertas', T6: 'usuarios', T7: 'ptr', T8: 'reporteria', T9: 'facturacion', T10: 'fincomercio', T11: 'oficinas' };
+  const procName = (id) => id === 'M' ? 'Se mantiene (monitoreo)' : id === 'P0' ? 'Tablero gerencial' : (PR[id] ? PR[id].name : id);
+  const isAuto = (a) => a.p !== 'M' && a.p !== 'P0';
+  const avatar = (id, lg) => { const a = AN[id]; return '<span class="avatar ' + (lg ? 'lg ' : '') + 'c' + (a ? a.color : 0) + '" title="' + (a ? a.name : 'Gerencia') + '">' + (a ? a.initials : 'G') + '</span>'; };
+  const firstName = (id) => AN[id] ? AN[id].name.split(' ')[0] : 'Gerencia';
+
+  const NOW = demoNow();
+  const NOW_MIN = NOW.getHours() * 60 + NOW.getMinutes();
+  const daySeed = NOW.getFullYear() * 1000 + NOW.getMonth() * 40 + NOW.getDate();
+  const PREV_MONTH = MONTHS[(NOW.getMonth() + 11) % 12];
+
+  const todayState = {};
+  acts.forEach((a) => {
+    const r = rng(hash('act' + a.n) ^ daySeed)();
+    let st;
+    if (/Por evento|Proyecto/.test(a.f)) st = r < 0.82 ? 'done' : 'progress';
+    else if (/Mensual|Bimensual|Semestral|Anual|Quincenal/.test(a.f)) st = r < 0.9 ? 'done' : 'scheduled';
+    else st = r < 0.84 ? 'done' : r < 0.95 ? 'progress' : 'scheduled';
+    if (a.n === 61 || a.n === 49 || a.n === 77) st = 'done';
+    if (a.n === 20) st = 'risk';
+    todayState[a.n] = st;
+  });
+  const ST = { done: ['Cerrada con evidencia', 'b-ok'], progress: ['En curso', 'b-info'], scheduled: ['Programada', 'b-mute'], risk: ['En riesgo', 'b-warn'] };
+
+  function analystStats(id) {
+    const list = acts.filter((a) => a.a === id);
+    const auto = list.filter(isAuto).length;
+    const done = list.filter((a) => todayState[a.n] === 'done').length;
+    const risk = list.filter((a) => todayState[a.n] === 'risk').length;
+    const due = list.filter((a) => todayState[a.n] !== 'scheduled').length;
+    const r = rng(hash(id));
+    const series = Array.from({ length: 30 }, (_, i) => 94 + r() * 5.6 + i * 0.03);
+    const freed = id === 'hernan' ? 6.5 : AN[id].baseHours * 5 * (0.52 + r() * 0.12);
+    return { list, auto, total: list.length, done, risk, due, comp: due ? (done / due) * 100 : 100, series, month: series.slice(-20).reduce((s, v) => s + v, 0) / 20, freed };
+  }
+  const STATS = {}; D.analysts.forEach((a) => { STATS[a.id] = analystStats(a.id); });
+  const clientActs = (cid) => acts.filter((a) => a.c.indexOf(cid) >= 0);
+
+  /* ================= Componentes ================= */
+  const badge = (st) => '<span class="badge ' + ST[st][1] + '">' + ST[st][0] + '</span>';
+  const tag = (txt, cls) => '<span class="badge ' + (cls || 'b-mute') + '">' + txt + '</span>';
+  const bar = (v, cls) => '<div class="bar ' + (cls || '') + '"><i style="width:' + Math.max(0, Math.min(100, v)) + '%"></i></div>';
+  function head(title, sub, right, crumb, code) {
+    return (crumb ? '<div class="crumb">' + crumb + '</div>' : '') + '<div class="page-head"><div><h1>' + title + (code ? ' <span class="chip" style="vertical-align:middle;font-family:var(--font-body);font-size:12px">Módulo ' + code + '</span>' : '') + '</h1>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>' + (right ? '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">' + right + '</div>' : '') + '</div>';
+  }
+  const crumb = (path, label) => '<button class="linkbtn" data-go="' + path + '">' + label + '</button>';
+  const kpi = (label, value, sub, icon, unit) => '<div class="card kpi"><div class="lbl"><span class="kx-ic">' + ic(icon) + '</span>' + label + '</div><div class="val num">' + value + (unit ? '<small>' + unit + '</small>' : '') + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div>';
+  const kpis = (arr) => '<div class="grid g4">' + arr.map((k) => kpi.apply(null, k)).join('') + '</div>';
+  function card(title, sub, body, right, flush, extra) {
+    return '<div class="card ' + (extra || '') + '"><div class="card-h"><div><h3>' + title + '</h3>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>' + (right || '') + '</div><div class="card-b ' + (flush ? 'flush scroll-x' : '') + '">' + body + '</div></div>';
+  }
+  function T(headers, rows, opts) {
+    opts = opts || {};
+    const al = opts.align || [];
+    return '<table class="t"><thead><tr>' + headers.map((h, i) => '<th class="' + (al[i] || '') + '">' + h + '</th>').join('') + '</tr></thead><tbody>' + rows.map((r) => '<tr' + (r.go ? ' class="click" data-go="' + r.go + '"' : '') + (r.act ? ' class="click" data-act="' + r.act + '"' + (r.data ? ' data-k="' + r.data + '"' : '') : '') + '>' + (r.cells || r).map((c, i) => '<td class="' + (al[i] || '') + '" data-label="' + String(headers[i] || '').replace(/<[^>]*>/g, '').replace(/"/g, '') + '">' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+  }
+  const cm = (main, sub) => '<div class="cell-main">' + main + '</div>' + (sub ? '<div class="cell-sub">' + sub + '</div>' : '');
+  let tabSeq = 0;
+  function tabs(items) {
+    const id = 'tb' + (++tabSeq);
+    return '<div class="tabs" role="tablist">' + items.map((t, i) => '<button class="' + (i ? '' : 'on') + '" data-tab="' + id + '-' + i + '" role="tab">' + t[0] + '</button>').join('') + '</div>' +
+      items.map((t, i) => '<div id="' + id + '-' + i + '"' + (i ? ' hidden' : '') + '>' + t[1] + '</div>').join('');
+  }
+  function gasFrame(code, name, body) {
+    return '<div class="gas-frame"><div class="gas-bar">' + ic('lock', 'lock') + '<span>Módulo ' + code + ' de Apps Script embebido en COI, ' + name + '. Sesión única activa.</span></div><div class="gas-body">' + body + '</div></div>';
+  }
+  function spark(values, w, h, color) {
+    w = w || 120; h = h || 32; color = color || 'var(--green)';
+    const min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    const pts = values.map((v, i) => [(i / (values.length - 1)) * w, h - 3 - ((v - min) / (max - min || 1)) * (h - 6)]);
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true"><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="' + pts[pts.length - 1][0] + '" cy="' + pts[pts.length - 1][1] + '" r="2.8" fill="' + color + '"/></svg>';
+  }
+  function lineChart(series, labels, opts) {
+    opts = opts || {}; const W = opts.w || 720, H = opts.h || 220, pl = 52, pr = 16, pt = 14, pb = 26;
+    const all = series.reduce((a, s) => a.concat(s.data), []);
+    let min = opts.min !== undefined ? opts.min : Math.min.apply(null, all), max = opts.max !== undefined ? opts.max : Math.max.apply(null, all);
+    if (max === min) max = min + 1;
+    const x = (i) => pl + (i / (labels.length - 1)) * (W - pl - pr);
+    const y = (v) => pt + (1 - (v - min) / (max - min)) * (H - pt - pb);
+    let g = '';
+    for (let k = 0; k <= 4; k++) { const v = min + (k / 4) * (max - min); g += '<line class="grid-l" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(v) + '" y2="' + y(v) + '"/><text x="' + (pl - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + (opts.fmt ? opts.fmt(v) : fmt(v)) + '</text>'; }
+    const step = Math.ceil(labels.length / 8);
+    labels.forEach((l, i) => { const last = i === labels.length - 1; if ((i % step === 0 && labels.length - 1 - i >= step / 2) || last) g += '<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle">' + l + '</text>'; });
+    series.forEach((s) => {
+      const d = s.data.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+      if (s.area) g += '<path d="' + d + ' L' + x(s.data.length - 1) + ' ' + y(min) + ' L' + x(0) + ' ' + y(min) + 'Z" fill="' + s.color + '" opacity="0.08"/>';
+      g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"' + (s.dash ? ' stroke-dasharray="5 5"' : '') + '/>';
+    });
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + esc(opts.label || 'Gráfico') + '">' + g + '</svg>';
+  }
+  function hbars(rows, color, min) {
+    const max = Math.max.apply(null, rows.map((r) => r[1])); min = min || 0;
+    return rows.map((r) => '<div class="hb"><span class="small ellip">' + r[0] + '</span>' + bar((r[1] - min) / (max - min || 1) * 100, color) + '<span class="small num" style="text-align:right">' + (r[2] || fmt(r[1])) + '</span></div>').join('');
+  }
+  function docRow(title, sub, icon, right) { return '<div class="doc"><span class="ico">' + ic(icon || 'file') + '</span><div class="grow"><div class="strong">' + title + '</div><div class="small muted">' + sub + '</div></div>' + (right || '') + '</div>'; }
+  const listRow = (left, main, sub, right, go) => '<div class="list-row' + (go ? ' click" data-go="' + go : '') + '">' + (left || '') + '<div class="grow"><div class="strong ellip">' + main + '</div>' + (sub ? '<div class="small muted">' + sub + '</div>' : '') + '</div>' + (right || '') + '</div>';
+
+  /* ================= Superposiciones ================= */
+  function toast(msg) {
+    const w = $('#toasts'); const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = ic('check') + '<span>' + msg + '</span>'; w.appendChild(t);
+    setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
+  }
+  function modal(title, body, foot) {
+    const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="modal-h"><h3>' + title + '</h3><button class="btn btn-g btn-sm" data-close>' + ic('x') + 'Cerrar</button></div><div class="modal-b">' + body + '</div>' + (foot ? '<div class="modal-f">' + foot + '</div>' : '') + '</div>';
+    bg.addEventListener('click', (e) => {
+      if (e.target === bg || e.target.closest('[data-close]')) { const msg = e.target.closest('[data-done]'); bg.remove(); if (msg) toast(msg.dataset.done); }
+    });
+    document.body.appendChild(bg); const b = $('[data-close]', bg); if (b) b.focus();
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const m = $('.modal-bg'); if (m) m.remove(); } });
+
+  /* ================= Vistas ================= */
+  const V = {};
+  let timers = [];
+  const every = (fn, ms) => { timers.push(setInterval(fn, ms)); };
+
+  /* ---------- N0 Tablero gerencial ---------- */
+  /* Serie diaria simulada desde enero de 2025 para comparar periodos completos. */
+  const SERIES = (function () {
+    const out = []; const r = rng(20250101);
+    const startD = new Date(2025, 0, 1), endD = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+    const total = (endD - startD) / 864e5;
+    const base = [0, 96, 92, 90, 90, 98, 34];
+    let bdInMonth = 0, lastMonth = -1;
+    for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+      const wd = d.getDay(); if (wd === 0) continue;
+      if (d.getMonth() !== lastMonth) { lastMonth = d.getMonth(); bdInMonth = 0; }
+      if (wd !== 6) bdInMonth++;
+      const p = Math.min(1, ((d - startD) / 864e5) / total);
+      const prog = Math.round(base[wd] + (bdInMonth <= 5 && wd !== 6 ? 22 : 0) + (r() - 0.5) * 8);
+      const comp = Math.min(0.996, 0.902 + 0.074 * p + (r() - 0.5) * 0.024);
+      const ans = Math.min(0.999, 0.935 + 0.058 * p + (r() - 0.5) * 0.02);
+      out.push({
+        d: new Date(d), key: d.toISOString().slice(0, 10), wd, p, prog, done: Math.round(prog * comp), ans,
+        hours: Math.max(0, (wd === 6 ? 1.5 : 4) + 22 * p + (r() - 0.5) * 3),
+        cases: Math.round((wd === 6 ? 14 : 44) + (r() - 0.5) * 12), pqr: Math.round(2 + r() * 3), alerts: Math.round(2 + r() * 4)
+      });
+    }
+    return out;
+  })();
+  const KNOWN_EVAL = (function () { const m = {}; const keys = Object.keys(D.clientExtra); [4, 5, 6, 7, 8, 9].forEach((mm, i) => { m['2026-' + mm] = keys.reduce((s, k) => s + D.clientExtra[k].score[i], 0) / keys.length; }); return m; })();
+  function evalFor(y, m) { const k = y + '-' + m; if (KNOWN_EVAL[k]) return KNOWN_EVAL[k]; const p = Math.max(0, Math.min(1, ((y - 2025) * 12 + m) / 16)); return 3.62 + 0.42 * p; }
+
+  const MSHORT = MONTHS.map((m) => m.slice(0, 3));
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  function periodDef(type, idx) {
+    const Y = NOW.getFullYear(), M = NOW.getMonth();
+    const today = new Date(Y, M, NOW.getDate());
+    const clampEnd = (e) => (e > today ? today : e);
+    let s, e, ps, pe, label, bucket, unitName;
+    if (type === 'dia') {
+      s = new Date(today); s.setDate(s.getDate() - idx); while (s.getDay() === 0) s.setDate(s.getDate() - 1);
+      e = new Date(s); ps = new Date(s); ps.setDate(ps.getDate() - 7); pe = new Date(ps);
+      label = cap(DAYS[s.getDay()]) + ' ' + s.getDate() + ' de ' + MONTHS[s.getMonth()]; bucket = 'hour'; unitName = 'el mismo día de la semana anterior';
+    } else if (type === 'mes') {
+      s = new Date(Y, M - idx, 1); e = new Date(Y, M - idx + 1, 0); ps = new Date(Y, M - idx - 1, 1); pe = new Date(Y, M - idx, 0);
+      label = cap(MONTHS[s.getMonth()]) + ' ' + s.getFullYear(); bucket = 'day'; unitName = cap(MONTHS[ps.getMonth()]);
+    } else if (type === 'bimestre') {
+      const b = Math.floor(M / 2) - idx; s = new Date(Y, b * 2, 1); e = new Date(Y, b * 2 + 2, 0); ps = new Date(Y, b * 2 - 2, 1); pe = new Date(Y, b * 2, 0);
+      label = cap(MONTHS[s.getMonth()]) + ' y ' + MONTHS[(s.getMonth() + 1) % 12] + ' ' + s.getFullYear(); bucket = 'week'; unitName = 'el bimestre anterior';
+    } else if (type === 'trimestre') {
+      const q = Math.floor(M / 3) - idx; s = new Date(Y, q * 3, 1); e = new Date(Y, q * 3 + 3, 0); ps = new Date(Y, q * 3 - 3, 1); pe = new Date(Y, q * 3, 0);
+      label = 'T' + (Math.floor(s.getMonth() / 3) + 1) + ' ' + s.getFullYear() + ', ' + MONTHS[s.getMonth()] + ' a ' + MONTHS[(s.getMonth() + 2) % 12]; bucket = 'week'; unitName = 'el trimestre anterior';
+    } else {
+      const h = Math.floor(M / 6) - idx; s = new Date(Y, h * 6, 1); e = new Date(Y, h * 6 + 6, 0); ps = new Date(Y, h * 6 - 6, 1); pe = new Date(Y, h * 6, 0);
+      label = 'S' + (Math.floor(s.getMonth() / 6) + 1) + ' ' + s.getFullYear() + ', ' + MONTHS[s.getMonth()] + ' a ' + MONTHS[(s.getMonth() + 5) % 12]; bucket = 'month'; unitName = 'el semestre anterior';
+    }
+    const partial = e > today && type !== 'dia';
+    const prevSpan = partial ? Math.round((clampEnd(e) - s) / 864e5) : null;
+    if (partial) { pe = new Date(ps); pe.setDate(pe.getDate() + prevSpan); }
+    return { type, idx, s, e: clampEnd(e), fullEnd: e, ps, pe, label, bucket, partial, unitName };
+  }
+  const PERIOD_OPTS = { dia: 6, mes: 6, bimestre: 4, trimestre: 4, semestre: 3 };
+  const inRange = (x, s, e) => x.d >= s && x.d <= new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59);
+  function agg(list) {
+    const prog = list.reduce((a, x) => a + x.prog, 0), done = list.reduce((a, x) => a + x.done, 0);
+    const ans = list.length ? list.reduce((a, x) => a + x.ans * x.prog, 0) / (prog || 1) : 0;
+    const hours = list.reduce((a, x) => a + x.hours, 0), cases = list.reduce((a, x) => a + x.cases + x.pqr, 0), alerts = list.reduce((a, x) => a + x.alerts, 0);
+    const months = {}; list.forEach((x) => { months[x.d.getFullYear() + '-' + x.d.getMonth()] = [x.d.getFullYear(), x.d.getMonth()]; });
+    const mk = Object.keys(months); const ev = mk.length ? mk.reduce((a, k) => a + evalFor(months[k][0], months[k][1]), 0) / mk.length : 0;
+    const comp = prog ? done / prog : 0;
+    const index = comp * 100 * 0.5 + ans * 100 * 0.3 + (ev / 5) * 100 * 0.2;
+    return { prog, done, comp, ans, hours, cases, alerts, ev, index, days: list.length };
+  }
+  function buckets(P, list) {
+    const out = [];
+    if (P.bucket === 'hour') {
+      const x = list[list.length - 1] || { done: 0, prog: 0 };
+      const shape = [3, 6, 9, 13, 16, 9, 6, 9, 11, 8, 6, 4]; const sum = shape.reduce((a, b) => a + b, 0);
+      const isToday = P.idx === 0; const lim = isToday ? Math.floor(NOW_MIN / 60) : 19;
+      shape.forEach((w, i) => { const h = 8 + i; const v = h <= lim ? Math.round(x.done * w / sum) : 0; out.push({ label: (h > 12 ? h - 12 : h) + (h >= 12 ? ' p. m.' : ' a. m.'), vol: v, comp: v ? Math.min(100, (x.prog ? x.done / x.prog : 0) * 100 + (i % 3 - 1) * 0.8) : null, future: h > lim }); });
+      return out;
+    }
+    const groups = {};
+    list.forEach((x) => {
+      let k, l;
+      if (P.bucket === 'day') { k = x.key; l = x.d.getDate() + ''; }
+      else if (P.bucket === 'week') { const m = new Date(x.d); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); k = m.toISOString().slice(0, 10); l = m.getDate() + ' ' + MSHORT[m.getMonth()]; }
+      else { k = x.d.getFullYear() + '-' + String(x.d.getMonth() + 1).padStart(2, '0'); l = MSHORT[x.d.getMonth()]; }
+      (groups[k] = groups[k] || { label: l, items: [] }).items.push(x);
+    });
+    Object.keys(groups).sort().forEach((k) => { const g = agg(groups[k].items); out.push({ label: groups[k].label, vol: g.done, comp: g.comp * 100, ans: g.ans * 100, hours: g.hours }); });
+    return out;
+  }
+  const DASH = { type: 'mes', idx: 0 };
+  const CHARTS = {};
+  const delta = (a, b, unit, dec, invert) => { const d = a - b; const flat = Math.abs(d) < 0.05; const good = invert ? d <= 0 : d >= 0; const s = (flat ? '' : d >= 0 ? '+' : '−') + fmt(flat ? 0 : Math.abs(d), dec === undefined ? 1 : dec) + (unit || ''); return '<span class="delta ' + (flat ? 'flat' : good ? 'pos' : 'neg') + '">' + s + '</span>'; };
+
+  function gauge(v, size) {
+    size = size || 168; const r = size / 2 - 12, c = 2 * Math.PI * r, frac = Math.max(0, Math.min(1, (v - 80) / 20));
+    return '<svg class="gauge" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true"><circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke="rgba(255,255,255,.12)" stroke-width="12" fill="none"/><circle class="gauge-arc" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke="#21BBEA" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="' + (c * frac).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 ' + size / 2 + ' ' + size / 2 + ')"/></svg>';
+  }
+  function donut(parts, size) {
+    size = size || 180; const r = size / 2 - 16, c = 2 * Math.PI * r, tot = parts.reduce((a, p) => a + p[1], 0); let off = 0;
+    const arcs = parts.map((p) => { const len = p[1] / tot * c; const s = '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="' + p[2] + '" stroke-width="22" stroke-dasharray="' + Math.max(0, len - 2).toFixed(1) + ' ' + c.toFixed(1) + '" stroke-dashoffset="' + (-off).toFixed(1) + '" transform="rotate(-90 ' + size / 2 + ' ' + size / 2 + ')"><title>' + p[0] + ': ' + fmt(p[1]) + '</title></circle>'; off += len; return s; }).join('');
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="Distribución por proceso">' + arcs + '<text x="50%" y="47%" text-anchor="middle" class="donut-n">' + fmt(tot) + '</text><text x="50%" y="60%" text-anchor="middle" class="donut-l">actividades</text></svg>';
+  }
+  function comboChart(id, data) {
+    const W = 860, H = 280, pl = 46, pr = 46, pt = 18, pb = 30, n = data.length;
+    const bw = Math.max(4, Math.min(34, (W - pl - pr) / n * 0.56));
+    const x = (i) => pl + (n === 1 ? (W - pl - pr) / 2 : (i + 0.5) * (W - pl - pr) / n);
+    const vmax = Math.max.apply(null, data.map((d) => d.vol).concat([1])) * 1.15;
+    const cs = data.filter((d) => d.comp != null).map((d) => d.comp);
+    const cmin = Math.min(88, Math.floor(Math.min.apply(null, cs.concat([95])) - 1)), cmax = 100;
+    const yv = (v) => pt + (1 - v / vmax) * (H - pt - pb), yc = (v) => pt + (1 - (v - cmin) / (cmax - cmin)) * (H - pt - pb);
+    let g = '<defs><linearGradient id="g-' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#048C38" stop-opacity=".22"/><stop offset="1" stop-color="#048C38" stop-opacity="0"/></linearGradient></defs>';
+    for (let k = 0; k <= 4; k++) { const cv = cmin + (k / 4) * (cmax - cmin); const yy = yc(cv); g += '<line class="grid-l" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy + '" y2="' + yy + '"/><text x="' + (W - pr + 8) + '" y="' + (yy + 4) + '">' + fmt(cv, 0) + ' %</text><text x="' + (pl - 8) + '" y="' + (yy + 4) + '" text-anchor="end">' + fmt(vmax * k / 4 / (vmax > 2000 ? 1000 : 1), 0) + (vmax > 2000 ? ' mil' : '') + '</text>'; }
+    const step = Math.ceil(n / 12);
+    data.forEach((d, i) => {
+      g += '<rect class="cb' + (d.future ? ' fut' : '') + '" x="' + (x(i) - bw / 2) + '" y="' + yv(d.vol) + '" width="' + bw + '" height="' + Math.max(0, H - pb - yv(d.vol)) + '" rx="' + Math.min(5, bw / 3) + '"/>';
+      if (i % step === 0 || i === n - 1) g += '<text x="' + x(i) + '" y="' + (H - 9) + '" text-anchor="middle">' + d.label + '</text>';
+    });
+    g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yc(95) + '" y2="' + yc(95) + '" stroke="#21BBEA" stroke-width="1.5" stroke-dasharray="5 5"/><text x="' + (pl + 6) + '" y="' + (yc(95) - 6) + '" class="meta-l">Meta 95 %</text>';
+    const pts = data.map((d, i) => d.comp == null ? null : [x(i), yc(d.comp)]).filter(Boolean);
+    if (pts.length > 1) {
+      const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+      g += '<path d="' + line + ' L' + pts[pts.length - 1][0] + ' ' + (H - pb) + ' L' + pts[0][0] + ' ' + (H - pb) + 'Z" fill="url(#g-' + id + ')"/><path d="' + line + '" fill="none" stroke="#048C38" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
+      if (pts.length <= 31) pts.forEach((p) => { g += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.2" fill="#fff" stroke="#048C38" stroke-width="2"/>'; });
+    }
+    g += '<line class="xh" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" style="display:none"/>';
+    CHARTS[id] = { data, x, W, n, pl, pr };
+    return '<div class="chart-wrap"><svg class="chart combo" data-chart="' + id + '" viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Cumplimiento y volumen del periodo">' + g + '</svg><div class="tip" id="tip-' + id + '"></div></div>';
+  }
+  function bindCharts() {
+    $$('svg[data-chart]').forEach((svg) => {
+      const C = CHARTS[svg.dataset.chart]; if (!C) return;
+      const tip = document.getElementById('tip-' + svg.dataset.chart), xh = $('.xh', svg);
+      const onMove = (e) => {
+        const r = svg.getBoundingClientRect(); const vx = (e.clientX - r.left) / r.width * C.W;
+        let i = Math.round((vx - C.pl) / ((C.W - C.pl - C.pr) / C.n) - 0.5); i = Math.max(0, Math.min(C.n - 1, i));
+        const d = C.data[i]; const px = C.x(i);
+        xh.setAttribute('x1', px); xh.setAttribute('x2', px); xh.style.display = '';
+        tip.innerHTML = '<b>' + d.label + '</b><span>Actividades cerradas <i>' + fmt(d.vol) + '</i></span>' + (d.comp != null ? '<span>Cumplimiento <i>' + pct(d.comp, 1) + '</i></span>' : '<span>Franja aún no transcurrida</span>') + (d.ans ? '<span>ANS cumplido <i>' + pct(d.ans, 1) + '</i></span>' : '');
+        tip.style.display = 'block'; const left = px / C.W * r.width; tip.style.left = Math.min(Math.max(0, r.width - 190), Math.max(0, left + 14)) + 'px';
+      };
+      svg.addEventListener('pointermove', onMove); svg.addEventListener('pointerdown', onMove);
+      svg.addEventListener('pointerleave', () => { tip.style.display = 'none'; xh.style.display = 'none'; });
+    });
+  }
+  function heatmap(list) {
+    if (!list.length) return '';
+    const first = new Date(list[0].d); first.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+    const weeks = Math.ceil(((list[list.length - 1].d - first) / 864e5 + 1) / 7);
+    const by = {}; list.forEach((x) => { by[x.key] = x; });
+    const lv = (c) => c >= 0.985 ? 5 : c >= 0.97 ? 4 : c >= 0.955 ? 3 : c >= 0.94 ? 2 : c >= 0.925 ? 1 : 0;
+    const sz = weeks <= 6 ? 40 : weeks <= 10 ? 30 : weeks <= 16 ? 24 : 18; const showN = sz >= 30;
+    const legend = '<div class="hm-leg"><span>Menos de 92,5 %</span>' + [0, 1, 2, 3, 4, 5].map((l) => '<i class="hm l' + l + '"></i>').join('') + '<span>98,5 % o más</span></div>';
+    if (weeks <= 6) {
+      let cal = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((d) => '<span class="cal-h">' + d + '</span>').join('');
+      for (let w = 0; w < weeks; w++) for (let dd = 0; dd < 6; dd++) {
+        const day = new Date(first); day.setDate(first.getDate() + w * 7 + dd); const x = by[day.toISOString().slice(0, 10)];
+        cal += x ? '<i class="hm l' + lv(x.done / x.prog) + '" title="' + day.getDate() + ' ' + MSHORT[day.getMonth()] + ': ' + pct(x.done / x.prog * 100, 1) + '"><b>' + day.getDate() + '</b><small>' + fmt(x.done / x.prog * 100, 1) + '</small></i>' : '<i class="hm off"></i>';
+      }
+      return '<div class="cal">' + cal + '</div>' + legend;
+    }
+    let cols = '';
+    for (let w = 0; w < weeks; w++) {
+      let cells = '';
+      for (let dd = 0; dd < 6; dd++) {
+        const day = new Date(first); day.setDate(first.getDate() + w * 7 + dd); const k = day.toISOString().slice(0, 10); const x = by[k];
+        cells += x ? '<i class="hm l' + lv(x.done / x.prog) + '" title="' + day.getDate() + ' ' + MSHORT[day.getMonth()] + ': ' + pct(x.done / x.prog * 100, 1) + '">' + (showN ? day.getDate() : '') + '</i>' : '<i class="hm off"></i>';
+      }
+      cols += '<div class="hm-col">' + cells + '</div>';
+    }
+    return '<div class="hm-wrap" style="--hm:' + sz + 'px"><div class="hm-days"><span>Lun</span><span></span><span>Mié</span><span></span><span>Vie</span><span></span></div><div class="hm-grid">' + cols + '</div></div><div class="hm-leg"><span>Menos de 92,5 %</span>' + [0, 1, 2, 3, 4, 5].map((l) => '<i class="hm l' + l + '"></i>').join('') + '<span>98,5 % o más</span></div>';
+  }
+
+  V.inicio = function () {
+    const P = periodDef(DASH.type, DASH.idx);
+    const list = SERIES.filter((x) => inRange(x, P.s, P.e)), prevList = SERIES.filter((x) => inRange(x, P.ps, P.pe));
+    const A = agg(list), B = agg(prevList);
+    const bk = buckets(P, list);
+    const isDay = P.type === 'dia';
+    const opts = Array.from({ length: PERIOD_OPTS[P.type] }, (_, i) => { const q = periodDef(P.type, i); return '<option value="' + i + '"' + (i === P.idx ? ' selected' : '') + '>' + q.label + (i === 0 && P.type !== 'dia' ? ', en curso' : i === 0 ? ', hoy' : '') + '</option>'; }).join('');
+    const seg = [['dia', 'Día'], ['mes', 'Mes'], ['bimestre', 'Bimestre'], ['trimestre', 'Trimestre'], ['semestre', 'Semestre']].map((s) => '<button class="' + (s[0] === P.type ? 'on' : '') + '" data-act="period" data-k="' + s[0] + '">' + s[1] + '</button>').join('');
+
+    /* Analistas en el periodo */
+    const anRows = D.analysts.map((a, i) => {
+      const off = [0.006, -0.004, 0.003, 0.001, -0.006, -0.009][i];
+      const offB = [0.002, -0.001, 0.006, -0.003, -0.002, -0.012][i]; const cA = Math.min(0.998, A.comp + off), cB = Math.min(0.998, B.comp + offB);
+      const share = STATS[a.id].total / 104; const doneA = Math.round(A.done * share);
+      const tr = bk.filter((b) => b.comp != null).map((b, j) => b.comp + off * 100 + Math.sin(j + i) * 0.4);
+      return { a, cA, cB, doneA, hours: A.hours * share * (a.id === 'hernan' ? 0.4 : 1), tr };
+    }).sort((p, q) => q.cA - p.cA);
+    const anTable = T(['Analista', 'Cumplimiento', 'Frente a ' + (isDay ? 'la semana anterior' : 'el anterior'), 'Cerradas', 'Horas liberadas', 'Tendencia'], anRows.map((r, i) => ({ go: 'analista/' + r.a.id, cells: ['<div class="who">' + '<span class="rank">' + (i + 1) + '</span>' + avatar(r.a.id) + '<div>' + cm(r.a.name, r.a.id === 'hernan' ? 'Analista de datos' : 'Analista') + '</div></div>', '<div class="cbar"><span class="num strong">' + pct(r.cA * 100, 1) + '</span>' + bar(r.cA * 100, r.cA >= 0.95 ? '' : 'gd') + '</div>', delta(r.cA * 100, r.cB * 100, ' pts'), '<span class="num">' + fmt(r.doneA) + '</span>', '<span class="num">' + fmt(r.hours, 0) + ' h</span>', r.tr.length > 1 ? spark(r.tr, 96, 26, r.cA >= 0.95 ? '#048C38' : '#C99A00') : '<span class="muted small">Un día</span>'] })), { align: ['', '', '', 'r', 'r', ''] });
+
+    /* Clientes en el periodo */
+    const evM = (k) => { const e = P.e; const idxM = (e.getFullYear() - 2026) * 12 + e.getMonth() - 4; const sc = D.clientExtra[k].score; return idxM >= 0 && idxM <= 5 ? sc[idxM] : Math.max(3.2, sc[0] - 0.05 * (0 - idxM)); };
+    const clRows = Object.keys(clients).map((k) => {
+      const off = (hash(k) % 100) / 100 * 0.04 - 0.02;
+      const offB = ((hash(k + 'b') % 100) / 100) * 0.04 - 0.022; const ansA = Math.min(1, A.ans + off), ansB = Math.min(1, B.ans + offB);
+      return { k, ansA, ansB, ev: evM(k) };
+    }).sort((p, q) => q.ansA - p.ansA);
+    const below = clRows.filter((c) => c.ansA < 0.95);
+    const clTable = T(['Cliente', 'ANS cumplido', 'Variación', 'Evaluación', 'Estado'], clRows.map((c) => ({ go: 'cliente/' + c.k, cells: [cm(clients[c.k].name, 'ANS ' + D.clientExtra[c.k].ans), '<div class="cbar"><span class="num strong">' + pct(c.ansA * 100, 1) + '</span>' + bar(c.ansA * 100, c.ansA >= 0.95 ? 'nv' : 'gd') + '</div>', delta(c.ansA * 100, c.ansB * 100, ' pts'), '<span class="num strong">' + fmt(c.ev, 1) + '</span><span class="muted small"> / 5</span>', c.ansA >= 0.95 ? tag('Cumple', 'b-ok') : tag('Por debajo', 'b-warn')] })), { align: ['', '', '', 'r', ''] });
+
+    /* Distribución por proceso */
+    const colors = ['#242A54', '#048C38', '#21BBEA', '#6C74A8', '#00BD4E', '#7FD3F0', '#B9BEDA', '#3D8A44', '#1A8FB5', '#9AA0C8', '#5CC6A0'];
+    const procParts = D.processes.map((p, i) => [p.name, Math.round(A.done * (acts.filter((a) => a.p === p.id).length / 95) * (0.9 + (hash(p.id) % 20) / 100)), colors[i % colors.length], p.id]).sort((a, b) => b[1] - a[1]);
+    const procLegend = procParts.map((p) => '<button class="lg-row" data-go="' + PROC_VIEW[p[3]] + '"><i style="background:' + p[2] + '"></i><span class="ellip">' + p[0] + '</span><b class="num">' + fmt(p[1]) + '</b></button>').join('');
+
+    /* Lectura automática */
+    const dComp = (A.comp - B.comp) * 100;
+    const reading = (isDay ? 'Hoy ' : (P.partial ? P.label + ' va ' : P.label + ' cerró ')) + 'con ' + pct(A.comp * 100, 1) + ' de las actividades cerradas con evidencia, ' + fmt(Math.abs(dComp), 1) + ' puntos ' + (dComp >= 0 ? 'por encima' : 'por debajo') + ' de ' + P.unitName + '. ' + (below.length ? below.length + (below.length === 1 ? ' cliente quedó' : ' clientes quedaron') + ' por debajo del 95 % de su ANS: ' + below.slice(0, 3).map((c) => clients[c.k].name).join(', ') + '.' : 'Todos los clientes cumplieron su ANS por encima del 95 %.') + ' El equipo liberó ' + fmt(A.hours, 0) + ' horas de trabajo manual.';
+
+    /* Atención */
+    const att = [];
+    if (anRows[anRows.length - 1].cA < 0.955) att.push(['warn', 'Cumplimiento de ' + anRows[anRows.length - 1].a.name, pct(anRows[anRows.length - 1].cA * 100, 1) + ' en el periodo, el más bajo del equipo', 'analista/' + anRows[anRows.length - 1].a.id]);
+    below.slice(0, 2).forEach((c) => att.push(['bad', clients[c.k].name + ' por debajo del ANS', pct(c.ansA * 100, 1) + ' frente a la meta de 95 %', 'cliente/' + c.k]));
+    if (P.idx === 0) { att.push(['warn', 'Exceso de efectivo en BBVA Salitre', 'Transportadora solicitada; alerta abierta', 'alertas']); att.push(['info', 'PQR con menos de 6 días de plazo', '1 caso en ampliación de información', 'pqr']); att.push(['info', 'Davivienda espera 2 validaciones de líderes', 'Facturación del mes', 'facturacion']); }
+    if (!att.length) att.push(['ok', 'Periodo sin pendientes abiertos', 'Todos los compromisos quedaron cerrados', 'bitacora']);
+    const attHtml = att.slice(0, 5).map((t) => '<button class="att ' + t[0] + '" data-go="' + t[3] + '"><span class="att-ic">' + ic(t[0] === 'ok' ? 'check' : t[0] === 'info' ? 'clock' : 'alert') + '</span><span class="grow"><b>' + t[1] + '</b><small>' + t[2] + '</small></span>' + ic('chevron') + '</button>').join('');
+
+    /* Hitos y comités del periodo */
+    const ms = [['2026-10-30', 'Hito 1: COI en producción'], ['2026-11-27', 'Hito 2: validación documental, PQR, gestión interna y analítica'], ['2026-12-18', 'Hito 3: novedades, personal y valores, alertas'], ['2027-01-15', 'Hito 4: reportería, Fincomercio, facturación y oficinas'], ['2027-01-22', 'Hito 5: entrega formal']];
+    const inP = (iso) => { const d = new Date(iso + 'T12:00:00'); return d >= P.s && d <= P.fullEnd; };
+    const events = ms.filter((m) => inP(m[0])).map((m) => [m[0], m[1], 'flag']);
+    if (!isDay) { const mm = new Set(list.map((x) => x.d.getFullYear() + '-' + x.d.getMonth())); mm.forEach((k) => { const p = k.split('-').map(Number); events.push([new Date(p[0], p[1], 5).toISOString().slice(0, 10), 'Comités mensuales de ' + MONTHS[p[1]] + ': BBVA, Banco Popular, Davivienda y Fincomercio', 'chart']); }); }
+    events.sort((a, b) => a[0] < b[0] ? -1 : 1);
+    const evHtml = events.length ? events.slice(0, 7).map((e) => { const d = new Date(e[0] + 'T12:00:00'); const done = d <= NOW; return '<div class="ev ' + (done ? 'done' : '') + '"><span class="ev-date"><b>' + d.getDate() + '</b>' + MSHORT[d.getMonth()] + '</span><span class="grow small">' + e[1] + '</span>' + (done ? tag('Cumplido', 'b-ok') : tag('Programado', 'b-mute')) + '</div>'; }).join('') : '<p class="small muted">Sin hitos ni comités en este periodo.</p>';
+
+    /* KPI con tendencia */
+    const sparkOf = (f) => isDay ? [] : bk.filter((b) => b.comp != null).map(f);
+    const kcard = (label, val, unit, dlt, sp, icon, color) => '<div class="card kx"><div class="kx-top"><span class="kx-ic" style="--c:' + color + '">' + ic(icon) + '</span><span class="kx-l">' + label + '</span></div><div class="kx-v num">' + val + (unit ? '<small>' + unit + '</small>' : '') + '</div><div class="kx-b">' + dlt + (sp.length > 1 ? spark(sp, 92, 26, color) : '') + '</div></div>';
+    const autoN = acts.filter(isAuto).length;
+
+    return '<div class="dash-head"><div><h1 class="dash-title">Tablero gerencial</h1><p class="muted">Lectura de la operación de Apoyo al Negocio por periodo.</p></div><div class="dash-ctrl"><div class="seg seg-lg">' + seg + '</div><select class="period-sel" data-dash-sel aria-label="Periodo">' + opts + '</select><button class="btn btn-o" data-act="toast" data-k="Informe de ' + esc(P.label) + ' generado en PDF.">' + ic('download') + 'Informe del periodo</button></div></div>' +
+      '<section class="hero"><div class="hero-g"><div class="gauge-box">' + gauge(A.index) + '<div class="gauge-c"><b class="num">' + fmt(A.index, 1) + '</b><span>de 100</span></div></div><div><div class="hero-k">Índice de servicio</div><div class="hero-p">' + P.label + (P.partial ? ', en curso' : '') + '</div><div class="hero-d">' + delta(A.index, B.index, ' pts') + ' <span>frente a ' + P.unitName + '</span></div></div></div>' +
+      '<div class="hero-stats">' + [['Actividades cerradas', fmt(A.done), 'de ' + fmt(A.prog) + ' programadas'], ['ANS cumplido', pct(A.ans * 100, 1), 'promedio ponderado de 16 clientes'], ['Evaluación de clientes', fmt(A.ev, 2), 'sobre 5, promedio del periodo'], ['Horas liberadas', fmt(A.hours, 0), 'trabajo manual evitado']].map((s) => '<div class="hs"><span>' + s[0] + '</span><b class="num">' + s[1] + '</b><small>' + s[2] + '</small></div>').join('') + '</div>' +
+      '<p class="hero-read">' + ic('sparkle') + '<span>' + reading + '</span></p></section>' +
+      '<div class="kx-row">' +
+      kcard('Cumplimiento con evidencia', pct(A.comp * 100, 1), '', delta(A.comp * 100, B.comp * 100, ' pts'), sparkOf((b) => b.comp), 'shield', '#048C38') +
+      kcard('ANS de clientes', pct(A.ans * 100, 1), '', delta(A.ans * 100, B.ans * 100, ' pts'), sparkOf((b) => b.ans || A.ans * 100), 'star', '#242A54') +
+      kcard('Casos atendidos', fmt(A.cases), '', delta(A.cases / Math.max(1, A.days), B.cases / Math.max(1, B.days), ' al día', 1), sparkOf((b) => b.vol), 'inbox', '#21BBEA') +
+      kcard('Horas liberadas', fmt(A.hours, 0), 'h', delta(A.hours / Math.max(1, A.days), B.hours / Math.max(1, B.days), ' h al día', 1), sparkOf((b) => b.hours || 0), 'clock', '#1A8FB5') +
+      kcard('Alertas gestionadas', fmt(A.alerts), '', delta(A.alerts / Math.max(1, A.days), B.alerts / Math.max(1, B.days), ' al día', 1, true), sparkOf((b) => b.vol), 'bell', '#C99A00') +
+      kcard('Automatización', pct(autoN / 104 * 100, 0), '', '<span class="delta flat">' + autoN + ' de 104</span>', [], 'sparkle', '#6C74A8') + '</div>' +
+      (isDay ? '<div class="mt">' + V._pulse() + '</div>' : '') +
+      '<div class="grid g-main mt">' + card(isDay ? 'Cierres por franja horaria' : 'Cumplimiento y volumen', isDay ? 'Actividades cerradas por hora y cumplimiento acumulado' : 'Barras: actividades cerradas por ' + ({ day: 'día', week: 'semana', month: 'mes' })[P.bucket] + '. Línea: cumplimiento con evidencia. Pase el cursor para ver el detalle.', comboChart('main', bk), '<div class="legend"><span><i style="background:#C9CDE3"></i>Cerradas</span><span><i style="background:#048C38"></i>Cumplimiento</span><span><i style="background:#21BBEA"></i>Meta</span></div>') +
+      card('Distribución por proceso', 'Actividades cerradas en el periodo', '<div class="donut-box">' + donut(procParts.map((p) => [p[0], p[1], p[2]])) + '<div class="dlg">' + procLegend + '</div></div>') + '</div>' +
+      (!isDay ? '<div class="grid g-main mt">' + card('Mapa de cumplimiento diario', 'Cada cuadro es un día hábil del periodo', heatmap(list)) + card('Lo que requiere atención', '', '<div class="att-list">' + attHtml + '</div>') + '</div>' : '<div class="mt">' + card('Lo que requiere atención', '', '<div class="att-list">' + attHtml + '</div>') + '</div>') +
+      '<div class="grid g2 mt">' + card('Analistas', 'Ordenadas por cumplimiento del periodo', anTable, '<button class="btn btn-g btn-sm" data-go="analistas">Fichas' + ic('chevron') + '</button>', true) + card('Clientes', 'ANS cumplido y evaluación del periodo', '<div style="max-height:520px;overflow:auto">' + clTable + '</div>', '<button class="btn btn-g btn-sm" data-go="clientes">Expedientes' + ic('chevron') + '</button>', true) + '</div>' +
+      '<div class="grid g-main mt">' + card('Hitos y comités del periodo', '', '<div class="ev-list">' + evHtml + '</div>') + card('Módulos de COI', 'Acceso directo', '<div class="mod-grid sm">' + MODULES.filter((m) => m[0] !== 'inicio').map((m) => '<button class="mod" data-go="' + m[0] + '">' + ic(m[3]) + '<span><b>' + m[2] + '</b><small>' + m[1] + '</small></span></button>').join('') + '</div>') + '</div>';
+  };
+
+  V._pulse = function () {
+    const ev = D.pulse.map((p) => Object.assign({ m: toMin(p.t) }, p));
+    const start = 7 * 60 + 30, end = 20 * 60, pos = (m) => ((m - start) / (end - start)) * 100;
+    const nextEv = ev.find((e) => e.m > NOW_MIN);
+    const track = ev.map((e, i) => { const doneE = e.m <= NOW_MIN; return '<div class="pulse-ev ' + (doneE ? 'done ' : '') + (e.critical ? 'crit ' : '') + (nextEv === e ? 'next ' : '') + (i % 2 ? 'up' : '') + '" style="left:' + pos(e.m) + '%"><button class="dotv" data-go="' + e.view + '" aria-label="' + esc(e.label) + '">' + (doneE ? ic('check') : '') + '</button><span class="tm">' + hhmm(e.m) + '</span><span class="pulse-tip">' + esc(e.label) + ', ' + firstName(e.owner) + '</span></div>'; }).join('');
+    const nowPos = pos(Math.min(Math.max(NOW_MIN, start), end));
+    return '<div class="card"><div class="card-h"><div><h3>Pulso de la operación</h3><p>Ventanas fijas del día con sus responsables. Seleccione un punto para abrir su módulo.</p></div>' + tag('Sin incumplimientos de ANS hoy', 'b-ok') + '</div><div class="pulse"><div class="pulse-track"><div class="pulse-axis"></div><div class="pulse-done" style="width:' + nowPos + '%"></div>' + track + '<div class="pulse-now" style="left:' + nowPos + '%"><span>Ahora, ' + hhmm(NOW_MIN) + '</span></div></div></div>' + (nextEv ? '<div class="pulse-next">' + ic('clock') + '<div class="grow"><span class="strong">Siguiente: ' + nextEv.label + '</span> <span class="muted">a las ' + hhmm(nextEv.m) + ', a cargo de ' + AN[nextEv.owner].name + '</span></div><button class="btn btn-o btn-sm" data-go="' + nextEv.view + '">Abrir módulo</button></div>' : '') + '</div>';
+  };
+
+  /* ---------- Analistas ---------- */
+  V.analistas = function () {
+    const cards = D.analysts.map((a) => {
+      const s = STATS[a.id];
+      return '<div class="card an-card" data-go="analista/' + a.id + '" tabindex="0"><div class="an-top">' + avatar(a.id, true) + '<div class="grow"><h4>' + a.name + '</h4><div class="small muted">' + a.focus + '</div></div></div>' +
+        '<div class="an-stats"><div><b class="num">' + s.total + '</b><span>actividades</span></div><div><b class="num">' + pct(s.auto / s.total * 100, 0) + '</b><span>automatizadas</span></div><div><b class="num">' + fmt(s.freed, 1) + ' h</b><span>liberadas por semana</span></div></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center"><div><div class="small muted">Cumplimiento a 20 días</div><div class="strong num">' + pct(s.month, 1) + '</div></div>' + spark(s.series, 130, 34) + '</div></div>';
+    }).join('');
+    return head('Analistas', 'Avance, cumplimiento y carga de cada integrante del equipo. Seleccione una persona para ver su día.') + '<div class="grid g3">' + cards + '</div>';
+  };
+  V.analista = function (id) {
+    const a = AN[id]; if (!a) return V.analistas();
+    const s = STATS[id];
+    const byProc = {}; s.list.forEach((x) => { byProc[x.p] = (byProc[x.p] || 0) + 1; });
+    const procBars = Object.keys(byProc).sort((p, q) => byProc[q] - byProc[p]).map((k) => [procName(k), byProc[k]]);
+    const rows = s.list.map((x) => ({ go: MODULE_VIEW[x.m] || null, cells: ['<span class="num muted">' + x.n + '</span>', cm(esc(x.d), esc(x.cl)), '<span class="small">' + esc(x.f) + '</span>', '<span class="small">' + procName(x.p) + '</span>', isAuto(x) ? tag('Automatizada', 'b-info') : tag('Monitoreada'), badge(todayState[x.n])] }));
+    const daily = Math.max(1.2, a.baseHours - s.freed / 5);
+    return head(a.name, a.role + '. ' + a.focus + '.', '<button class="btn btn-o" data-act="mensaje" data-k="' + id + '">' + ic('mail') + 'Enviar mensaje</button>', crumb('analistas', 'Analistas') + ' / ' + a.name) +
+      kpis([['Avance del día', pct(s.comp, 0), s.done + ' de ' + s.due + ' cerradas con evidencia', 'shield'], ['Actividades a cargo', s.total, s.auto + ' automatizadas', 'list'], ['Horas liberadas', fmt(s.freed, 1), 'por semana frente a la línea base', 'clock', 'h'], ['Cumplimiento a 20 días', pct(s.month, 1), spark(s.series, 110, 22), 'activity']]) +
+      '<div class="grid g-main mt">' + card('Actividades del día', 'Seleccione una actividad para abrir su módulo', T(['N.º', 'Actividad', 'Frecuencia', 'Proceso', 'Modalidad', 'Hoy'], rows), '', true) +
+      '<div>' + card('Distribución por proceso', '', hbars(procBars, 'cy')) + '<div class="mt">' + card('Tiempo diario en tareas repetitivas', '', hbars([['Línea base', a.baseHours, fmt(a.baseHours, 1) + ' h'], ['Con COI', daily, fmt(daily, 1) + ' h']], 'nv')) + '</div></div></div>';
+  };
+
+  /* ---------- Procesos ---------- */
+  V.procesos = function () {
+    const rows = D.processes.map((p) => {
+      const list = acts.filter((a) => a.p === p.id);
+      const ans = Array.from(new Set(list.map((a) => a.a)));
+      const cls = Array.from(new Set(list.reduce((s, a) => s.concat(a.c), [])));
+      return { go: PROC_VIEW[p.id], cells: [cm(p.name, p.summary), ans.map((x) => '<span style="margin-right:-6px;display:inline-block">' + avatar(x) + '</span>').join(''), '<span class="small">' + (cls.length ? cls.map((c) => clients[c].name).slice(0, 4).join(', ') + (cls.length > 4 ? ' y ' + (cls.length - 4) + ' más' : '') : 'Interno') + '</span>', '<span class="num">' + list.length + '</span>', '<span class="small">' + p.module.split(' ').join(', ') + '</span>', p.id === 'T5' ? tag('Alerta abierta', 'b-warn') : tag('En operación', 'b-ok')] };
+    });
+    const extra = [['P0', 'Tablero gerencial y control de ANS', 'Base de indicadores de la Gerencia y revisión de acuerdos de servicio, cubiertas por el tablero desde el hito 1.', 'inicio', 'N0', tag('En operación', 'b-ok')], ['M', 'Analítica que se mantiene', 'Tableros de Oracle y Power BI, control de apertura en COI, informes mensuales y reportería bajo demanda de Hernán. Se monitorean en COI sin automatizar.', 'analista/hernan', 'Monitoreo', tag('Monitoreada', 'b-mute')]].map((e) => {
+      const list = acts.filter((x) => x.p === e[0]);
+      const ans = Array.from(new Set(list.map((x) => x.a)));
+      const cls = Array.from(new Set(list.reduce((s, x) => s.concat(x.c), [])));
+      return { go: e[3], cells: [cm(e[1], e[2]), ans.map((x) => '<span style="margin-right:-6px;display:inline-block">' + avatar(x) + '</span>').join(''), '<span class="small">' + (cls.length ? cls.map((c) => clients[c].name).join(', ') : 'Interno') + '</span>', '<span class="num">' + list.length + '</span>', '<span class="small">' + e[4] + '</span>', e[5]] };
+    });
+    const nAuto = acts.filter((x) => PR[x.p]).length;
+    const total = { cells: ['<span class="strong">Total</span>', '', '<span class="small muted">' + nAuto + ' en los once procesos y ' + (104 - nAuto) + ' monitoreadas</span>', '<span class="num strong">' + acts.length + '</span>', '', ''] };
+    return head('Procesos transversales', 'Las 104 actividades del área: ' + nAuto + ' operan en los once procesos transversales y ' + (104 - nAuto) + ' se monitorean desde el tablero sin automatizar. Seleccione una fila para abrir su módulo.') +
+      kpis([['Actividades del área', acts.length, 'el catálogo completo', 'list'], ['En procesos transversales', nAuto, 'automatizadas en once procesos', 'sparkle'], ['Monitoreadas', 104 - nAuto, '7 de analítica y 2 del tablero gerencial', 'eye'], ['Procesos en operación', 11, '1 con alerta abierta', 'layers']]) +
+      '<div class="mt">' + card('Procesos y actividades', '', T(['Proceso', 'Analistas', 'Clientes', 'Actividades', 'Módulos', 'Estado'], rows.concat(extra).concat([total]), { align: ['', '', '', 'c', '', ''] }), '', true) + '</div>';
+  };
+
+  /* ---------- Módulos de gestión por cliente ---------- */
+  const CTX = { client: null };
+  const CLIENT_ALIAS = { bbva: ['BBVA'], colfondos: ['Colfondos'], proteccion: ['Protección'], porvenir: ['Porvenir'], bancolombia: ['Bancolombia', 'Indega'], agrario: ['Agrario'], popular: ['Popular'], snr: ['SNR'], bogota: ['Bogotá'], occidente: ['Occidente'], davivienda: ['Davivienda'], fincomercio: ['Fincomercio', 'Finco'], citibank: ['Citibank'], cajasocial: ['Caja Social'], coopcentral: ['Coopcentral'], union: ['Banco Unión'] };
+  const modInfo = (code) => { if (code === 'Se mantiene') return ['analista/hernan', 'Monitoreo', 'Tableros de analítica', 'activity']; const m = MODULES.find((x) => x[1] === code); return m || ['inicio', code, code, 'layers']; };
+  const nextCut = (f) => { const m = f.match(/antes de [^,;]+/i); if (m) return 'Hoy, ' + m[0]; if (/Diaria/.test(f)) return 'Hoy'; if (/lunes/i.test(f)) return 'Lunes'; if (/martes/i.test(f)) return 'Martes'; if (/viernes/i.test(f)) return 'Viernes'; if (/Semanal/.test(f)) return 'Esta semana'; if (/Quincenal/.test(f)) return 'Próxima quincena'; if (/Bimensual/.test(f)) return 'Próximo bimestre'; if (/Semestral/.test(f)) return 'Fin del semestre'; if (/Mensual|1\.ª semana|día 1/i.test(f)) return 'Día 5 de ' + MONTHS[(NOW.getMonth() + 1) % 12]; if (/Anual/.test(f)) return 'Temporada'; return 'Según solicitud'; };
+  const lastEv = (n) => { if (todayState[n] !== 'done') return '<span class="muted">Sin evidencia hoy</span>'; const r = rng(hash('ev' + n) ^ daySeed)(); return 'Hoy, ' + hhmm(8 * 60 + Math.floor(r * Math.max(30, NOW_MIN - 8 * 60))); };
+  function clientModGroups(list) {
+    const groups = {}; list.forEach((x) => { (groups[x.m] = groups[x.m] || []).push(x); });
+    return Object.keys(groups).sort((p, q) => groups[q].length - groups[p].length).map((code) => ({ code, items: groups[code] }));
+  }
+  function clientModulePanel(k, code) {
+    const list = clientActs(k), g = clientModGroups(list).find((x) => x.code === code) || clientModGroups(list)[0];
+    const mi = modInfo(g.code), items = g.items;
+    const done = items.filter((x) => todayState[x.n] === 'done').length, risk = items.filter((x) => todayState[x.n] === 'risk').length;
+    const owners = Array.from(new Set(items.map((x) => x.a)));
+    const rows = items.map((x) => ['<span class="num muted">' + x.n + '</span>', '<div class="cm-act">' + cm(esc(x.d), esc(x.f)) + '</div>', '<div class="who">' + avatar(x.a) + '<span class="small nowrap">' + (AN[x.a] ? AN[x.a].name.split(' ')[0] : 'Gerencia') + '</span></div>', '<span class="small">' + nextCut(x.f) + '</span>', '<span class="small nowrap">' + lastEv(x.n) + '</span>', badge(todayState[x.n]), '<button class="btn btn-o btn-sm btn-ic" data-act="evidencia" data-k="' + x.n + '" title="Registrar evidencia" aria-label="Registrar evidencia">' + ic('upload') + '</button>']);
+    return '<div class="cm-head"><div class="cm-title"><span class="kx-ic">' + ic(mi[3]) + '</span><div><h3>' + mi[2] + '</h3><p>' + (g.code === 'Se mantiene' ? 'Se monitorea en COI sin automatizar' : 'Módulo ' + g.code + ' para ' + clients[k].name) + '</p></div></div><div class="cm-actions"><button class="btn btn-o btn-sm" data-act="ans" data-k="' + k + '">' + ic('file') + 'ANS vigente</button><button class="btn btn-p btn-sm" data-go="' + mi[0] + '" data-client="' + k + '">Abrir módulo completo' + ic('chevron') + '</button></div></div>' +
+      '<dl class="cm-stats"><div><dt>Actividades</dt><dd class="num">' + items.length + '</dd></div><div><dt>Cerradas hoy</dt><dd class="num">' + done + '</dd></div><div><dt>En curso o programadas</dt><dd class="num">' + (items.length - done - risk) + '</dd></div><div><dt>En riesgo</dt><dd class="num' + (risk ? ' down' : '') + '">' + risk + '</dd></div><div><dt>Responsables</dt><dd>' + owners.map((o) => avatar(o)).join('') + '</dd></div></dl>' +
+      '<div class="scroll-x">' + T(['N.º', 'Actividad', 'Responsable', 'Próximo corte', 'Última evidencia', 'Estado', 'Evidencia'], rows, { align: ['', '', '', '', '', '', 'c'] }) + '</div>';
+  }
+  function clientModules(k, list) {
+    const groups = clientModGroups(list);
+    const nav = groups.map((g, i) => { const mi = modInfo(g.code); const pend = g.items.filter((x) => todayState[x.n] !== 'done').length; const risk = g.items.some((x) => todayState[x.n] === 'risk'); return '<button class="cm-item' + (i ? '' : ' on') + '" data-act="cmsel" data-k="' + g.code + '" data-c="' + k + '">' + ic(mi[3]) + '<span class="grow"><b>' + mi[2] + '</b><small>' + (g.code === 'Se mantiene' ? 'Monitoreo' : 'Módulo ' + g.code) + '</small></span><span class="cm-count' + (risk ? ' warn' : pend ? ' info' : '') + '">' + g.items.length + '</span></button>'; }).join('');
+    return '<div class="card cm-layout"><nav class="cm-nav" aria-label="Módulos del cliente"><div class="cm-nav-h">Módulos que atienden a ' + clients[k].name + '</div>' + nav + '</nav><section class="cm-panel" id="cm-panel">' + clientModulePanel(k, groups[0].code) + '</section></div>';
+  }
+  function ctxBar(view) {
+    const k = CTX.client; if (!k || !clients[k]) return '';
+    const code = (MODULES.find((m) => m[0] === view) || [])[1];
+    const items = acts.filter((x) => x.c.indexOf(k) >= 0 && (x.m === code || (view === 'analista' && x.m === 'Se mantiene')));
+    return '<div class="ctx-bar"><span class="cl-mono">' + clients[k].name.replace(/^Banco (de )?/, '').slice(0, 2).toUpperCase() + '</span><div class="grow"><div class="strong">Gestionando a ' + clients[k].name + '</div><div class="small muted">' + (items.length ? items.length + (items.length === 1 ? ' actividad' : ' actividades') + ' de este cliente en el módulo: ' + items.map((x) => esc(x.d.split(':')[0].split(';')[0])).join('; ') : 'Información del cliente resaltada en el módulo') + '</div></div><span class="small muted" id="ctx-count"></span><button class="btn btn-o btn-sm" data-go="cliente/' + k + '">' + ic('back') + 'Volver al expediente</button><button class="btn btn-g btn-sm" data-act="ctx-off" aria-label="Quitar filtro de cliente">' + ic('x') + '</button></div>';
+  }
+  function highlightClient() {
+    const k = CTX.client; if (!k) return;
+    const keys = (CLIENT_ALIAS[k] || [clients[k].name]).map((s) => s.toLowerCase());
+    const tb = $$('#content [data-tab]').find((b) => keys.some((s) => b.textContent.toLowerCase().indexOf(s) >= 0)); if (tb) tb.click();
+    let n = 0;
+    $$('#content tbody tr, #content .list-row, #content .doc, #content .kcard, #content .office, #content .att').forEach((el) => { const t = el.textContent.toLowerCase(); if (keys.some((s) => t.indexOf(s) >= 0)) { el.classList.add('hl'); n++; } });
+    const c = $('#ctx-count'); if (c) c.textContent = n ? n + ' registros resaltados' : '';
+  }
+
+  /* ---------- Clientes ---------- */
+  V.clientes = function () {
+    const cards = Object.keys(clients).map((k) => {
+      const c = clients[k], x = D.clientExtra[k], n = clientActs(k).length, delta = x.score[5] - x.score[4];
+      return '<div class="card cl-card" data-go="cliente/' + k + '" tabindex="0"><div style="display:flex;gap:12px;align-items:center"><span class="cl-mono">' + c.name.replace(/^Banco (de )?/, '').slice(0, 2).toUpperCase() + '</span><div class="grow"><h4 class="ellip">' + c.name + '</h4><div class="small muted ellip">' + c.desc + '</div></div></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-end"><div><div class="small muted">Evaluación del cliente</div><div><span class="score num">' + fmt(x.score[5], 1) + '</span><span class="small muted"> / 5 </span><span class="small ' + (delta >= 0 ? 'up' : 'down') + '">' + (delta >= 0 ? '+' : '') + fmt(delta, 1) + '</span></div></div>' + spark(x.score, 90, 28, '#242A54') + '</div>' +
+        '<div class="small muted">ANS vigente ' + x.ans + ', ' + shortDate(x.ansDate) + '. ' + n + ' actividades' + (x.offices ? ', ' + x.offices + ' oficinas' : '') + '.</div></div>';
+    }).join('');
+    return head('Clientes', 'Expediente de cada cliente: servicios, acuerdo de nivel de servicio vigente con su historial y evaluaciones emitidas.') + '<div class="grid g4">' + cards + '</div>';
+  };
+  V.cliente = function (k) {
+    const c = clients[k], x = D.clientExtra[k]; if (!c) return V.clientes();
+    const list = clientActs(k);
+    const num = (s) => parseFloat(s.replace(',', '.'));
+    const met = x.clauses.filter((cl) => num(cl[3]) >= num(cl[2])).length;
+    const vmaj = parseInt(x.ans.slice(1), 10), vmin = parseInt(x.ans.split('.')[1], 10);
+    const hist = [[x.ans, x.ansDate, 'Versión vigente', true]].concat(D.ansHistory.default.map((h, i) => { const d = new Date(x.ansDate + 'T12:00:00'); d.setMonth(d.getMonth() - (i + 1) * 5); const ver = i === 2 ? 'v1.0' : 'v' + (i === 0 && vmin > 0 ? vmaj + '.' + (vmin - 1) : Math.max(1, vmaj - i) + '.0'); return [ver, d.toISOString().slice(0, 10), h[0], false]; }));
+    const histHtml = hist.map((h) => '<div class="it ' + (h[3] ? 'cur' : '') + '"><div class="strong">' + h[0] + (h[3] ? ' ' + tag('Vigente', 'b-ok') : '') + '</div><div class="small muted">' + shortDate(h[1]) + '. ' + h[2] + '.</div></div>').join('');
+    const clauses = x.clauses.map((cl) => [cm(cl[0]), '<span class="small">' + cl[1] + '</span>', '<span class="num">' + cl[2] + '</span>', '<span class="num strong">' + cl[3] + '</span>', num(cl[3]) >= num(cl[2]) ? tag('Cumple', 'b-ok') : tag('Por debajo', 'b-warn')]);
+    const svc = list.map((a) => ({ go: MODULE_VIEW[a.m] || null, cells: ['<span class="num muted">' + a.n + '</span>', cm(esc(a.d)), avatar(a.a), '<span class="small">' + procName(a.p) + '</span>', badge(todayState[a.n])] }));
+    return head(c.name, c.desc + (x.offices ? '. ' + x.offices + ' oficinas en operación' : '') + '.', '<button class="btn btn-o" data-act="ans" data-k="' + k + '">' + ic('file') + 'Ver ANS vigente</button><button class="btn btn-p" data-act="evaluacion" data-k="' + k + '">' + ic('upload') + 'Registrar evaluación</button>', crumb('clientes', 'Clientes') + ' / ' + c.name) +
+      kpis([['Evaluación vigente', fmt(x.score[5], 1), 'emitida por el cliente en ' + PREV_MONTH, 'star', '/ 5'], ['Cláusulas del ANS cumplidas', met + ' de ' + x.clauses.length, 'versión ' + x.ans + ' vigente desde ' + shortDate(x.ansDate), 'shield'], ['Servicios en COI', list.length, 'actividades con responsable y evidencia', 'list'], ['Analistas responsables', x.owners.length, x.owners.map(firstName).join(', '), 'users']]) +
+'<div class="mt">' + tabs([['Módulos de gestión', clientModules(k, list)], ['Expediente y ANS', '<div class="grid g-main mt">' + card('Checklist del acuerdo de nivel de servicio', 'Medición del mes contra la versión ' + x.ans, T(['Cláusula', 'Plazo', 'Meta', 'Resultado', 'Estado'], clauses, { align: ['', '', 'r', 'r', ''] }), '', true) + card('Historial del ANS', 'La versión vigente rige el checklist y la medición', '<div class="timeline-v">' + histHtml + '</div>') + '</div>' +
+      '<div class="grid g2 mt">' + card('Evaluaciones del cliente', 'Calificación mensual emitida por ' + c.name, lineChart([{ data: x.score, color: '#242A54', area: true }], D.months, { min: 3, max: 5, fmt: (v) => fmt(v, 1), label: 'Evaluaciones', h: 210, w: 560 })) +
+      card('Documentos del expediente', 'Última versión disponible', '<div style="display:grid;gap:10px">' + docRow('Acuerdo de nivel de servicio ' + x.ans, 'PDF firmado, ' + shortDate(x.ansDate), 'file', '<button class="btn btn-g btn-sm" data-act="ans" data-k="' + k + '">' + ic('eye') + 'Abrir</button>') + docRow('Evaluación del servicio de ' + PREV_MONTH, 'Formato del cliente, ' + fmt(x.score[5], 1) + ' / 5', 'star', '<button class="btn btn-g btn-sm" data-act="evaluacion" data-k="' + k + '">' + ic('eye') + 'Abrir</button>') + docRow('Acta del último comité', 'Generada por COI', 'chart', '<button class="btn btn-g btn-sm" data-act="acta" data-k="' + c.name + '">' + ic('eye') + 'Abrir</button>') + '</div>') + '</div>'], ['Todas las actividades', card('Servicios y actividades', 'Todo lo que Apoyo al Negocio hace para ' + c.name + '; seleccione una fila para abrir su módulo', T(['N.º', 'Actividad', 'Responsable', 'Proceso', 'Hoy'], svc), '', true)]]) + '</div>';
+  };
+
+  /* ---------- N1 Validación documental ---------- */
+  V.validacion = function () {
+    const r = rng(daySeed ^ 77);
+    const offices = ['Chapinero', 'Salitre', 'Unicentro', 'Usaquén', 'Kennedy', 'Suba', 'Soacha', 'Chía', 'Zipaquirá', 'Fontibón', 'Restrepo', 'Galerías', 'Cedritos', 'Calle 72', 'Centro Internacional', 'Modelia', 'Bosa', 'Tunal', 'Américas', 'Teusaquillo', 'Toberín', 'Madrid', 'Mosquera', 'Funza', 'Facatativá', 'Girardot', 'Fusagasugá', 'Calle 100', 'Plaza de las Américas', 'Ciudad Salitre', 'Centro Mayor'];
+    const sop = offices.map((o, i) => { const imgs = 1 + Math.floor(r() * 4); const okAll = r() > 0.1; return { o, imgs, failing: okAll ? -1 : Math.floor(r() * 4), man: i % 4 === 0 }; });
+    const pending = sop.filter((s) => s.failing >= 0);
+    const checks = ['Fecha', 'Orientación', 'Completitud', 'Oficina'];
+    const sopRows = sop.map((s) => [cm(s.o, s.man ? 'Oficina manual, Excel de cuadre generado' : 'Cargue por Drive de contingencia'), '<div style="display:flex;gap:6px">' + Array.from({ length: Math.min(s.imgs, 3) }, () => '<span class="thumb"></span>').join('') + '</div>', '<div class="checks">' + checks.map((c, i) => '<span class="ck ' + (i === s.failing ? 'no' : '') + '">' + ic(i === s.failing ? 'x' : 'check') + c + '</span>').join('') + '</div>', s.failing >= 0 ? tag('Revisión humana', 'b-warn') : tag('Aprobado por el sistema', 'b-ok'), s.failing >= 0 ? '<button class="btn btn-p btn-sm" data-act="aprobar">Aprobar</button>' : '<button class="btn btn-g btn-sm" data-act="ver">Ver</button>']);
+    const cartas = [['Construcciones Andinas S.A.S.', 'Colfondos', 1, 'Esperando respuesta del empleador'], ['Distribuidora La Sabana', 'Colfondos', 2, 'Segundo correo enviado a las 10:00 a. m.'], ['Agroindustrias del Huila', 'Protección', 3, 'Datos remitidos a Karen, Colfondos'], ['Transportes Boyacá Ltda.', 'Colfondos', 4, 'Tercer correo programado a las 2:00 p. m.'], ['Hotel Plaza Mayor', 'Protección', 1, 'Carta, cédula y tirilla completas'], ['Clínica San Rafael', 'Colfondos', 2, 'Esperando respuesta del empleador']];
+    const cRows = cartas.map((c) => [cm(c[0], c[1]), '<div style="width:190px">' + bar(c[2] / 5 * 100, c[2] >= 4 ? 'gd' : 'cy') + '<div class="small muted" style="margin-top:4px">Día ' + c[2] + ' de 5 hábiles</div></div>', '<span class="small">' + c[3] + '</span>', c[2] >= 4 ? tag('Vence pronto', 'b-warn') : tag('En plazo', 'b-info')]);
+    const base1000 = [['Bogotá Centro', 14, 13], ['Bogotá Norte', 11, 11], ['Medellín', 7, 7], ['Cali', 6, 6], ['Barranquilla', 4, 4], ['Bucaramanga', 3, 3]];
+    const decl = [['DE-30418', 'Plaza Central', '12.500.000', 'ok'], ['DE-30419', 'Suba', '8.200.000', 'ok'], ['DE-30420', 'Kennedy', '6.700.000', 'firma'], ['DE-30421', 'Chapinero', '15.000.000', 'ok'], ['DE-30422', 'Restrepo', '5.400.000', 'huella'], ['DE-30423', 'Soacha', '9.800.000', 'ok']];
+    const fotos = [['Agrario Más Cerca Tunja', 'Fachada, tarifario y vista interna', true], ['Agrario Más Cerca Duitama', 'Fachada y tarifario', true], ['Agrario Más Cerca Sogamoso', 'Falta vista interna', false], ['Agrario Más Cerca Chiquinquirá', 'Fachada, tarifario y vista interna', true]];
+    return head('Validación documental', 'El sistema revisa cada soporte y documento antes de que llegue a la analista; solo los casos dudosos requieren revisión humana.', tag('Soportes BBVA completos a las 10:42 a. m.', 'b-ok'), '', 'N1') +
+      kpis([['Soportes BBVA recibidos hoy', sop.reduce((s, x) => s + x.imgs, 0), '31 oficinas, corte 11:00 a. m.', 'filecheck'], ['Aprobados sin intervención', pct((sop.length - pending.length) / sop.length * 100, 0), 'meta del plan: 70 %', 'sparkle'], ['Tiempo de revisión de Mónica', '1,2', 'antes de 1 a 3 horas diarias', 'clock', 'h'], ['Cartas de cesantías fuera de plazo', '0', '6 en curso dentro de los 5 días', 'shield']]) +
+      '<div class="mt">' + tabs([
+        ['Soportes BBVA', card('Soportes de apertura y cierre del ' + NOW.getDate() + ' de ' + MONTHS[NOW.getMonth()], '31 oficinas; ' + pending.length + ' requieren revisión humana', T(['Oficina', 'Imágenes', 'Verificación automática', 'Resultado', ''], sopRows, { align: ['', '', '', '', 'r'] }), '<button class="btn btn-o btn-sm" data-act="toast" data-k="Excel de cuadre de oficinas generado.">' + ic('download') + 'Excel de cuadre</button>', true)],
+        ['Cartas de cesantías', card('Cartas en curso', 'Ciclo de correos al empleador a primera hora, 10:00 a. m. y 2:00 p. m.; alertas en los días 2 y 5', T(['Empleador', 'Plazo', 'Último movimiento', 'Estado'], cRows), '', true)],
+        ['Base 1000', card('Base 1000 de novedades de cesantías', 'Formulario de cajeros y líderes, cierre en PTR y consolidado a los líderes los viernes. Cerrar sin documento exige autorización de la jefatura.', T(['Zona', 'Novedades', 'Cerradas', 'Avance'], base1000.map((b) => [cm(b[0]), '<span class="num">' + b[1] + '</span>', '<span class="num">' + b[2] + '</span>', '<div style="width:180px">' + bar(b[2] / b[1] * 100, b[2] < b[1] ? 'gd' : '') + '</div>']), { align: ['', 'r', 'r', ''] }), '<button class="btn btn-o btn-sm" data-act="toast" data-k="Consolidado de la base 1000 enviado a los líderes.">' + ic('send') + 'Enviar consolidado</button>', true)],
+        ['Declaraciones Fincomercio', card('Declaraciones de efectivo superiores a 5 millones', 'Tomadas del buzón de Fincomercio y validadas por firma, huella, usuario del cajero, origen de fondos y cédula', T(['Declaración', 'Oficina', 'Valor', 'Validación', ''], decl.map((d) => [cm(d[0]), d[1], '<span class="num">$ ' + d[2] + '</span>', d[3] === 'ok' ? tag('Conforme', 'b-ok') : tag('Revisar ' + d[3], 'b-warn'), d[3] === 'ok' ? '' : '<button class="btn btn-p btn-sm" data-act="aprobar">Aprobar</button>']), { align: ['', '', 'r', '', 'r'] }), '', true)],
+        ['Fotografías Banco Agrario', card('Fotografías de validación', 'Fachada, tarifario y vista interna de las oficinas Banco Agrario Más Cerca', T(['Oficina', 'Contenido', 'Resultado'], fotos.map((f) => [cm(f[0]), '<span class="small">' + f[1] + '</span>', f[2] ? tag('Completo', 'b-ok') : tag('Incompleto, se pidió al líder', 'b-warn')])), '', true)]
+      ]) + '</div>';
+  };
+
+  /* ---------- N2 Novedades ---------- */
+  const NOV = [
+    ['wa', 'BBVA', 'Exceso de efectivo en oficina Salitre', 'lina', 22, 'Alta'], ['mail', 'Banco Popular', 'Reporte de transportadora con voucher pendiente', 'yesica', 95, 'Media'],
+    ['form', 'Fincomercio', 'PNC de la oficina Plaza Central', 'maira', 4320, 'Media'], ['aranda', 'BBVA', 'Falla de alarma en oficina Chía', 'lina', 180, 'Alta'],
+    ['wa', 'Davivienda', 'Novedad de transportadora oficina 14', 'maira', 40, 'Alta'], ['mail', 'Banco de Bogotá', 'Diferencia operativa: faltante de caja', 'maira', 300, 'Alta'],
+    ['form', 'Banco Agrario', 'Evidencia fotográfica de fachada', 'yesica', 600, 'Baja'], ['mail', 'Coopcentral', 'Solicitud de creación de usuario', 'jully', 1440, 'Baja'],
+    ['wa', 'Citibank', 'Requerimiento de oficina Bulevar', 'maira', 1200, 'Media'], ['mail', 'Colfondos', 'Anulación en PTR por valor errado', 'jully', 240, 'Media'],
+    ['mail', 'Banco Unión', 'Corrección de giro 4471', 'maira', 700, 'Media'], ['wa', 'Colfondos', 'Consulta de cajero: carta de cesantías con NIT duplicado', 'jully', 360, 'Media'], ['mail', 'Fincomercio', 'Requerimiento del cliente con solicitud de video, oficina Kennedy', 'maira', 2880, 'Media'], ['mail', 'Banco Caja Social', 'Pedido de bolsas de envío para 3 oficinas', 'maira', 2400, 'Baja'], ['form', 'BBVA', 'Solicitud de cambio de clave de bóveda', 'lina', 150, 'Alta']
+  ];
+  const CH = { wa: ['chat', 'ch-wa', 'WhatsApp'], mail: ['mail', 'ch-mail', 'Correo'], form: ['form', 'ch-form', 'Formulario'], aranda: ['ticket', 'ch-aranda', 'Aranda'] };
+  const leftTime = (m) => m < 60 ? m + ' min' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d';
+  V.novedades = function () {
+    const sorted = NOV.map((it, i) => it.concat([i])).sort((p, q) => p[4] - q[4]);
+    const rows = sorted.map((it) => { const c = CH[it[0]]; return { act: 'caso', data: it[6], cells: ['<span class="channel ' + c[1] + '" title="' + c[2] + '">' + ic(c[0]) + '</span>', cm(it[2], it[1] + ', ' + c[2].toLowerCase() + ', caso NOV-' + (2610 + it[6] * 7)), avatar(it[3]), tag(it[5], it[5] === 'Alta' ? 'b-bad' : it[5] === 'Media' ? 'b-warn' : 'b-mute'), '<span class="countdown ' + (it[4] < 60 ? 'down' : '') + '">' + leftTime(it[4]) + '</span><div class="cell-sub">para vencer ANS</div>', '<button class="btn btn-o btn-sm">Atender</button>'] }; });
+    const reunion = [['Insumos y bolsas MTI', 'Pedido aprobado para 6 oficinas', 'b-ok', 'Cerrado'], ['Precintos y extintores', 'Recarga de extintores en 3 oficinas', 'b-info', 'En gestión'], ['Personal de Sumar', 'Reemplazo en oficina Usaquén', 'b-info', 'En gestión'], ['Mantenimientos', 'Aire acondicionado en Chapinero', 'b-warn', 'Pendiente del banco']];
+    const canje = [['Chapinero', '10:20 a. m.', true], ['Salitre', '10:45 a. m.', true], ['Usaquén', '11:10 a. m.', true], ['Kennedy', '11:40 a. m.', false], ['Suba', '12:05 p. m.', false], ['Centro', '12:30 p. m.', false]];
+    const byCh = { wa: 0, mail: 0, form: 0, aranda: 0 }; NOV.forEach((n) => byCh[n[0]]++);
+    return head('Novedades y requerimientos', 'Un solo canal con los bancos: correo, WhatsApp, Aranda y formularios llegan aquí con responsable y acuerdo de servicio.', '', '', 'N2') +
+      kpis([['Casos abiertos', NOV.length, '5 de prioridad alta', 'inbox'], ['Cerrados hoy', 37, 'tiempo medio 2,4 h', 'check'], ['Dentro del ANS', '98,6 %', 'últimos 30 días', 'shield'], ['Canales unificados', 4, 'correo, WhatsApp, Aranda y formularios', 'layers']]) +
+      '<div class="mt">' + tabs([
+        ['Bandeja única', '<div class="grid g-main">' + card('Casos abiertos', 'Ordenados por tiempo restante del acuerdo de servicio; seleccione uno para ver su historial', T(['Canal', 'Caso', 'Responsable', 'Prioridad', 'Tiempo', ''], rows, { align: ['', '', '', '', 'r', 'r'] }), '', true) + card('Entrada por canal', 'Casos abiertos', hbars([['WhatsApp', byCh.wa], ['Correo', byCh.mail], ['Formularios', byCh.form], ['Aranda', byCh.aranda]], 'cy')) + '</div>'],
+        ['Reunión semanal BBVA', card('Reunión de seguimiento con Edwin, martes 10:00 a. m.', 'Agenda y compromisos generados desde las novedades de la semana', T(['Tema', 'Detalle', 'Estado'], reunion.map((x) => [cm(x[0]), '<span class="small">' + x[1] + '</span>', tag(x[3], x[2])])), '<button class="btn btn-o btn-sm" data-act="toast" data-k="Agenda del martes enviada a BBVA.">' + ic('send') + 'Enviar agenda</button>', true)],
+        ['Cheques en canje Fincomercio', card('Reconfirmación de recolección de cheques en canje', 'Seis oficinas de Bogotá; aviso por WhatsApp al mensajero del cliente', T(['Oficina', 'Hora programada', 'Reconfirmación'], canje.map((x) => [cm(x[0]), '<span class="num">' + x[1] + '</span>', x[2] ? tag('Confirmada', 'b-ok') : '<button class="btn btn-o btn-sm" data-act="reconfirmar">' + ic('chat') + 'Reconfirmar</button>'])), '', true)]
+      ]) + '</div>';
+  };
+
+  /* ---------- N3 PQR y encuestas ---------- */
+  const PQR = [['PQR-1182', 'Demora en pago de cesantías', 'Varios', 'Respuesta del líder', 1, 9, 'lina'], ['PQR-1185', 'Trato del cajero en oficina Kennedy', 'BBVA', 'Ampliación de información', 2, 6, 'monica'], ['PQR-1190', 'Cobro de comisión no informado', 'Banco Popular', 'Análisis con video', 1, 12, 'yesica'], ['PQR-1193', 'Fila extensa en hora pico', 'Bancolombia', 'Radicada por código QR', 0, 14, 'monica'], ['PQR-1196', 'Billete rechazado en ventanilla', 'Fincomercio', 'Respuesta del líder', 1, 11, 'lina']];
+  V.pqr = function () {
+    const rows = PQR.map((x, i) => ({ act: 'pqr', data: i, cells: ['<span class="num strong">' + x[0] + '</span>', cm(x[1], x[2]), '<span class="small">' + x[3] + '</span>', '<span class="num">' + x[4] + ' de 3</span>', '<div style="width:170px">' + bar((15 - x[5]) / 15 * 100, x[5] < 6 ? 'gd' : 'cy') + '<div class="small muted" style="margin-top:4px">' + x[5] + ' días hábiles restantes</div></div>', avatar(x[6])] }));
+    const jur = [['DP-0214', 'Derecho de petición: certificación de pagos', 'Varios', 4, 'En Jurídica'], ['DP-0217', 'Derecho de petición: copia de grabación', 'BBVA', 10, 'Respuesta en revisión'], ['TU-0031', 'Tutela por demora en cesantías', 'Colfondos', 2, 'Respuesta radicada']];
+    const enc = [['Bogotá Centro', 92.4, 118], ['Bogotá Norte', 94.1, 102], ['Antioquia Norte', 90.8, 96], ['Nororiental', 89.7, 88], ['Occidente', 91.9, 121], ['Costa', 90.3, 117]];
+    return head('PQR, reclamaciones y encuestas', 'Radicación por código QR, ampliaciones controladas, respuesta del líder y escalamiento a Jurídica, con el reporte del día 1 generado automáticamente.', '<button class="btn btn-o" data-act="toast" data-k="Reporte de PQR del mes generado.">' + ic('download') + 'Reporte del mes</button>', '', 'N3') +
+      kpis([['PQR abiertas', PQR.length, 'ninguna vencida', 'message'], ['Tiempo medio de respuesta', '4,1', 'días hábiles', 'clock', 'd'], ['Encuestas del mes', fmt(642), 'con líder y gerente regional asignados', 'list'], ['Satisfacción en encuestas', '91,4 %', '<span class="up">+2,1</span> frente al mes anterior', 'star']]) +
+      '<div class="mt">' + tabs([
+        ['PQR en gestión', card('Casos en gestión', 'Seleccione un caso para ver su trazabilidad', T(['Radicado', 'Asunto', 'Etapa', 'Ampliaciones', 'Plazo', 'Responsable'], rows), '', true)],
+        ['Derechos de petición y tutelas', card('Casos remitidos a Jurídica', 'Plazo legal de 15 días hábiles para derechos de petición', T(['Radicado', 'Asunto', 'Días restantes', 'Estado'], jur.map((j) => [cm(j[0]), cm(j[1], j[2]), '<span class="num ' + (j[3] < 5 ? 'down' : '') + '">' + j[3] + ' días</span>', tag(j[4], 'b-info')])), '', true)],
+        ['Encuestas', '<div class="grid g2">' + card('Satisfacción por regional', 'Encuestas del mes, descargadas del aplicativo de Tecnología', hbars(enc.map((e) => [e[0], e[1], pct(e[1], 1)]), 'nv', 85)) + card('Calidad de los datos', 'Antes de consolidar', T(['Control', 'Resultado'], [[cm('Código de oficina corregido'), tag('23 registros', 'b-info')], [cm('Líder asignado desde el Directorio Nacional'), tag('642 de 642', 'b-ok')], [cm('Gerente regional asignado'), tag('642 de 642', 'b-ok')], [cm('Duplicados descartados'), tag('7 registros', 'b-mute')]]), '', true) + '</div>']
+      ]) + '</div>';
+  };
+
+  /* ---------- N4 Alertas ---------- */
+  V.alertas = function () {
+    const al = [['bad', 'Exceso de efectivo en BBVA Salitre', 'Saldo 38 % sobre el cupo de póliza. Transportadora solicitada a las 2:51 p. m.', 'lina', 'Hace 18 min'], ['warn', 'Llegada tarde en Banco de Occidente Calle 13', 'Apertura a las 7:52 a. m.; compromiso a las 7:30 a. m. Justificación pendiente del líder.', 'yesica', 'Hoy 8:30 a. m.'], ['info', 'Programación de fines de semana BBVA', 'Se enviará por correo y WhatsApp a las 5:30 p. m. con 9 oficinas programadas.', 'lina', 'Programada'], ['ok', 'Caída de datáfono resuelta en Davivienda oficina 7', 'Restablecido a la 1:12 p. m. tras 26 minutos.', 'maira', 'Cerrada']];
+    const map = { bad: ['b-bad', 'Crítica'], warn: ['b-warn', 'Atención'], info: ['b-info', 'Informativa'], ok: ['b-ok', 'Cerrada'] };
+    const rows = al.map((a) => '<div class="list-row"><span class="channel ' + (a[0] === 'bad' ? 'ch-aranda' : a[0] === 'ok' ? 'ch-wa' : 'ch-mail') + '">' + ic(a[0] === 'ok' ? 'check' : a[0] === 'info' ? 'clock' : 'alert') + '</span><div class="grow"><div class="strong">' + a[1] + '</div><div class="small muted">' + a[2] + '</div></div>' + avatar(a[3]) + tag(map[a[0]][1], map[a[0]][0]) + '<span class="small muted" style="width:100px;text-align:right">' + a[4] + '</span></div>').join('');
+    const exc = [['BBVA Salitre', 138, 'Transportadora solicitada'], ['BBVA Chapinero', 92, 'Dentro del cupo'], ['Banco de Bogotá Calle 26', 104, 'Recolección programada 4:00 p. m.'], ['Fincomercio Plaza Central', 88, 'Dentro del cupo'], ['BBVA Kennedy', 97, 'Vigilancia']];
+    const late = [['Calle 13', '7:52 a. m.', 22, 'Pendiente'], ['Unicentro', '7:41 a. m.', 11, 'Justificada: falla de transporte'], ['Plaza 80', '7:36 a. m.', 6, 'Justificada: apertura de bóveda']];
+    const fds = [['Sábado', 'BBVA Salitre, Unicentro, Santafé, Titán, Gran Estación', '5 oficinas'], ['Domingo', 'BBVA Santafé, Titán, Gran Estación, Andino', '4 oficinas']];
+    const alarmas = [['Plaza Central', 'Cliente', true], ['Restrepo', 'Cliente', true], ['Kennedy', 'Cliente', true], ['Suba', 'Seguridad Reval', true], ['Chapinero', 'Seguridad Reval', true], ['Soacha', 'Seguridad Reval', false], ['Bosa', 'Seguridad Reval', true], ['Fontibón', 'Seguridad Reval', true]];
+    return head('Alertas operativas', 'El sistema vigila excesos de efectivo, aperturas, programación de fines de semana, datáfonos y alarmas, y avisa a la persona responsable por correo y WhatsApp.', '', '', 'N4') +
+      kpis([['Alertas abiertas', 1, 'crítica, en gestión', 'bell'], ['Excesos de efectivo hoy', 2, 'ambos con transportadora solicitada', 'wallet'], ['Llegadas tarde hoy', 3, 'festivos excluidos del cálculo', 'clock'], ['Caídas de datáfono', 1, 'resuelta en 26 minutos', 'activity']]) +
+      '<div class="mt">' + tabs([
+        ['Alertas del día', card('Alertas del día', '', rows, tag('1 abierta crítica', 'b-warn'), true)],
+        ['Excesos de efectivo', card('Saldo frente al cupo de póliza', 'Porcentaje del cupo asegurado de cada oficina', T(['Oficina', 'Uso del cupo', '', 'Acción'], exc.map((e) => [cm(e[0]), '<div style="width:220px">' + bar(Math.min(100, e[1]), e[1] > 100 ? 'gd' : 'nv') + '</div>', '<span class="num strong ' + (e[1] > 100 ? 'down' : '') + '">' + e[1] + ' %</span>', '<span class="small">' + e[2] + '</span>'])), '', true)],
+        ['Llegadas tarde', card('Banco de Occidente, compromiso de apertura 7:30 a. m.', 'Fuente: transacción de apertura en PTR; los festivos no cuentan', T(['Oficina', 'Apertura', 'Minutos tarde', 'Justificación del líder'], late.map((l) => [cm(l[0]), '<span class="num">' + l[1] + '</span>', '<span class="num">' + l[2] + '</span>', l[3] === 'Pendiente' ? tag('Pendiente', 'b-warn') : '<span class="small">' + l[3] + '</span>'])), '', true)],
+        ['Fines de semana', card('Programación de fines de semana BBVA', 'Se notifica a Reval por correo y WhatsApp a las 5:30 p. m. del viernes', T(['Día', 'Oficinas', 'Total'], fds.map((f) => [cm(f[0]), '<span class="small">' + f[1] + '</span>', tag(f[2], 'b-info')])), '<button class="btn btn-p btn-sm" data-act="toast" data-k="Programación de fines de semana enviada por correo y WhatsApp.">' + ic('send') + 'Enviar ahora</button>', true)],
+        ['Pruebas de alarma', card('Pruebas de alarma de Fincomercio', 'Tres oficinas monitoreadas por el cliente y nueve por Seguridad; consolidado mensual', T(['Oficina', 'Monitoreo', 'Prueba del mes'], alarmas.map((x) => [cm(x[0]), '<span class="small">' + x[1] + '</span>', x[2] ? tag('Conforme', 'b-ok') : tag('Pendiente', 'b-warn')])), '', true)]
+      ]) + '</div>';
+  };
+
+  /* ---------- N5 Reportería y comités ---------- */
+  V.reporteria = function () {
+    const com = [['BBVA', 'Comité mensual de ANS, 32 oficinas', '5 nov', 'Listo', 'lina'], ['Banco Popular', 'Cifras de comité y partidas pendientes', '6 nov', 'Listo', 'yesica'], ['Davivienda', 'Cifras, acta y socialización con líderes', '7 nov', 'En preparación', 'yesica'], ['Fincomercio', 'Cifras y tablero de gestión', '8 nov', 'En preparación', 'maira'], ['Banco de Bogotá', 'Comité bimensual', '12 nov', 'Programado', 'maira']];
+    const rows = com.map((c) => [cm(c[0], c[1]), '<span class="num">' + c[2] + '</span>', avatar(c[4]), tag(c[3], c[3] === 'Listo' ? 'b-ok' : c[3] === 'Programado' ? 'b-mute' : 'b-info'), '<button class="btn btn-o btn-sm" data-act="acta" data-k="' + c[0] + '">' + ic('file') + 'Generar acta</button>']);
+    const rec = [['Reporte diario de transacciones Indega', 'Todos los días, 9:00 a. m.', 'lina'], ['Indicador mensual de recaudo BBVA', 'Día 1 de cada mes', 'lina'], ['Informe de transacciones SNR y Citibank', 'Día 3 de cada mes', 'yesica'], ['Informe semestral de actas Davivienda', 'Enero y julio', 'yesica'], ['Consolidado de encuestas', 'Día 1 de cada mes', 'monica'], ['Auditorías mensuales Fincomercio', 'Última semana del mes', 'maira'], ['Cuadre de oficinas e indicadores BBVA', 'Todos los días, 11:00 a. m.', 'monica']];
+    const months = ['may', 'jun', 'jul', 'ago', 'sep', 'oct'];
+    const aud = ['Plaza Central', 'Restrepo', 'Kennedy', 'Suba', 'Chapinero', 'Soacha', 'Bosa', 'Fontibón', 'Usaquén', 'Engativá', 'Centro', 'Américas'].map((o, i) => [cm(o), '<span class="num">' + (2 + i) + ' oct</span>', i < 9 ? tag('Checklist completo', 'b-ok') : tag('Programada', 'b-mute'), i < 9 ? '<span class="small">Soportes en Drive</span>' : '']);
+    return head('Reportería y comités', 'Cifras, indicadores y actas de comité generados desde los datos de COI, sin armar presentaciones a mano.', '', '', 'N5') +
+      kpis([['Comités del mes', 5, '2 listos, 2 en preparación', 'chart'], ['Informes automáticos', 7, 'generados en su fecha', 'sparkle'], ['Horas de armado ahorradas', 26, 'en el mes', 'clock', 'h'], ['Auditorías Fincomercio', '9 de 12', 'checklist completo', 'shield']]) +
+      '<div class="mt">' + tabs([
+        ['Comités', '<div class="grid g-main">' + card('Comités del mes', 'Material listo antes de la fecha de cada cliente', T(['Cliente', 'Fecha', 'Responsable', 'Estado', ''], rows, { align: ['', '', '', '', 'r'] }), '', true) + card('Recaudo BBVA', 'Millones de pesos por mes', lineChart([{ data: [41200, 43800, 42950, 45100, 47320, 48810], color: '#242A54', area: true }], months, { fmt: (v) => fmt(v / 1000, 0) + ' mil', label: 'Recaudo BBVA', h: 230, w: 520 })) + '</div>'],
+        ['Informes recurrentes', card('Informes recurrentes', 'Se generan solos y quedan en la bitácora', '<div class="docs-grid">' + rec.map((d) => docRow(d[0], d[1], 'chart', avatar(d[2]))).join('') + '</div>')],
+        ['Auditorías Fincomercio', card('Auditorías mensuales obligatorias', 'Cronograma, lista de chequeo y soportes; videos solicitados por el cliente', T(['Oficina', 'Fecha', 'Estado', 'Soportes'], aud), '', true)]
+      ]) + '</div>';
+  };
+
+  /* ---------- N6 Facturación y conciliación ---------- */
+  V.facturacion = function () {
+    const f = [['BBVA', 'Facturación, horas extra y complementarios', 32, 32, 'lina'], ['Banco Popular y SNR', 'Novedades validadas por líderes', 18, 18, 'lina'], ['Indega', 'Programación mensual', 1, 1, 'lina'], ['Davivienda', 'CTL con cruce sistema y Drive', 19, 17, 'yesica'], ['Banco de Bogotá', '50 oficinas con control de descuentos', 50, 48, 'maira'], ['Citibank', 'Horas extra liquidadas por el líder', 46, 46, 'maira'], ['Fincomercio', 'Horas extra y adiciones de tiempo', 12, 12, 'maira'], ['Banco Caja Social', 'Facturación mensual', 1, 1, 'maira']];
+    const rows = f.map((x) => [cm(x[0], x[1]), avatar(x[4]), '<div style="width:220px">' + bar(x[3] / x[2] * 100, x[3] === x[2] ? '' : 'gd') + '<div class="small muted" style="margin-top:4px">' + x[3] + ' de ' + x[2] + ' novedades validadas</div></div>', x[3] === x[2] ? tag('Lista para radicar', 'b-ok') : tag('Esperando líderes', 'b-warn')]);
+    const part = [['PC-2022-014', 'Banco Popular', 'Consignación sin soporte', '2.340.000', 'Sofía, en revisión con Milena'], ['PC-2022-021', 'Banco Popular', 'Diferencia en canje', '870.500', 'Soporte enviado'], ['PC-2026-103', 'BBVA', 'Recaudo manual sin tipificar', '1.120.000', 'Tipificado hoy'], ['PC-2026-109', 'Davivienda', 'Datáfono sin cierre', '455.000', 'Conciliado']];
+    const reemb = [['RE-0881', 'Davivienda oficina 4', '380.000', 'Enviado a Eduardo'], ['RE-0883', 'Davivienda oficina 11', '1.020.000', 'Aprobado'], ['RE-0885', 'Davivienda oficina 7', '215.000', 'En revisión']];
+    const desc = [['ene', 0], ['feb', 1.8], ['mar', 2.4], ['abr', 1.1], ['may', 0.9], ['jun', 0.6], ['jul', 0.4], ['ago', 0.2], ['sep', 0], ['oct', 0]];
+    return head('Facturación y conciliación', 'Novedades validadas por los líderes dentro de COI, cruces automáticos y control de descuentos por cliente.', '', '', 'N6') +
+      kpis([['Facturas listas', '6 de 8', 'cierre de octubre', 'receipt'], ['Descuentos por falta de personal', '$ 0', 'en el mes; histórico 2026 consolidado', 'shield'], ['Partidas abiertas', 14, 'cada una con código y responsable', 'list'], ['Datáfonos conciliados hoy', '19 de 19', 'Davivienda', 'check']]) +
+      '<div class="mt">' + tabs([
+        ['Facturación del mes', card('Facturación de ' + MONTHS[NOW.getMonth()], 'Avance de validación de novedades por cliente', T(['Cliente', 'Responsable', 'Validación', 'Estado'], rows), '', true)],
+        ['Partidas de conciliación', card('Partidas con código', 'Cada partida tiene responsable y trazabilidad, incluidas las abiertas desde 2022', T(['Código', 'Cliente', 'Concepto', 'Valor', 'Estado'], part.map((p) => [cm(p[0]), p[1], '<span class="small">' + p[2] + '</span>', '<span class="num">$ ' + p[3] + '</span>', '<span class="small">' + p[4] + '</span>']), { align: ['', '', '', 'r', ''] }), '', true)],
+        ['Reembolsos Davivienda', card('Reembolsos', 'Solicitud, envío a Eduardo y aprobación', T(['Radicado', 'Oficina', 'Valor', 'Estado'], reemb.map((p) => [cm(p[0]), p[1], '<span class="num">$ ' + p[2] + '</span>', tag(p[3], p[3] === 'Aprobado' ? 'b-ok' : 'b-info')]), { align: ['', '', 'r', ''] }), '', true)],
+        ['Cuentas de cobro y descuentos', '<div class="grid g2">' + card('Cuentas de cobro por faltantes', 'Fincomercio; seguimiento con Tesorería y Diferencias', T(['Cuenta', 'Oficina', 'Valor', 'Estado'], [['CC-0212', 'Restrepo', '450.000', 'Descontado en nómina'], ['CC-0215', 'Suba', '1.200.000', 'En Tesorería'], ['CC-0219', 'Bosa', '300.000', 'En Diferencias']].map((c) => [cm(c[0]), c[1], '<span class="num">$ ' + c[2] + '</span>', tag(c[3], c[3] === 'Descontado en nómina' ? 'b-ok' : 'b-info')]), { align: ['', '', 'r', ''] }), '', true) + card('Descuentos vehiculares Davivienda', 'Facturas generadas dentro del rango de tiempo del sistema', T(['Radicado', 'Concepto', 'Estado'], [['DV-0091', 'Descuento vehicular, oficina 3', 'Factura generada'], ['DV-0094', 'Descuento vehicular, oficina 12', 'Dentro del rango, por facturar']].map((c) => [cm(c[0]), '<span class="small">' + c[1] + '</span>', tag(c[2], c[2] === 'Factura generada' ? 'b-ok' : 'b-warn')])), '', true) + '</div>'],
+        ['Recaudo manual BBVA', card('Base de recaudo manual del mes', 'Transacciones menores a 100.000 tipificadas automáticamente contra el directorio de códigos; se exporta en CSV', T(['Tipo', 'Transacciones', 'Tipificadas'], [['Consignación a cuenta', 1284, 1284], ['Pago de tarjeta', 512, 512], ['Recaudo de convenio', 377, 371]].map((r) => [cm(r[0]), '<span class="num">' + fmt(r[1]) + '</span>', r[1] === r[2] ? tag('Completo', 'b-ok') : tag(r[2] + ' de ' + r[1], 'b-warn')]), { align: ['', 'r', ''] }), '<button class="btn btn-o btn-sm" data-act="toast" data-k="CSV de recaudo manual exportado.">' + ic('download') + 'Exportar CSV</button>', true)],
+        ['Descuentos por falta de personal', card('Histórico 2026 de descuentos', 'Millones de pesos descontados por Banco de Bogotá y Fincomercio por falta de supernumerarios', lineChart([{ data: desc.map((d) => d[1]), color: '#D6453D', area: true }], desc.map((d) => d[0]), { min: 0, max: 3, fmt: (v) => fmt(v, 1) + ' M', label: 'Descuentos 2026', h: 220 }))]
+      ]) + '</div>';
+  };
+
+  /* ---------- N7 Oficinas ---------- */
+  V.oficinas = function () {
+    const r = rng(daySeed ^ 909); const list = [];
+    [['BBVA', 32], ['Banco de Occidente', 6], ['Banco Popular', 14], ['Fincomercio', 12]].forEach((g) => { for (let i = 1; i <= g[1]; i++) { const x = r(); list.push({ c: g[0], n: g[0] + ' ' + String(i).padStart(2, '0'), st: x < 0.86 ? 'ok' : x < 0.95 ? 'late' : x < 0.98 ? 'closed' : 'bad' }); } });
+    const lbl = { ok: 'Abierta a tiempo', late: 'Apertura tardía justificada', closed: 'Cerrada por novedad', bad: 'Sin apertura registrada' };
+    const counts = { ok: 0, late: 0, closed: 0, bad: 0 }; list.forEach((o) => counts[o.st]++);
+    const adec = [['Banco Popular Itagüí', 'Filtración en techo de caja', 'Alta, impacto en salud', 'Abierta desde 2022', 'Contratista asignado'], ['Banco Popular Bucaramanga', 'Aire acondicionado', 'Alta, impacto en salud', 'Abierta desde 2022', 'Visita técnica 22 oct'], ['Banco Popular Centro', 'Cambio de cerradura', 'Media', '12 días', 'Solicitud CD radicada'], ['Banco Popular Suba', 'Iluminación', 'Baja', '5 días', 'En cotización']];
+    const actas = [['Acta de recepción', 'BBVA Titán', 'Inventario, entrega y destrucción de formatos', '14 oct'], ['Acta de cierre', 'BBVA Galerías', 'Inventario y entrega al banco', '9 oct'], ['Acta de recepción', 'Banco de Occidente Plaza 80', 'Inventario inicial', '2 oct']];
+    const disp = [['BBVA Unicentro', 'Disponible', 'b-ok'], ['BBVA Chía', 'Cerrada por mantenimiento', 'b-warn'], ['Banco Popular Itagüí', 'Operación parcial', 'b-warn'], ['Fincomercio Bosa', 'Disponible', 'b-ok']];
+    return head('Torre de control de oficinas', 'Aperturas, cierres, disponibilidad, actas y adecuaciones, cruzadas con el Directorio Nacional como única fuente de oficinas.', '', '', 'N7') +
+      kpis([['Abiertas a tiempo', counts.ok, 'de ' + list.length + ' oficinas monitoreadas', 'check'], ['Aperturas tardías', counts.late, 'con justificación del líder', 'clock'], ['Cerradas por novedad', counts.closed + counts.bad, 'registradas en la bitácora', 'pin'], ['Adecuaciones abiertas', adec.length, 'priorizadas por impacto en salud', 'building']]) +
+      '<div class="mt">' + tabs([
+        ['Apertura de hoy', card('Estado de apertura de hoy', 'Fuente: transacción de apertura en PTR y reporte de los líderes', '<div class="office-grid">' + list.map((o) => '<div class="office ' + o.st + '"><b>' + o.n + '</b><span>' + lbl[o.st] + '</span></div>').join('') + '</div>', '<div class="legend"><span><i style="background:var(--green)"></i>A tiempo</span><span><i style="background:var(--gold)"></i>Tardía</span><span><i style="background:var(--line-strong)"></i>Cerrada</span><span><i style="background:var(--red)"></i>Sin apertura</span></div>')],
+        ['Adecuaciones locativas', card('Adecuaciones y arreglos locativos', 'Banco Popular; prioridad según impacto en la salud de los funcionarios', T(['Oficina', 'Necesidad', 'Prioridad', 'Antigüedad', 'Estado'], adec.map((a) => [cm(a[0]), '<span class="small">' + a[1] + '</span>', tag(a[2], a[2].indexOf('Alta') === 0 ? 'b-bad' : a[2] === 'Media' ? 'b-warn' : 'b-mute'), '<span class="small">' + a[3] + '</span>', '<span class="small">' + a[4] + '</span>'])), '', true)],
+        ['Actas', card('Actas de recepción y cierre', 'Inventario, entrega y destrucciones', T(['Tipo', 'Oficina', 'Contenido', 'Fecha'], actas.map((a) => [cm(a[0]), a[1], '<span class="small">' + a[2] + '</span>', '<span class="num">' + a[3] + '</span>'])), '', true)],
+        ['Disponibilidad', card('Disponibilidad de oficinas', 'Reemplaza el archivo de Drive de disponibilidad', T(['Oficina', 'Estado'], disp.map((d) => [cm(d[0]), tag(d[1], d[2])])), '', true)],
+        ['Despliegue de PTR Banco de Bogotá', '<div class="grid g2">' + card('Instalación de PTR en 50 oficinas', 'Los equipos del banco operan con Outlook y exigen cuentas propias', '<div class="big-num">31 de 50</div><div class="small muted" style="margin:6px 0 12px">oficinas con PTR instalado y probado</div>' + bar(62)) + card('Bloqueos abiertos', '', T(['Motivo', 'Oficinas'], [['Cuenta de correo propia pendiente', 12], ['Acceso a equipo del banco', 5], ['Prueba de transacción pendiente', 2]].map((r) => [cm(r[0]), '<span class="num">' + r[1] + '</span>']), { align: ['', 'r'] }), '', true) + '</div>']
+      ]) + '</div>';
+  };
+
+  /* ---------- N8 Fincomercio ---------- */
+  const FIN_OFF = ['Plaza Central', 'Restrepo', 'Kennedy', 'Suba', 'Chapinero', 'Soacha', 'Bosa', 'Fontibón', 'Usaquén', 'Engativá', 'Centro', 'Américas'];
+  V.fincomercio = function () {
+    const r = rng(daySeed ^ 501);
+    const after = NOW_MIN >= 18 * 60;
+    const grid = FIN_OFF.map((o) => '<div class="office ' + (after ? 'ok' : 'closed') + '"><b>' + o + '</b><span>' + (after ? 'Cierre recibido' : 'En operación') + '</span></div>').join('');
+    const anul = [['88412', 'Plaza Central', 'Valor errado', 'En curso', ''], ['88390', 'Suba', 'Cuenta errada', '8 min', 'ok'], ['88371', 'Kennedy', 'Duplicada', '11 min', 'ok'], ['88355', 'Restrepo', 'Valor errado', '6 min', 'ok'], ['88340', 'Chapinero', 'Cliente desiste', '9 min', 'ok'], ['88322', 'Soacha', 'Cuenta errada', '12 min', 'ok']];
+    const prov = FIN_OFF.map((o, i) => [o, 20 + ((i * 7) % 36) + Math.round(r() * 8)]);
+    const pnc = [['PNC-0441', 'Plaza Central', 'Billete no apto', '5 días', 'En respuesta del líder'], ['PNC-0438', 'Kennedy', 'Faltante en cierre', '2 días', 'Soporte cargado'], ['PNC-0433', 'Suba', 'Firma de cajero', 'Cerrado', 'Cerrado']];
+    const retiros = [['Kennedy', '4 millones nacional', '4.800.000', 'Soporte completo'], ['Centro', '9 millones Bogotá', '9.600.000', 'Falta biometría']];
+    return head('Operación diaria de Fincomercio', 'Provisiones, anulaciones, cierre de 12 oficinas, boletería e informe nocturno en un solo lugar. La ejecución en el aplicativo del cliente sigue por VPN.', '', '', 'N8') +
+      kpis([['Anulaciones de hoy', 6, 'todas dentro de 15 minutos', 'clock'], ['Provisiones', '11:12 a. m.', 'enviadas; límite 11:30 a. m.', 'wallet'], ['Declaraciones mayores a 5 M', 28, '25 validadas por el sistema', 'filecheck'], ['Informe nocturno', after ? 'Enviado' : '7:30 p. m.', after ? 'generado tras el cierre' : 'se genera al cierre de la última oficina', 'send']]) +
+      '<div class="mt">' + tabs([
+        ['Anulaciones', '<div class="grid g-main">' + card('Anulación en curso', 'Plaza Central solicita anular la transacción 88412 por valor errado', '<div style="display:flex;gap:28px;align-items:center;flex-wrap:wrap"><div><div class="small muted">Tiempo restante del ANS</div><div class="big-timer" id="anu-timer">11:24</div></div><div class="grow" style="min-width:240px"><div class="timeline-v"><div class="it cur"><div class="strong">Solicitud recibida por correo</div><div class="small muted">Detectada por el sistema y asignada a Maira</div></div><div class="it cur"><div class="strong">Anulación ejecutada por VPN</div><div class="small muted">Cambio a la agencia Plaza Central y cajero 07</div></div><div class="it"><div class="strong">Documento reemplazante</div><div class="small muted">Esperando al cajero; recordatorio automático en 5 minutos</div></div></div></div></div>', tag('ANS de 15 minutos', 'b-info')) +
+          card('Anulaciones del día', '', T(['Transacción', 'Oficina', 'Tiempo'], anul.map((a) => [cm(a[0], a[2]), a[1], a[4] ? tag(a[3], 'b-ok') : tag(a[3], 'b-info')])), '', true) + '</div>'],
+        ['Provisiones', card('Provisiones del día', 'Saldos de bóveda consultados, formulario de cajeros y cartas generadas; millones de pesos', hbars(prov.map((p) => [p[0], p[1], p[1] + ' M']), 'cy'), tag('Enviadas 11:12 a. m.', 'b-ok'))],
+        ['Cierre e informe nocturno', card('Cierre de oficinas', after ? 'Informe nocturno generado a partir de los tres archivos de cierre' : 'El informe nocturno se genera al recibir el cierre de la última oficina, 6:00 p. m.', '<div class="office-grid">' + grid + '</div>', '<button class="btn btn-o btn-sm" data-act="toast" data-k="Vista previa del informe nocturno generada.">' + ic('eye') + 'Vista previa del informe</button>')],
+        ['Biometría y retiros', '<div class="grid g2">' + card('Cruce de cierres contra biometría', 'Reconocer y Olimpia; corte 11:00 a. m.', hbars([['Transacciones del cierre', 4820], ['Con biometría conforme', 4806], ['Diferencias en seguimiento', 14]], 'nv')) + card('Retiros sobre política', '4 millones nacional y 9 millones Bogotá', T(['Oficina', 'Política', 'Valor', 'Soportes'], retiros.map((x) => [cm(x[0]), '<span class="small">' + x[1] + '</span>', '<span class="num">$ ' + x[2] + '</span>', x[3] === 'Soporte completo' ? tag(x[3], 'b-ok') : tag(x[3], 'b-warn')]), { align: ['', '', 'r', ''] }), '', true) + '</div>'],
+        ['Boletería y agencias', '<div class="grid g2">' + card('Boletería de Finco Ticket', 'Conteo diario cruzado con la validación biométrica del día siguiente', T(['Fecha', 'Boletas', 'Cruce biométrico'], [['Ayer', 164, 'Conforme'], ['Antier', 151, 'Conforme'], ['Hace 3 días', 172, '1 diferencia resuelta']].map((r) => [cm(r[0]), '<span class="num">' + r[1] + '</span>', tag(r[2], r[2] === 'Conforme' ? 'b-ok' : 'b-info')]), { align: ['', 'r', ''] }), '', true) + card('Cambios de cajeros de agencia', 'Reemplazos y traslados registrados en el aplicativo del banco', T(['Cajero', 'De', 'A', 'Motivo'], [['Cajero 07', 'Kennedy', 'Plaza Central', 'Reemplazo'], ['Cajero 15', 'Suba', 'Usaquén', 'Traslado']].map((r) => [cm(r[0]), r[1], r[2], '<span class="small">' + r[3] + '</span>'])), '', true) + '</div><div class="grid g2 mt">' + card('Planta activa semanal', 'Reporte al cliente con novedades y solicitudes de usuarios', docRow('Planta de la semana', '36 cajeros activos, 2 novedades, 1 usuario por crear', 'usercheck', tag('Enviada', 'b-ok'))) + card('Efectivo deteriorado', 'Recolección según cupo y póliza de cada oficina', docRow('Recolección programada', 'Oficinas Centro y Bosa, jueves', 'wallet', tag('Programada', 'b-info'))) + '</div>'],
+        ['PNC', card('Productos no conformes', 'Descarga del aplicativo del cliente; los líderes responden en una semana', T(['Radicado', 'Oficina', 'Motivo', 'Plazo', 'Estado'], pnc.map((p) => [cm(p[0]), p[1], '<span class="small">' + p[2] + '</span>', '<span class="small">' + p[3] + '</span>', tag(p[4], p[4] === 'Cerrado' ? 'b-ok' : 'b-info')])), '', true)]
+      ]) + '</div>';
+  };
+  function startFinTimer() {
+    let left = 11 * 60 + 24;
+    every(() => { const el = $('#anu-timer'); if (!el) return; left = Math.max(0, left - 1); el.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); }, 1000);
+  }
+
+  /* ---------- N9 Transacciones en vivo ---------- */
+  const ptr = { total: 0, series: [], labels: [], neg: { 'Bancolombia': 0, 'Banco Agrario': 0, 'Davivienda': 0, 'Cesantías': 0, 'AV Villas': 0, 'Citibank': 0 } };
+  (function initPtr() {
+    const r = rng(daySeed ^ 3131);
+    for (let m = 8 * 60; m <= NOW_MIN; m += 15) {
+      const h = m / 60; const wave = Math.max(0.15, Math.sin((h - 7.4) / 11 * Math.PI)) * (1 + (h > 11 && h < 13 ? 0.25 : 0));
+      const v = Math.round(1800 * wave + r() * 300);
+      ptr.series.push(v); ptr.labels.push(hhmm(m).replace(' a. m.', '').replace(' p. m.', '')); ptr.total += v;
+    }
+    const share = [0.46, 0.18, 0.13, 0.11, 0.07, 0.05]; Object.keys(ptr.neg).forEach((k, i) => { ptr.neg[k] = Math.round(ptr.total * share[i]); });
+  })();
+  const ptrChart = () => lineChart([{ data: ptr.series, color: '#21BBEA', area: true }], ptr.labels, { label: 'Transacciones por franja', h: 230 });
+  V.ptr = function () {
+    const tops = [['Bancolombia Calle 26', 812], ['Banco Agrario Tunja', 640], ['Davivienda Centro', 588], ['Bancolombia Suba', 571], ['Citibank Bulevar', 402]];
+    return head('Transacciones en vivo', 'Lectura directa de la base MySQL de PTR, sin extracción manual. Las cifras se actualizan cada pocos segundos.', '<span class="badge b-ok" style="height:30px"><span class="live-dot"></span>&nbsp;Conectado a PTR</span>', '', 'N9') +
+      '<div class="grid g-main"><div class="card"><div class="card-h"><div><h3>Transacciones del día</h3><p>Todos los negocios, por franjas de 15 minutos</p></div></div><div class="card-b"><div class="big-num" id="ptr-total">' + fmt(ptr.total) + '</div><div class="small muted" style="margin-bottom:12px">transacciones desde las 8:00 a. m.</div><div id="ptr-chart">' + ptrChart() + '</div></div></div>' +
+      '<div><div class="card"><div class="card-h"><div><h3>Por negocio</h3><p>Acumulado del día</p></div></div><div class="card-b" id="ptr-neg">' + hbars(Object.keys(ptr.neg).map((k) => [k, ptr.neg[k]]), 'nv') + '</div></div>' +
+      '<div class="mt">' + card('Oficinas con más transacciones', 'Hoy', hbars(tops, 'cy')) + '</div></div></div>';
+  };
+  function startPtr() {
+    every(() => {
+      const el = $('#ptr-total'); if (!el) return;
+      const add = 4 + Math.floor(Math.random() * 18); ptr.total += add; ptr.series[ptr.series.length - 1] += add;
+      const keys = Object.keys(ptr.neg); ptr.neg[keys[Math.floor(Math.random() * 3)]] += add;
+      el.textContent = fmt(ptr.total);
+      const c = $('#ptr-chart'); if (c) c.innerHTML = ptrChart();
+      const n = $('#ptr-neg'); if (n) n.innerHTML = hbars(keys.map((k) => [k, ptr.neg[k]]), 'nv');
+    }, 2500);
+  }
+
+  /* ---------- G1 Malas prácticas y fraccionamientos ---------- */
+  V.malas = function () {
+    const casos = [['Bancolombia Suba', 'Fraccionamiento', '6 depósitos de $ 9,8 M en 40 min', 'Líder Zona Norte', 'Enviado'], ['Bancolombia Kennedy', 'Mala práctica', 'Transacción sin firma del cliente', 'Líder Zona Sur', 'Enviado'], ['BBVA Restrepo', 'Fraccionamiento', '4 retiros consecutivos misma cédula', 'Líder Zona Sur', 'En respuesta'], ['Bancolombia Chía', 'Mala práctica', 'Cajero con dos sesiones abiertas', 'Líder Sabana', 'Respondido'], ['Bancolombia Centro', 'Mala práctica', 'Reclamación del cliente sin radicar', 'Líder Centro', 'En respuesta']];
+    const rows = casos.map((c) => [cm(c[0]), tag(c[1], c[1] === 'Fraccionamiento' ? 'b-warn' : 'b-info'), '<span class="small">' + c[2] + '</span>', '<span class="small">' + c[3] + '</span>', tag(c[4], c[4] === 'Respondido' ? 'b-ok' : c[4] === 'Enviado' ? 'b-mute' : 'b-info')]);
+    const weeks = ['sem 37', 'sem 38', 'sem 39', 'sem 40', 'sem 41', 'sem 42'];
+    return head('Malas prácticas y fraccionamientos', 'Registro semanal de casos y envío automático a cada líder los viernes; las reclamaciones de Bancolombia se controlan con su plazo de 5 días hábiles.', '<button class="btn btn-p" data-act="toast" data-k="Consolidado enviado a los 6 líderes de zona.">' + ic('send') + 'Enviar a los líderes</button>', '', 'G1') +
+      kpis([['Casos de la semana', casos.length, '2 fraccionamientos, 3 malas prácticas', 'alert'], ['Envío a líderes', 'Viernes', '4:00 p. m., automático', 'send'], ['Respuesta de líderes', '86 %', 'dentro de 5 días hábiles', 'check'], ['Reclamaciones Bancolombia', 2, 'en plazo', 'shield']]) +
+      '<div class="mt">' + gasFrame('G1', 'malas prácticas', '<div class="grid g-main">' + card('Casos de la semana', 'Se agrupan por líder en un solo envío', T(['Oficina', 'Tipo', 'Detalle', 'Líder', 'Estado'], rows), '', true) + card('Tendencia semanal', 'Casos registrados', lineChart([{ data: [9, 7, 8, 6, 5, 5], color: '#242A54', area: true }], weeks, { min: 0, max: 10, label: 'Tendencia', h: 220, w: 480 })) + '</div>') + '</div>';
+  };
+
+  /* ---------- G2 Papelería e insumos ---------- */
+  V.papeleria = function () {
+    const sol = [['BBVA Salitre', 'Rollos térmicos, sobres de consignación', 'Aprobada'], ['Banco Popular Centro', 'Formatos de arqueo', 'En consolidación'], ['Fincomercio Suba', 'Bolsas de seguridad', 'Aprobada'], ['Davivienda oficina 9', 'Sellos y tinta', 'En consolidación']];
+    const pedido = [['Rollos térmicos', 420], ['Sobres de consignación', 3600], ['Bolsas de seguridad', 960], ['Formatos de arqueo', 1500], ['Sellos y tinta', 64]];
+    const agr = [['Oficinas Banco Agrario Más Cerca', '38'], ['Consumo promedio por oficina', '1.250 formatos'], ['Inventario actual', '18.400 formatos'], ['Pedido sugerido para dos meses', '76.600 formatos']];
+    return head('Papelería e insumos', 'Solicitudes de las oficinas, pedido mensual consolidado de la primera semana y cálculo bimensual de papelería bancaria del Banco Agrario.', '', '', 'G2') +
+      kpis([['Solicitudes del mes', 64, 'de las oficinas', 'package'], ['Pedido de noviembre', 'En consolidación', 'cierra el 6 de noviembre', 'list'], ['Banco Agrario', 'Bimensual', 'próximo cálculo en noviembre', 'building'], ['Tiempo de consolidación', '20 min', 'antes medio día', 'clock']]) +
+      '<div class="mt">' + gasFrame('G2', 'papelería', tabs([
+        ['Solicitudes', card('Solicitudes recientes', '', T(['Oficina', 'Elementos', 'Estado'], sol.map((s) => [cm(s[0]), '<span class="small">' + s[1] + '</span>', tag(s[2], s[2] === 'Aprobada' ? 'b-ok' : 'b-info')])), '<button class="btn btn-o btn-sm" data-act="toast" data-k="Formulario de solicitud enviado a las oficinas.">' + ic('form') + 'Formulario para oficinas</button>', true)],
+        ['Pedido mensual', card('Pedido consolidado de noviembre', 'Unidades', hbars(pedido, 'nv'), '<button class="btn btn-p btn-sm" data-act="toast" data-k="Pedido de papelería enviado a Compras.">' + ic('send') + 'Enviar a Compras</button>')],
+        ['Banco Agrario bimensual', card('Cálculo de papelería bancaria', 'Banco Agrario, cada dos meses', T(['Concepto', 'Valor'], agr.map((a) => [cm(a[0]), '<span class="num strong">' + a[1] + '</span>']), { align: ['', 'r'] }), '', true)]
+      ])) + '</div>';
+  };
+
+  /* ---------- G3 Usuarios, planta y directorios ---------- */
+  V.usuarios = function () {
+    const granja = [['Andrea Castillo', 'Ingreso', 'BBVA Salitre', 'Asignado', 'Lunes 8:05 a. m.'], ['Jorge Pinzón', 'Retiro', 'Banco Popular Centro', 'Asignado', 'Lunes 8:05 a. m.'], ['Carolina Mesa', 'Traslado', 'Fincomercio Suba', 'Asignado', 'Lunes 8:05 a. m.'], ['Diego Rincón', 'Ingreso', 'Citibank Bulevar', 'Pendiente', 'Programado']];
+    const planta = [['Banco de Bogotá', 'Quincenal', 12, 3, 2], ['Banco Popular', 'Semanal', 8, 1, 1], ['Coopcentral', 'Semanal', 4, 0, 1]];
+    const crea = [['Reconocer (Colfondos)', 'Jully Ríos', 3, 'Creados'], ['BBVA', 'Jully Ríos', 2, 'Creados'], ['Banco Agrario, incluye MAC', 'Jully Ríos', 1, 'Actualización de MAC'], ['Porvenir, por MAC del equipo', 'William', 1, 'En gestión'], ['Banco Popular', 'Líderes, con la planta semanal', 2, 'Notificados']];
+    const dirs = [['Protección', '1 oct'], ['Porvenir', '1 oct'], ['Davivienda', '1 oct'], ['AV Villas', '1 oct']];
+    return head('Usuarios, planta y directorios', 'Granja de usuarios de los lunes, planta de cajeros por cliente, creación de usuarios, informe de planta, parafiscales y directorios de la red.', '', '', 'G3') +
+      kpis([['Novedades de la semana', 4, '2 ingresos, 1 retiro, 1 traslado', 'usercheck'], ['Plantas enviadas', '3 de 3', 'Bogotá, Popular y Coopcentral', 'send'], ['Usuarios creados en el mes', 9, 'en sistemas de clientes', 'users'], ['Directorios actualizados', '4 de 4', 'red transaccional', 'list']]) +
+      '<div class="mt">' + gasFrame('G3', 'usuarios y planta', tabs([
+        ['Granja de usuarios', card('Granja de usuarios de esta semana', 'Ingresos y retiros de la semana anterior; los líderes asignan backups', T(['Funcionario', 'Novedad', 'Oficina', 'Backup', 'Notificado'], granja.map((x) => [cm(x[0]), tag(x[1], x[1] === 'Retiro' ? 'b-warn' : x[1] === 'Ingreso' ? 'b-ok' : 'b-info'), '<span class="small">' + x[2] + '</span>', x[3] === 'Asignado' ? tag('Asignado', 'b-ok') : tag('Pendiente', 'b-warn'), '<span class="small">' + x[4] + '</span>'])), '', true)],
+        ['Planta de cajeros', card('Planta de cajeros por cliente', 'Usuarios por eliminar, mantener o ingresar', T(['Cliente', 'Frecuencia', 'Mantener', 'Ingresar', 'Eliminar', ''], planta.map((p) => [cm(p[0]), '<span class="small">' + p[1] + '</span>', '<span class="num">' + p[2] + '</span>', '<span class="num">' + p[3] + '</span>', '<span class="num">' + p[4] + '</span>', '<button class="btn btn-o btn-sm" data-act="toast" data-k="Planta de ' + p[0] + ' enviada.">' + ic('send') + 'Enviar</button>']), { align: ['', '', 'r', 'r', 'r', 'r'] }), '', true)],
+        ['Creación de usuarios', card('Usuarios en sistemas de clientes', 'Responsable según cada cliente', T(['Sistema', 'Responsable', 'Usuarios', 'Estado'], crea.map((c) => [cm(c[0]), '<span class="small">' + c[1] + '</span>', '<span class="num">' + c[2] + '</span>', tag(c[3], c[3] === 'En gestión' ? 'b-info' : 'b-ok')]), { align: ['', '', 'r', ''] }), '', true)],
+        ['Planta e ingresos', '<div class="grid g2">' + card('Informe mensual de planta', 'BBVA e Indega; notificación de cada ingreso', hbars([['Cajeros', 142], ['Backups', 38], ['Supernumerarios', 21], ['Supervisores', 12], ['Control interno', 4]], 'nv')) + card('Parafiscales y formatos', 'Mensual', docRow('Formatos de parafiscales de ' + PREV_MONTH, 'Generados y enviados', 'file', tag('Enviado', 'b-ok'))) + '</div>'],
+        ['Directorios', card('Directorios de la red transaccional', 'Direcciones, oficinas y horarios; actualización mensual', T(['Red', 'Última actualización', 'Estado'], dirs.map((d) => [cm(d[0]), '<span class="num">' + d[1] + '</span>', tag('Actualizado', 'b-ok')])), '', true)]
+      ])) + '</div>';
+  };
+
+  /* ---------- G4 Cheques, arqueos y valores ---------- */
+  V.cheques = function () {
+    const inv = [['Bogotá, custodia central', 7120, 2.1], ['Puerto Boyacá', 900, 9], ['Tunja', 640, 3.2], ['Barranquilla', 520, 2.6], ['Medellín Centro', 480, 1.4], ['Cali Norte', 410, 1.8], ['Bucaramanga', 360, 2.2]];
+    const arq = [['BBVA', 32, 32, 'Sin diferencias'], ['Fincomercio', 12, 12, 'Sin diferencias'], ['Itaú', 6, 6, '1 diferencia justificada']];
+    const onp = [['ONP-0118', 'Porvenir', 'Solicitud del afiliado', 'Cheque perforado y carta recibidos', 'b-ok'], ['ONP-0121', 'Porvenir', 'Falla de PTR, anulado en Multifondos', 'Esperando sellos de anulación', 'b-warn']];
+    return head('Cheques, arqueos y valores', 'Inventario y custodia de cheques por consecutivo, consolidado de arqueos descargado desde COI, órdenes de no pago y proyección de temporada.', '<button class="btn btn-o" data-act="toast" data-k="Consolidado de arqueos descargado desde COI.">' + ic('download') + 'Consolidado desde COI</button>', '', 'G4') +
+      kpis([['Cheques en custodia', fmt(10430), 'central y 12 oficinas', 'wallet'], ['Proyección de temporada', fmt(15000), 'solicitud sugerida: 4.570', 'chart'], ['Arqueos del mes', '50 de 50', 'BBVA, Fincomercio e Itaú', 'shield'], ['Órdenes de no pago', 2, 'Porvenir', 'alert']]) +
+      '<div class="mt">' + gasFrame('G4', 'cheques y arqueos', tabs([
+        ['Inventario', card('Inventario de cheques por ubicación', 'Años de cobertura según el consumo actual; seguridad no permite traslados entre municipios', T(['Ubicación', 'Cheques', 'Cobertura', ''], inv.map((i) => [cm(i[0]), '<span class="num">' + fmt(i[1]) + '</span>', '<span class="num">' + fmt(i[2], 1) + ' años</span>', i[2] > 5 ? tag('Sobrestock', 'b-warn') : tag('Adecuado', 'b-ok')]), { align: ['', 'r', 'r', ''] }), '', true)],
+        ['Proyección de temporada', '<div class="grid g2">' + card('Cálculo de la solicitud', 'Proyección recibida contra inventario disponible', T(['Concepto', 'Cheques'], [[cm('Proyección de temporada'), '<span class="num">15.000</span>'], [cm('Inventario utilizable en Bogotá'), '<span class="num">7.120</span>'], [cm('Traslados autorizados dentro de Bogotá'), '<span class="num">3.310</span>'], [cm('Solicitud sugerida por la plataforma de Davivienda'), '<span class="num strong">4.570</span>']], { align: ['', 'r'] }), '', true) + card('Recomendación', '', '<p class="small" style="line-height:1.6">Mantener en Puerto Boyacá el inventario actual hasta su consumo, porque no puede trasladarse fuera del municipio, y solicitar 4.570 cheques en lugar de 15.000 para no sobrestockear la custodia.</p><div style="margin-top:14px"><button class="btn btn-p btn-sm" data-act="toast" data-k="Correo de arqueo y propuesta de distribución enviado para aprobación.">' + ic('send') + 'Enviar para aprobación</button></div>') + '</div>'],
+        ['Consolidado de arqueos', card('Consolidado de arqueos del mes', 'Descargado desde COI, sin macros', T(['Cliente', 'Oficinas', 'Arqueos', 'Resultado'], arq.map((a) => [cm(a[0]), '<span class="num">' + a[1] + '</span>', '<span class="num">' + a[2] + '</span>', tag(a[3], a[3] === 'Sin diferencias' ? 'b-ok' : 'b-info')]), { align: ['', 'r', 'r', ''] }), '', true)],
+        ['Órdenes de no pago', card('Órdenes de no pago', 'La oficina envía el cheque perforado con sellos de anulación y carta explicativa', T(['Radicado', 'Cliente', 'Motivo', 'Estado'], onp.map((o) => [cm(o[0]), o[1], '<span class="small">' + o[2] + '</span>', tag(o[3], o[4])])), '', true)],
+        ['Zunchos y BO de cheques', '<div class="grid g2">' + card('Solicitudes de cheques y zunchos', 'Porvenir y Citibank; entrega con arqueo de cofre', T(['Solicitud', 'Cliente', 'Cantidad', 'Estado'], [['SC-0331', 'Porvenir', '500 cheques', 'Arqueo de cofre realizado'], ['SC-0334', 'Citibank', '20 zunchos', 'En alistamiento']].map((r) => [cm(r[0]), r[1], '<span class="num">' + r[2] + '</span>', tag(r[3], r[3].indexOf('Arqueo') === 0 ? 'b-ok' : 'b-info')])), '', true) + card('BO de cheques', 'Datos leídos con inteligencia artificial e ingresados al sistema', hbars([['BO recibidos hoy', 18], ['Ingresados sin corrección', 17], ['Revisados por la analista', 1]], 'nv')) + '</div>'],
+        ['Custodia y Control Interno', '<div class="grid g2">' + card('Cofre de custodia', 'Capacidad usada', '<div class="big-num">96 %</div><div class="small muted" style="margin:6px 0 12px">Se solicitó un cofre mediano adicional</div>' + bar(96, 'gd')) + card('Arqueo de Control Interno', '', docRow('Arqueo de custodia central', '3 de octubre, sin diferencias', 'shield', tag('Conforme', 'b-ok'))) + '</div>']
+      ])) + '</div>';
+  };
+
+  /* ---------- G5 Banco Agrario ---------- */
+  V.agrario = function () {
+    const punteo = [['OP-55120', 'PR-88214', 'GU-77125', 'ok'], ['OP-55121', 'PR-88215', '', 'warn'], ['OP-55124', 'PR-88219', 'GU-77131', 'ok'], ['OP-55128', 'PR-88223', 'GU-77140', 'ok'], ['OP-55130', 'PR-88227', 'GU-77144', 'ok']];
+    const cert = [['Certificación de infraestructura', 'Asesor y cajero', '38 de 38'], ['Certificación de publicidad', 'Material en oficina', '37 de 38'], ['Validación de incidencias', 'Reportadas por el banco', '4 cerradas']];
+    const pend = [['Transacciones 2025 sin guía', 23, 'En conciliación con la transportadora'], ['Solicitudes de Oriana', 5, 'En gestión'], ['Reclamaciones potenciales', 0, 'Sin reclamaciones abiertas']];
+    return head('Banco Agrario', 'Punteo de tulas y precintos sobre el formulario existente, certificaciones mensuales, anexo de calificación con revisión previa de Recursos Físicos y pendientes de 2025.', '', '', 'G5') +
+      kpis([['Operaciones punteadas', '128', 'esta semana', 'check'], ['Guías faltantes', 1, 'alerta enviada a la transportadora', 'alert'], ['Certificaciones del mes', '75 de 76', 'infraestructura y publicidad', 'filecheck'], ['Pendientes 2025', 23, 'antes 41', 'list']]) +
+      '<div class="mt">' + gasFrame('G5', 'Banco Agrario', tabs([
+        ['Punteo de tulas', card('Punteo electrónico de la semana', 'Operación, precinto y guía de la transportadora', T(['Operación', 'Precinto', 'Guía', 'Estado'], punteo.map((x) => ['<span class="num">' + x[0] + '</span>', '<span class="num">' + x[1] + '</span>', x[2] ? '<span class="num">' + x[2] + '</span>' : '<span class="muted">Sin guía</span>', x[3] === 'ok' ? tag('Conciliada', 'b-ok') : tag('Alerta de guía faltante', 'b-warn')])), '', true)],
+        ['Certificaciones', card('Certificaciones mensuales', 'Cargadas al Drive del banco', T(['Certificación', 'Alcance', 'Avance'], cert.map((c) => [cm(c[0]), '<span class="small">' + c[1] + '</span>', '<span class="num strong">' + c[2] + '</span>'])), '', true)],
+        ['Anexo de calificación', '<div class="grid g2">' + card('Anexo de calificación de ' + PREV_MONTH, 'Actas y novedades revisadas con Recursos Físicos antes de enviarlo', '<div class="timeline-v"><div class="it cur"><div class="strong">Actas y novedades consolidadas</div><div class="small muted">2 de ' + MONTHS[NOW.getMonth()] + '</div></div><div class="it cur"><div class="strong">Revisión con Recursos Físicos</div><div class="small muted">3 de ' + MONTHS[NOW.getMonth()] + ', sin descuentos previstos</div></div><div class="it cur"><div class="strong">Anexo enviado al banco</div><div class="small muted">3 de ' + MONTHS[NOW.getMonth()] + '</div></div></div>') + card('Calificación del banco', 'Últimos seis meses', lineChart([{ data: D.clientExtra.agrario.score, color: '#048C38', area: true }], D.months, { min: 3, max: 5, fmt: (v) => fmt(v, 1), label: 'Calificación', h: 200, w: 480 })) + '</div>'],
+        ['Pendientes', card('Pendientes y solicitudes del banco', '', T(['Tema', 'Cantidad', 'Estado'], pend.map((p) => [cm(p[0]), '<span class="num">' + p[1] + '</span>', '<span class="small">' + p[2] + '</span>']), { align: ['', 'r', ''] }), '', true)]
+      ])) + '</div>';
+  };
+
+  /* ---------- G6 Correo de ingresos ---------- */
+  V.ingresos = function () {
+    const lotes = [['BBVA', 32, 'cajeros, backups, supernumerarios, supervisores y control interno', 'Enviado'], ['Bancolombia (Indega)', 86, 'cajeros, backups y supervisores', 'Enviado'], ['Técnicos de mantenimiento', 4, 'cerraduras e internet', 'Programado']];
+    const preview = '<div class="paper"><div class="small muted">Para: buzón de la oficina BBVA Salitre</div><div class="small muted" style="margin-bottom:12px">Asunto: Ingresos autorizados ' + MONTHS[NOW.getMonth()] + ' a ' + MONTHS[(NOW.getMonth() + 1) % 12] + ', oficina Salitre</div><p style="margin-bottom:10px">Buen día. Relacionamos el personal de Reval autorizado para ingresar a la oficina entre el 15 de ' + MONTHS[NOW.getMonth()] + ' y el 15 de ' + MONTHS[(NOW.getMonth() + 1) % 12] + ':</p>' + T(['Nombre', 'Cargo'], [['Andrea Castillo', 'Cajera'], ['Luis Ramírez', 'Backup'], ['Sandra Gómez', 'Supervisora'], ['Pedro Ortiz', 'Control interno']].map((x) => [x[0], '<span class="small">' + x[1] + '</span>'])) + '<p style="margin-top:10px" class="small muted">Generado automáticamente por COI desde la planta vigente.</p></div>';
+    return head('Correo de ingresos', 'Correo mensual por oficina con el personal autorizado, generado desde la planta vigente; reemplaza el flujo manual de Workspace Studio.', '<button class="btn btn-p" data-act="toast" data-k="118 correos de ingresos programados.">' + ic('send') + 'Programar envío</button>', '', 'G6') +
+      kpis([['Correos del periodo', 118, '15 oct a 15 nov', 'mail'], ['Oficinas BBVA', 32, 'un correo por oficina', 'building'], ['Oficinas Indega', 86, 'Bancolombia', 'building'], ['Tiempo de preparación', '5 min', 'antes una jornada', 'clock']]) +
+      '<div class="mt">' + gasFrame('G6', 'correo de ingresos', '<div class="grid g2">' + card('Lotes del periodo', '', T(['Destino', 'Correos', 'Tipos de personal', 'Estado'], lotes.map((l) => [cm(l[0]), '<span class="num">' + l[1] + '</span>', '<span class="small">' + l[2] + '</span>', tag(l[3], l[3] === 'Enviado' ? 'b-ok' : 'b-info')]), { align: ['', 'r', '', ''] }), '', true) + card('Vista previa', 'BBVA Salitre', preview) + '</div>') + '</div>';
+  };
+
+  /* ---------- TRAZA ---------- */
+  /* ---------- TRAZA: gestión de solicitudes ---------- */
+  const TZ_STATES = ['Recibida', 'En análisis', 'En desarrollo', 'En pruebas', 'En espera', 'Cerrada', 'Rechazada'];
+  const TZ_FLOW = ['Recibida', 'En análisis', 'En desarrollo', 'En pruebas', 'Cerrada'];
+  const TZ_STATE_CLS = { 'Recibida': 'b-mute', 'En análisis': 'b-info', 'En desarrollo': 'b-info', 'En pruebas': 'b-warn', 'En espera': 'b-mute', 'Cerrada': 'b-ok', 'Rechazada': 'b-bad' };
+  const TZ_PRIO_CLS = { 'Crítica': 'b-bad', 'Alta': 'b-warn', 'Media': 'b-info', 'Baja': 'b-mute' };
+  const TZ_OWNERS = { brian: { name: 'Brian Tautiva', role: 'Desarrollo y arquitectura', initials: 'BT', color: 2 }, hernan: { name: 'Hernán Dimate', role: 'Analítica transaccional', initials: 'HD', color: 5 } };
+  const tzAvatar = (o) => '<span class="avatar c' + TZ_OWNERS[o].color + '" title="' + TZ_OWNERS[o].name + '">' + TZ_OWNERS[o].initials + '</span>';
+  /* [id, título, aplicativo, tipo, prioridad, score, estado, solicitante, área, responsable, días desde radicación, días a fecha objetivo, horas estimadas, horas invertidas, descripción] */
+  const TZ_RAW = [
+    ['TRZ-0413', 'Tablero de transacciones por regional con meta diaria', 'Analítica transaccional', 'Nuevo desarrollo', 'Alta', 78, 'Recibida', 'Nubia Parrado', 'Gestión del Negocio', 'hernan', 0, 12, 10, 0, 'Vista por regional con la meta diaria definida por la Dirección Comercial y alerta cuando el día cierre por debajo.'],
+    ['TRZ-0412', 'Informe de vivienda robustos', 'Analítica transaccional', 'Nuevo desarrollo', 'Media', 54, 'Recibida', 'Dirección Comercial', 'Comercial', 'hernan', 1, 9, 6, 0, 'Informe mensual de transacciones de vivienda de los clientes robustos, antes enviado por correo.'],
+    ['TRZ-0411', 'Campana de notificaciones por rol en COI', 'COI', 'Mejora', 'Media', 61, 'En análisis', 'Gustavo Rojas', 'Formación y Desarrollo', 'brian', 2, 8, 8, 1.5, 'Mensaje emergente al iniciar sesión según el rol con información operativa y estratégica.'],
+    ['TRZ-0409', 'Insumo de oficinas SNR y ORIP', 'Analítica transaccional', 'Nuevo desarrollo', 'Alta', 72, 'En análisis', 'Yesica Valencia', 'Apoyo al Negocio', 'hernan', 3, 5, 8, 2, 'Insumo mensual de Bancolombia para las oficinas de SNR y ORIP a partir de este mes.'],
+    ['TRZ-0408', 'Migración de Multival Te Escucha a producción de SMART30', 'SMART30', 'Cambio', 'Media', 58, 'En pruebas', 'Mafe Ortiz', 'Formación y Desarrollo', 'brian', 6, 4, 10, 6.5, 'Trasladar el módulo Multival Te Escucha al ambiente de producción de SMART30, proyecto de innovación 2026.'],
+    ['TRZ-0406', 'Tablero transaccional de Gina', 'Analítica transaccional', 'Nuevo desarrollo', 'Media', 49, 'En análisis', 'Gina Pardo', 'Banco Agrario', 'hernan', 5, 10, 12, 1, 'Réplica del tablero transaccional con filtros propios para el seguimiento del Banco Agrario.'],
+    ['TRZ-0405', 'Error al guardar evaluación de colaborador con multimedia', 'CreSER', 'Corrección de falla', 'Crítica', 92, 'En desarrollo', 'Gustavo Rojas', 'Formación y Desarrollo', 'brian', 4, 1, 4, 3, 'La evaluación con archivos multimedia no se guarda cuando el archivo supera el tamaño permitido.'],
+    ['TRZ-0401', 'Metas diarias en tablero Bancolombia', 'Analítica transaccional', 'Mejora', 'Alta', 81, 'En desarrollo', 'Sebastián Arismendy', 'Dirección Comercial', 'hernan', 8, 3, 14, 9, 'Aplicar la meta diaria variable definida para octubre, noviembre y diciembre y reflejarla por oficina.'],
+    ['TRZ-0400', 'Descarga del consolidado de arqueos desde COI', 'COI', 'Mejora', 'Alta', 76, 'En desarrollo', 'Jully Ríos', 'Apoyo al Negocio', 'brian', 7, 6, 12, 5, 'Reemplazar el Excel con macros del consolidado de arqueos de BBVA, Fincomercio e Itaú por una descarga directa.'],
+    ['TRZ-0398', 'Justificación de aperturas en COI', 'COI', 'Mejora', 'Alta', 74, 'En espera', 'William Castro', 'Operaciones', 'hernan', 12, 7, 18, 16, 'Formulario integrado para que los líderes registren la justificación de aperturas tarde. Pendiente de aprobación de la Gerencia.'],
+    ['TRZ-0396', 'Ajuste de directorio de oficinas en granja de usuarios', 'COI', 'Reajuste', 'Media', 52, 'En pruebas', 'Jully Ríos', 'Apoyo al Negocio', 'brian', 9, 2, 3, 2.5, 'Las novedades de granja deben tomar las oficinas del Directorio Nacional actualizado.'],
+    ['TRZ-0394', 'Filtro por regional en Gestión de la Demanda', 'Gestión de la Demanda', 'Mejora', 'Baja', 33, 'Recibida', 'Nubia Parrado', 'Gestión del Negocio', 'brian', 10, 15, 4, 0, 'Agregar filtro por regional y por área en el tablero de demanda.'],
+    ['TRZ-0392', 'Reporte de cumplimiento de políticas de datos', 'Gobierno de Datos', 'Nuevo desarrollo', 'Media', 47, 'En espera', 'Comité de Datos', 'Gobierno de Datos', 'brian', 14, 11, 8, 2, 'Reporte mensual de cumplimiento por área. En espera de la matriz de políticas aprobada.'],
+    ['TRZ-0390', 'Actualización de metas Mi ATM', 'Analítica transaccional', 'Reajuste', 'Media', 45, 'Cerrada', 'John y Tatiana', 'Cajeros automáticos', 'hernan', 15, -10, 3, 3, 'Carga de las metas del mes según el comportamiento transaccional.'],
+    ['TRZ-0389', 'Corrección de radicados de control de cambios', 'COI', 'Corrección de falla', 'Alta', 70, 'Cerrada', 'Jully Ríos', 'Apoyo al Negocio', 'brian', 16, -9, 6, 5.5, 'Incidencias reportadas en la granja de usuarios y novedades de arqueos.'],
+    ['TRZ-0387', 'Reporte de facturación PTR', 'Analítica transaccional', 'Mejora', 'Baja', 30, 'Cerrada', 'Natalia y Vanessa', 'Facturación', 'hernan', 20, -12, 4, 4, 'Compensaciones, transacciones no monetarias, vivienda, cash in y cash out en el tablero de facturación.'],
+    ['TRZ-0385', 'Ajuste de tarifas en contrato tipo', 'LexCore', 'Reajuste', 'Media', 41, 'Cerrada', 'Jurídica', 'Jurídica', 'brian', 22, -14, 3, 2, 'Actualizar las variables de tarifa del contrato tipo de corresponsalía.'],
+    ['TRZ-0383', 'Exportación de evaluaciones a Excel', 'CreSER', 'Mejora', 'Media', 44, 'Cerrada', 'Gustavo Rojas', 'Formación y Desarrollo', 'brian', 24, -16, 2, 2, 'Descarga de las evaluaciones con filtros por gerencia.'],
+    ['TRZ-0381', 'Pantalla de campañas en MultiLAB', 'MultiLAB', 'Nuevo desarrollo', 'Media', 50, 'Cerrada', 'Mercadeo', 'Mercadeo', 'brian', 27, -18, 10, 11, 'Registro y seguimiento de campañas de contenido con los líderes de zona.'],
+    ['TRZ-0379', 'Acceso a módulo de cartera para nuevo usuario', 'Gestión CORE', 'Cambio', 'Baja', 22, 'Rechazada', 'Usuario externo', 'Cartera', 'brian', 25, -20, 0, 0.5, 'Solicitud fuera del alcance del aplicativo; se remite a Tecnología para gestión de accesos corporativos.'],
+    ['TRZ-0377', 'Leer equipos de cómputo de toda la organización', 'COI', 'Nuevo desarrollo', 'Baja', 15, 'Rechazada', 'Usuario interno', 'Administrativa', 'brian', 29, -22, 0, 0.5, 'Fuera del alcance de los aplicativos del área.']
+  ];
+  const TZ = TZ_RAW.map((r) => {
+    const created = new Date(NOW); created.setDate(created.getDate() - r[10]);
+    const target = new Date(NOW); target.setDate(target.getDate() + r[11]);
+    return { id: r[0], title: r[1], app: r[2], type: r[3], prio: r[4], score: r[5], state: r[6], req: r[7], area: r[8], owner: r[9], created, target, est: r[12], inv: r[13], desc: r[14], email: r[7].split(' ')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') + '@reval.com.co' };
+  });
+  const TZF = { view: 'tablero', estado: '', app: '', owner: '', q: '' };
+  const tzOpen = (t) => t.state !== 'Cerrada' && t.state !== 'Rechazada';
+  const dshort = (d) => d.getDate() + ' ' + MSHORT[d.getMonth()];
+  function tzLog(t) {
+    const out = []; const idx = TZ_FLOW.indexOf(t.state); const base = new Date(t.created);
+    out.push([base, 'Solicitud radicada por ' + t.req, 'file']);
+    const steps = t.state === 'Rechazada' ? ['Rechazada'] : t.state === 'En espera' ? ['En análisis', 'En desarrollo', 'En espera'] : TZ_FLOW.slice(1, idx + 1);
+    const hSteps = steps.filter((s) => s === 'En análisis' || s === 'En desarrollo' || s === 'En pruebas').length || 1;
+    steps.forEach((s, i) => { const d = new Date(base); d.setDate(d.getDate() + Math.min(i + 1, Math.max(1, Math.floor((NOW - base) / 864e5)))); out.push([d, 'Cambio de estado a ' + s.toLowerCase(), 'flow']); if ((s === 'En análisis' || s === 'En desarrollo' || s === 'En pruebas') && t.inv) out.push([d, 'Registro de ' + fmt(t.inv / hSteps, 1) + ' horas de ejecución', 'clock']); });
+    if (t.state === 'Rechazada' && t.inv) out.push([new Date(base), 'Registro de ' + fmt(t.inv, 1) + ' horas de análisis', 'clock']);
+    if (t.state === 'En espera') out.push([new Date(NOW), 'Nota: ' + t.desc.split('. ').slice(-1)[0], 'message']);
+    return out.sort((a, b) => b[0] - a[0]);
+  }
+  function tzStepper(t) {
+    if (t.state === 'Rechazada') return '<div class="stepper"><div class="st done"><i>' + ic('check') + '</i><span>Recibida</span></div><div class="st bad"><i>' + ic('x') + '</i><span>Rechazada</span></div></div>';
+    const cur = t.state === 'En espera' ? 2 : TZ_FLOW.indexOf(t.state);
+    return '<div class="stepper">' + TZ_FLOW.map((s, i) => '<div class="st ' + (i < cur || t.state === 'Cerrada' ? 'done' : i === cur ? 'cur' : '') + '"><i>' + (i < cur || t.state === 'Cerrada' ? ic('check') : i + 1) + '</i><span>' + s + (i === cur && t.state === 'En espera' ? ', en espera' : '') + '</span></div>').join('') + '</div>';
+  }
+  function tzTable(list, compact) {
+    return T(['Radicado', 'Solicitud', 'Aplicativo', 'Tipo', 'Prioridad', 'Responsable', 'Estado', 'Fecha objetivo', 'Horas'], list.map((t) => ({ go: 'traza/' + t.id, cells: ['<span class="num strong">' + t.id + '</span>', cm(esc(t.title), t.req + ', ' + t.area), '<span class="small">' + t.app + '</span>', '<span class="small">' + t.type + '</span>', tag(t.prio, TZ_PRIO_CLS[t.prio]), tzAvatar(t.owner), tag(t.state, TZ_STATE_CLS[t.state]), '<span class="small nowrap ' + (tzOpen(t) && t.target < NOW ? 'down' : '') + '">' + dshort(t.target) + '</span>', '<span class="num small nowrap">' + fmt(t.inv, 1) + ' de ' + fmt(t.est, 0) + '</span>'] })), { align: ['', '', '', '', '', 'c', '', '', 'r'] });
+  }
+
+  V.traza = function (id) {
+    if (id) return V.trazaDetalle(id);
+    const open = TZ.filter(tzOpen), closedM = TZ.filter((t) => t.state === 'Cerrada');
+    const crit = open.filter((t) => t.prio === 'Crítica').length, overdue = open.filter((t) => t.target < NOW).length;
+    const hours = TZ.reduce((s, t) => s + t.inv, 0);
+    const sub = [['tablero', 'Tablero'], ['solicitudes', 'Solicitudes'], ['etapas', 'Flujo por etapas'], ['capacidad', 'Capacidad'], ['informe', 'Informe de gestión'], ['radicar', 'Radicar solicitud']];
+    let body = '';
+    if (TZF.view === 'tablero') {
+      const weeks = ['sem 37', 'sem 38', 'sem 39', 'sem 40', 'sem 41', 'sem 42'];
+      const byState = TZ_STATES.map((s) => [s, TZ.filter((t) => t.state === s).length]).filter((x) => x[1]);
+      const byApp = {}; TZ.forEach((t) => { byApp[t.app] = (byApp[t.app] || 0) + 1; });
+      const ranking = open.slice().sort((a, b) => b.score - a.score).slice(0, 6);
+      body = '<div class="kx-row" style="margin-top:0">' + [['Abiertas', open.length, 'flow', '#242A54'], ['Prioridad crítica', crit, 'alert', '#D6453D'], ['Fecha objetivo vencida', overdue, 'clock', '#C99A00'], ['Cerradas en el mes', closedM.length, 'check', '#048C38'], ['Horas invertidas', fmt(hours, 1), 'clock', '#1A8FB5'], ['Ciclo promedio', '6,2 d', 'activity', '#6C74A8']].map((k) => '<div class="card kx"><div class="kx-top"><span class="kx-ic" style="--c:' + k[3] + '">' + ic(k[2]) + '</span><span class="kx-l">' + k[0] + '</span></div><div class="kx-v num">' + k[1] + '</div></div>').join('') + '</div>' +
+        '<div class="grid g-main mt">' + card('Recibidas y cerradas por semana', 'Últimas seis semanas', lineChart([{ data: [4, 6, 3, 5, 7, 5], color: '#242A54' }, { data: [3, 5, 5, 4, 6, 4], color: '#048C38', area: true }], weeks, { min: 0, max: 8, label: 'Recibidas y cerradas', h: 230 }) + '<div class="legend"><span><i style="background:#242A54"></i>Recibidas</span><span><i style="background:#048C38"></i>Cerradas</span></div>') +
+        card('Prioridad por criticidad', 'Puntaje de 0 a 100 calculado con impacto, urgencia y usuarios afectados', ranking.map((t) => '<button class="rk-row" data-go="traza/' + t.id + '"><span class="rk-score ' + (t.score >= 85 ? 'bad' : t.score >= 70 ? 'warn' : '') + '">' + t.score + '</span><span class="grow"><b>' + esc(t.title) + '</b><small>' + t.id + ', ' + t.app + '</small></span>' + tag(t.state, TZ_STATE_CLS[t.state]) + '</button>').join('')) + '</div>' +
+        '<div class="grid g2 mt">' + card('Solicitudes por estado', '', hbars(byState, 'nv')) + card('Solicitudes por aplicativo', '', hbars(Object.keys(byApp).map((k) => [k, byApp[k]]).sort((a, b) => b[1] - a[1]), 'cy')) + '</div>';
+    } else if (TZF.view === 'solicitudes') {
+      const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const list = TZ.filter((t) => (!TZF.estado || (TZF.estado === 'abiertas' ? tzOpen(t) : t.state === TZF.estado)) && (!TZF.app || t.app === TZF.app) && (!TZF.owner || t.owner === TZF.owner) && (!TZF.q || norm(t.id + ' ' + t.title + ' ' + t.req).indexOf(norm(TZF.q)) >= 0));
+      const apps = Array.from(new Set(TZ.map((t) => t.app))).sort();
+      const sel = (key, opts, label) => '<select class="period-sel" data-tz="' + key + '" aria-label="' + label + '">' + opts.map((o) => '<option value="' + o[0] + '"' + (TZF[key] === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>';
+      body = '<div class="card"><div class="card-h"><div class="cat-filters">' + sel('estado', [['', 'Todos los estados'], ['abiertas', 'Solo abiertas']].concat(TZ_STATES.map((s) => [s, s])), 'Estado') + sel('app', [['', 'Todos los aplicativos']].concat(apps.map((a) => [a, a])), 'Aplicativo') + sel('owner', [['', 'Todos los responsables'], ['brian', 'Brian Tautiva'], ['hernan', 'Hernán Dimate']], 'Responsable') + '<input class="cat-q" data-tz-q type="search" placeholder="Buscar por radicado, título o solicitante" value="' + esc(TZF.q) + '"></div><span class="small muted">' + list.length + ' solicitudes</span></div><div class="card-b flush scroll-x">' + (list.length ? tzTable(list) : '<p class="small muted" style="padding:20px">Ninguna solicitud cumple los filtros. Quite alguno para ver más resultados.</p>') + '</div></div>';
+    } else if (TZF.view === 'etapas') {
+      const cols = ['Recibida', 'En análisis', 'En desarrollo', 'En pruebas', 'En espera', 'Cerrada'];
+      body = '<div class="kanban k6">' + cols.map((c) => { const items = TZ.filter((t) => t.state === c); return '<div class="kcol"><h5><span>' + c + '</span><span class="cm-count">' + items.length + '</span></h5>' + items.map((t) => '<button class="kcard" data-go="traza/' + t.id + '"><div class="kc-top"><span class="cell-sub num">' + t.id + '</span>' + tag(t.prio, TZ_PRIO_CLS[t.prio]) + '</div><div class="strong">' + esc(t.title) + '</div><div class="cell-sub">' + t.app + '</div><div class="kc-foot">' + tzAvatar(t.owner) + '<span class="small muted num">' + fmt(t.inv, 1) + ' de ' + fmt(t.est, 0) + ' h</span><span class="small ' + (tzOpen(t) && t.target < NOW ? 'down' : 'muted') + '">' + dshort(t.target) + '</span></div></button>').join('') + '</div>'; }).join('') + '</div>';
+    } else if (TZF.view === 'capacidad') {
+      const cap = Object.keys(TZ_OWNERS).map((o) => { const mine = TZ.filter((t) => t.owner === o && tzOpen(t)); const pend = mine.reduce((s, t) => s + Math.max(0, t.est - t.inv), 0); return [o, mine.length, pend]; });
+      const days = Array.from({ length: 10 }, (_, i) => { const d = new Date(NOW); d.setDate(d.getDate() + i); return d; }).filter((d) => d.getDay() !== 0 && d.getDay() !== 6);
+      const cal = days.map((d) => { const due = TZ.filter((t) => tzOpen(t) && t.target.toDateString() === d.toDateString()); return '<div class="cal-day' + (d.toDateString() === NOW.toDateString() ? ' today' : '') + '"><div class="cal-d"><b>' + d.getDate() + '</b>' + DAYS[d.getDay()].slice(0, 3) + '</div>' + (due.length ? due.map((t) => '<button class="cal-ev ' + (TZ_PRIO_CLS[t.prio] || '') + '" data-go="traza/' + t.id + '">' + t.id + '<span>' + esc(t.title) + '</span></button>').join('') : '<span class="small muted">Sin vencimientos</span>') + '</div>'; }).join('');
+      body = '<div class="grid g2">' + cap.map((c) => card(TZ_OWNERS[c[0]].name, TZ_OWNERS[c[0]].role, '<dl class="cm-stats flat"><div><dt>Solicitudes abiertas</dt><dd class="num">' + c[1] + '</dd></div><div><dt>Horas pendientes</dt><dd class="num">' + fmt(c[2], 1) + '</dd></div><div><dt>Disponibles por semana</dt><dd class="num">' + (c[0] === 'brian' ? 30 : 16) + '</dd></div></dl><div class="small muted" style="margin:14px 0 6px">Ocupación de las próximas dos semanas</div>' + bar(Math.min(100, c[2] / ((c[0] === 'brian' ? 30 : 16) * 2) * 100), c[2] > (c[0] === 'brian' ? 60 : 32) ? 'gd' : 'cy') + '<div class="small muted" style="margin-top:6px">' + pct(Math.min(100, c[2] / ((c[0] === 'brian' ? 30 : 16) * 2) * 100), 0) + ' de la capacidad comprometida</div>', tzAvatar(c[0]))).join('') + '</div>' +
+        '<div class="mt">' + card('Calendario de fechas objetivo', 'Próximos diez días hábiles', '<div class="cal-row">' + cal + '</div>') + '</div>';
+    } else if (TZF.view === 'informe') {
+      const apps = {}; TZ.forEach((t) => { const a = apps[t.app] = apps[t.app] || [0, 0, 0]; a[0]++; if (t.state === 'Cerrada') a[1]++; a[2] += t.inv; });
+      body = '<div class="card"><div class="card-h"><div><h3>Informe de gestión de ' + MONTHS[NOW.getMonth()] + '</h3><p>Base para la revisión semanal con la Gerencia</p></div><button class="btn btn-o btn-sm" data-act="toast" data-k="Informe de gestión de TRAZA descargado en PDF.">' + ic('download') + 'Descargar PDF</button></div><dl class="cm-stats"><div><dt>Recibidas</dt><dd class="num">' + TZ.length + '</dd></div><div><dt>Cerradas</dt><dd class="num">' + closedM.length + '</dd></div><div><dt>Rechazadas</dt><dd class="num">' + TZ.filter((t) => t.state === 'Rechazada').length + '</dd></div><div><dt>Horas invertidas</dt><dd class="num">' + fmt(hours, 1) + '</dd></div><div><dt>Cumplimiento de fecha objetivo</dt><dd class="num">94 %</dd></div></dl><div class="scroll-x">' + T(['Aplicativo', 'Recibidas', 'Cerradas', 'Horas invertidas'], Object.keys(apps).sort((a, b) => apps[b][2] - apps[a][2]).map((k) => [cm(k), '<span class="num">' + apps[k][0] + '</span>', '<span class="num">' + apps[k][1] + '</span>', '<span class="num">' + fmt(apps[k][2], 1) + ' h</span>']), { align: ['', 'r', 'r', 'r'] }) + '</div></div>';
+    } else {
+      const f = (label, html, wide) => '<label class="fld' + (wide ? ' wide' : '') + '"><span>' + label + '</span>' + html + '</label>';
+      const inp = (v, ph) => '<input class="inp" value="' + (v || '') + '" placeholder="' + (ph || '') + '">';
+      const sl = (opts) => '<select class="inp">' + opts.map((o) => '<option>' + o + '</option>').join('') + '</select>';
+      body = '<div class="grid g-main"><div class="card"><div class="card-h"><div><h3>Radicar una solicitud</h3><p>Cada solicitud recibe un radicado y se puede consultar en todo momento</p></div></div><div class="card-b"><div class="form-grid">' +
+        f('Nombre completo', inp('Nubia Parrado')) + f('Área', inp('Gestión del Negocio')) + f('Correo electrónico', inp('nubia.parrado@reval.com.co')) + f('Aplicativo', sl(['COI', 'Analítica transaccional', 'CreSER', 'Gestión de la Demanda', 'Gobierno de Datos', 'Gestión CORE', 'SMART30', 'LexCore', 'MultiLAB'])) + f('Tipo de solicitud', sl(['Mejora', 'Cambio', 'Reajuste', 'Corrección de falla', 'Nuevo desarrollo'])) + f('Prioridad sugerida', sl(['Media', 'Alta', 'Baja', 'Crítica'])) +
+        f('Título', inp('', 'Ejemplo: tablero de transacciones por regional'), true) + f('Descripción', '<textarea class="inp" rows="4" placeholder="Qué necesita, para qué y quiénes lo usarán"></textarea>', true) + '<div class="fld wide"><span>Evidencia</span><div class="drop">' + ic('upload') + '<div>Arrastre aquí capturas o documentos de soporte</div></div></div>' +
+        '</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="btn btn-o" data-act="tzview" data-k="solicitudes">Cancelar</button><button class="btn btn-p" data-act="toast" data-k="Solicitud TRZ-0414 radicada. Se envió confirmación al correo del solicitante.">' + ic('send') + 'Radicar solicitud</button></div></div></div>' +
+        card('Consultar mis radicados', 'Escriba el correo del solicitante', '<div style="display:flex;gap:8px;margin-bottom:12px"><input class="inp" value="jully@reval.com.co"><button class="btn btn-o" data-act="toast" data-k="Se encontraron 3 radicados de Jully Ríos.">Consultar</button></div>' + TZ.filter((t) => t.req === 'Jully Ríos').map((t) => '<button class="rk-row" data-go="traza/' + t.id + '"><span class="grow"><b>' + t.id + ', ' + esc(t.title) + '</b><small>' + t.app + ', radicada el ' + dshort(t.created) + '</small></span>' + tag(t.state, TZ_STATE_CLS[t.state]) + '</button>').join('')) + '</div>';
+    }
+    return head('TRAZA', 'Gestión de solicitudes de los aplicativos del área: radicación, priorización, ejecución, horas invertidas y trazabilidad hasta el cierre.', '<button class="btn btn-p" data-act="tzview" data-k="radicar">' + ic('upload') + 'Radicar solicitud</button>') +
+      '<div class="subnav">' + sub.map((s) => '<button class="' + (TZF.view === s[0] ? 'on' : '') + '" data-act="tzview" data-k="' + s[0] + '">' + s[1] + (s[0] === 'solicitudes' ? ' <span class="cm-count">' + TZ.length + '</span>' : '') + '</button>').join('') + '</div>' + body;
+  };
+
+  V.trazaDetalle = function (id) {
+    const t = TZ.find((x) => x.id === id); if (!t) { TZF.view = 'solicitudes'; return V.traza(); }
+    const log = tzLog(t);
+    const plan = [['Levantar requerimiento con el solicitante', true], ['Definir alcance, fuentes de datos y criterios de aceptación', TZ_FLOW.indexOf(t.state) >= 1 || t.state === 'Cerrada'], ['Desarrollo y pruebas internas', TZ_FLOW.indexOf(t.state) >= 3 || t.state === 'Cerrada'], ['Pruebas con el solicitante', t.state === 'Cerrada'], ['Documentación, despliegue en producción y cierre', t.state === 'Cerrada']];
+    const meta = [['Solicitante', t.req], ['Área', t.area], ['Correo', t.email], ['Aplicativo', t.app], ['Tipo', t.type], ['Prioridad', tag(t.prio, TZ_PRIO_CLS[t.prio])], ['Puntaje de criticidad', '<b class="num">' + t.score + '</b> de 100'], ['Responsable', '<span class="who">' + tzAvatar(t.owner) + TZ_OWNERS[t.owner].name + '</span>'], ['Radicada', dshort(t.created) + ' ' + t.created.getFullYear()], ['Fecha objetivo', '<span class="' + (tzOpen(t) && t.target < NOW ? 'down' : '') + '">' + dshort(t.target) + ' ' + t.target.getFullYear() + '</span>']];
+    const actions = tzOpen(t) ? '<button class="btn btn-o" data-act="tzlog" data-k="nota">' + ic('message') + 'Agregar nota</button><button class="btn btn-o" data-act="tzlog" data-k="horas">' + ic('clock') + 'Registrar horas</button><button class="btn btn-o" data-act="toast" data-k="Solicitud ' + t.id + ' rechazada con motivo registrado.">' + ic('x') + 'Rechazar</button><button class="btn btn-p" data-act="tzadv" data-k="' + t.id + '">Avanzar etapa' + ic('chevron') + '</button>' : '<button class="btn btn-o" data-act="toast" data-k="Documentación de ' + t.id + ' descargada.">' + ic('download') + 'Documentación</button>';
+    return head(t.id + ', ' + esc(t.title), t.app + '. ' + t.type + ' solicitada por ' + t.req + '.', actions, crumb('traza', 'TRAZA') + ' / ' + t.id) +
+      '<div class="card"><div class="card-b">' + tzStepper(t) + '</div></div>' +
+      '<div class="grid g-main mt"><div>' + card('Descripción', '', '<p style="line-height:1.6">' + esc(t.desc) + '</p>') +
+      '<div class="mt">' + card('Plan de trabajo', '', '<div class="plan">' + plan.map((p) => '<div class="pl ' + (p[1] ? 'ok' : '') + '"><i>' + (p[1] ? ic('check') : '') + '</i><span>' + p[0] + '</span></div>').join('') + '</div>') + '</div>' +
+      '<div class="mt">' + card('Bitácora', 'Cambios de estado, horas y notas', '<div class="timeline-v">' + log.map((l, i) => '<div class="it ' + (i === 0 ? 'cur' : '') + '"><div class="strong">' + l[1] + '</div><div class="small muted">' + dshort(l[0]) + ', ' + TZ_OWNERS[t.owner].name + '</div></div>').join('') + '</div>') + '</div></div>' +
+      '<div>' + card('Detalle', '', '<dl class="meta">' + meta.map((m) => '<dt>' + m[0] + '</dt><dd>' + m[1] + '</dd>').join('') + '</dl>') +
+      '<div class="mt">' + card('Horas', 'Invertidas frente a estimadas', '<div class="big-num" style="font-size:34px">' + fmt(t.inv, 1) + ' <span class="small muted">de ' + fmt(t.est, 0) + ' h</span></div><div style="margin-top:10px">' + bar(t.est ? Math.min(100, t.inv / t.est * 100) : 0, t.inv > t.est ? 'gd' : 'cy') + '</div>') + '</div>' +
+      '<div class="mt">' + card('Adjuntos', '', docRow('Evidencia del solicitante', 'Captura adjunta en la radicación', 'file', '<button class="btn btn-g btn-sm" data-act="ver">' + ic('eye') + 'Ver</button>')) + '</div></div></div>';
+  };
+
+  /* ---------- Bitácora ---------- */
+  /* ---------- Catálogo de actividades ---------- */
+  const CAT = { who: '', q: '' };
+  V.catalogo = function () {
+    const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const list = acts.filter((a) => (!CAT.who || a.a === CAT.who) && (!CAT.q || norm(a.d + ' ' + a.cl + ' ' + procName(a.p)).indexOf(norm(CAT.q)) >= 0));
+    const people = [['', 'Todo el equipo']].concat(D.analysts.map((a) => [a.id, a.name])).concat([['gerencia', 'Gerencia']]);
+    const modLabel = (m) => { const x = MODULES.find((k) => k[1] === m); return x ? x[2] + ' (' + m + ')' : m === 'Se mantiene' ? 'Tablero actual, monitoreado' : m; };
+    const rows = list.map((a) => ({ go: MODULE_VIEW[a.m] || (a.a !== 'gerencia' ? 'analista/' + a.a : null), cells: ['<span class="num muted">' + a.n + '</span>', cm(esc(a.d), esc(a.cl)), AN[a.a] ? avatar(a.a) : avatar('gerencia'), '<span class="small">' + esc(a.f) + '</span>', '<span class="small">' + modLabel(a.m) + '</span>', isAuto(a) ? tag('Automatizada', 'b-info') : tag('Monitoreada'), badge(todayState[a.n])] }));
+    const auto = acts.filter(isAuto).length;
+    return head('Catálogo de actividades', 'Las 104 actividades levantadas con cada integrante del equipo, con su módulo en COI. Seleccione una fila para abrir el módulo.', '<button class="btn btn-o" data-act="toast" data-k="Catálogo exportado a Excel.">' + ic('download') + 'Exportar</button>') +
+      kpis([['Actividades en COI', '104 de 104', 'todas con responsable, frecuencia y evidencia', 'list'], ['Automatizadas', auto, 'en los módulos de COI', 'sparkle'], ['Monitoreadas sin automatizar', 104 - auto, 'tableros de analítica que se mantienen y base de indicadores', 'eye'], ['Integrantes', 6, 'cinco analistas y un analista de datos', 'users']]) +
+      '<div class="card mt"><div class="card-h"><div class="cat-filters"><select class="period-sel" data-cat-who aria-label="Responsable">' + people.map((p) => '<option value="' + p[0] + '"' + (p[0] === CAT.who ? ' selected' : '') + '>' + p[1] + '</option>').join('') + '</select><input class="cat-q" data-cat-q type="search" placeholder="Filtrar por actividad, cliente o proceso" value="' + esc(CAT.q) + '"></div><span class="small muted">' + list.length + ' actividades</span></div><div class="card-b flush scroll-x">' + T(['N.º', 'Actividad', 'Responsable', 'Frecuencia', 'Módulo en COI', 'Modalidad', 'Hoy'], rows) + '</div></div>';
+  };
+
+  V.bitacora = function () {
+    const ev = []; const r = rng(daySeed ^ 4242);
+    acts.filter((a) => todayState[a.n] === 'done' && a.p !== 'M').slice(0, 40).forEach((a) => { ev.push({ t: 8 * 60 + Math.floor(r() * Math.max(30, NOW_MIN - 8 * 60)), a }); });
+    ev.sort((x, y) => y.t - x.t);
+    const rows = ev.slice(0, 24).map((e) => ({ go: MODULE_VIEW[e.a.m] || null, cells: ['<span class="num small">' + hhmm(e.t) + '</span>', cm(esc(e.a.d), procName(e.a.p)), avatar(e.a.a), isAuto(e.a) ? tag('Sistema', 'b-info') : tag('Manual'), tag('Evidencia adjunta', 'b-ok')] }));
+    return head('Bitácora', 'Registro de cada actividad ejecutada, con su responsable y evidencia. Es la fuente de todos los indicadores de COI.', '<button class="btn btn-o" data-act="toast" data-k="Bitácora exportada.">' + ic('download') + 'Exportar</button>') + card('Registro de hoy', 'Seleccione una fila para abrir su módulo', T(['Hora', 'Actividad', 'Responsable', 'Origen', 'Evidencia'], rows), '', true);
+  };
+
+  /* ---------- Plan de implementación ---------- */
+  V.implementacion = function () {
+    const ms = [['Hito 1', '30 oct 2026', 'COI en producción'], ['Hito 2', '27 nov 2026', 'Validación documental, PQR, gestión interna y analítica'], ['Hito 3', '18 dic 2026', 'Novedades, personal y valores, alertas'], ['Hito 4', '15 ene 2027', 'Reportería, Fincomercio, facturación y oficinas'], ['Hito 5', '22 ene 2027', 'Estabilización y entrega formal']];
+    const plan = [['monica', 6, 3, 4, 6], ['lina', 26, 7, 14, 25], ['jully', 13, 1, 13, 13], ['yesica', 24, 4, 14, 24], ['maira', 25, 2, 12, 25], ['hernan', 9, 2, 2, 2]];
+    const rows = plan.map((p) => ['<div style="display:flex;align-items:center;gap:10px">' + avatar(p[0]) + '<span class="strong">' + AN[p[0]].name + '</span></div>', '<span class="num">' + p[1] + '</span>'].concat([p[2], p[3], p[4]].map((v) => '<div style="width:170px">' + bar(v / p[1] * 100) + '<div class="small muted num" style="margin-top:4px">' + v + ' (' + fmt(v / p[1] * 100, 0) + ' %)</div></div>')));
+    return head('Plan de implementación', 'Así se llega a esta versión final: COI en dos semanas y procesos transversales hasta el 22 de enero de 2027.') +
+      '<div class="card"><div class="card-b ms-grid">' + ms.map((m, i) => '<div style="border-top:4px solid ' + (i === 0 ? 'var(--cyan)' : 'var(--navy)') + ';padding-top:10px"><div class="strong" style="color:var(--navy)">' + m[0] + '</div><div class="small muted num">' + m[1] + '</div><div class="small" style="margin-top:6px">' + m[2] + '</div></div>').join('') + '</div></div>' +
+      '<div class="mt">' + card('Avance comprometido por analista', 'Actividades automatizadas acumuladas en cada hito', T(['Analista', 'Actividades', 'Hito 2', 'Hito 3', 'Hito 4'], rows, { align: ['', 'c', '', '', ''] }), '', true) + '</div>';
+  };
+
+  /* ================= Acciones ================= */
+  function ansDoc(k) {
+    const c = clients[k], x = D.clientExtra[k];
+    return '<div class="paper"><h4>Acuerdo de nivel de servicio</h4><div class="small muted" style="margin-bottom:14px">' + c.name + ' y Reval S.A.S. Versión ' + x.ans + ', vigente desde el ' + shortDate(x.ansDate) + '.</div>' + x.clauses.map((cl, i) => '<div class="clause"><span class="num muted">' + (i + 1) + '.</span><div><div class="strong">' + cl[0] + '</div><div class="small muted">Plazo: ' + cl[1] + '. Meta: ' + cl[2] + '.</div></div>' + tag('Medida en COI', 'b-ok') + '</div>').join('') + '<p class="small muted" style="margin-top:14px">Documento de demostración. En producción se muestra el PDF firmado cargado en el expediente.</p></div>';
+  }
+  const input = (label, html) => '<label class="small strong" style="display:block">' + label + '<div style="margin-top:6px">' + html + '</div></label>';
+  const field = 'height:38px;border:1px solid var(--line);border-radius:8px;padding:0 10px;width:100%';
+  const ACTIONS = {
+    period: (b) => { DASH.type = b.dataset.k; DASH.idx = 0; go('inicio', true); },
+    tzview: (b) => { TZF.view = b.dataset.k; go('traza', true); },
+    radicar: () => { TZF.view = 'radicar'; go('traza'); },
+    tzadv: (b) => { const t = TZ.find((x) => x.id === b.dataset.k); const i = TZ_FLOW.indexOf(t.state === 'En espera' ? 'En desarrollo' : t.state); t.state = TZ_FLOW[Math.min(TZ_FLOW.length - 1, i + 1)]; go('traza/' + t.id, true); toast(t.id + ' avanzó a ' + t.state.toLowerCase() + '.'); },
+    tzlog: (b) => modal(b.dataset.k === 'horas' ? 'Registrar horas' : 'Agregar nota', '<div style="display:grid;gap:12px">' + (b.dataset.k === 'horas' ? input('Horas invertidas', '<input type="number" step="0.5" value="1.5" style="' + field + ';max-width:140px">') + input('Qué se hizo', '<textarea rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px">Conexión a la base de datos y ajuste de filtros.</textarea>') : input('Nota', '<textarea rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px">Se validó el alcance con el solicitante.</textarea>') + input('Notificar al solicitante', '<select style="' + field + ';max-width:200px"><option>Sí, por correo</option><option>No</option></select>')) + '</div>', '<button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" data-close data-done="' + (b.dataset.k === 'horas' ? 'Horas registradas en la bitácora.' : 'Nota agregada a la bitácora.') + '">Guardar</button>'),
+    cmsel: (b) => { $$('.cm-item').forEach((x) => x.classList.toggle('on', x === b)); const p = $('#cm-panel'); if (p) { p.innerHTML = clientModulePanel(b.dataset.c, b.dataset.k); p.classList.remove('view-enter'); void p.offsetWidth; p.classList.add('view-enter'); } },
+    'ctx-off': () => { CTX.client = null; const bar = $('.ctx-bar'); if (bar) bar.remove(); $$('#content .hl').forEach((el) => el.classList.remove('hl')); },
+    evidencia: (b) => { const x = acts.find((y) => y.n === +b.dataset.k); modal('Registrar evidencia', cm(esc(x.d), esc(x.cl) + ', ' + esc(x.f)) + '<div style="display:grid;gap:12px;margin-top:16px"><div class="drop">' + ic('upload') + '<div>Arrastre aquí el soporte (PDF, imagen o correo)</div></div>' + input('Observación', '<textarea rows="2" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px">Actividad ejecutada dentro del plazo del ANS.</textarea>') + '</div>', '<button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" data-close data-done="Evidencia registrada en la bitácora.">Registrar</button>'); },
+    toast: (b) => toast(b.dataset.k),
+    informe: () => toast('Informe del día generado con ' + acts.length + ' actividades y sus evidencias.'),
+    mensaje: (b) => toast('Mensaje enviado a ' + AN[b.dataset.k].name + '.'),
+    ans: (b) => modal('ANS vigente de ' + clients[b.dataset.k].name, ansDoc(b.dataset.k)),
+    evaluacion: (b) => modal('Registrar evaluación del cliente', '<p class="muted" style="margin-bottom:14px">Cargue el formato de evaluación emitido por ' + clients[b.dataset.k].name + '. La calificación queda en el expediente y en el tablero.</p><div style="display:grid;gap:12px">' + input('Calificación de 1 a 5', '<input type="number" min="1" max="5" step="0.1" value="4.6" style="' + field + ';max-width:160px">') + input('Periodo', '<select style="' + field + ';max-width:240px"><option>' + PREV_MONTH + '</option></select>') + '<div class="drop">' + ic('upload') + '<div>Arrastre aquí el PDF de la evaluación</div></div></div>', '<button class="btn btn-o" data-close>Cancelar</button><button class="btn btn-p" data-close data-done="Evaluación registrada en el expediente.">Registrar evaluación</button>'),
+    aprobar: (b) => { const tr = b.closest('tr'); const cells = $$('td', tr); cells[cells.length - 2].innerHTML = tag('Aprobado por la analista', 'b-ok'); b.outerHTML = '<span class="small muted">Aprobado</span>'; toast('Aprobado y registrado en la bitácora.'); },
+    ver: () => modal('Soporte de cierre', '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' + Array.from({ length: 3 }, () => '<div class="thumb" style="width:100%;height:160px"></div>').join('') + '</div><p class="small muted" style="margin-top:12px">Imágenes de demostración. Verificación automática: fecha, orientación, completitud y oficina conformes.</p>'),
+    caso: (b) => { const it = NOV[+b.dataset.k]; const c = CH[it[0]]; modal('Caso NOV-' + (2610 + +b.dataset.k * 7), '<div class="grid g2" style="margin-bottom:16px"><div>' + cm(it[2], it[1]) + '</div><div style="text-align:right">' + tag(it[5], it[5] === 'Alta' ? 'b-bad' : 'b-warn') + ' <span class="countdown">' + leftTime(it[4]) + '</span></div></div><div class="timeline-v"><div class="it cur"><div class="strong">Recibido por ' + c[2].toLowerCase() + '</div><div class="small muted">Clasificado por el sistema y asignado a ' + AN[it[3]].name + '</div></div><div class="it cur"><div class="strong">Confirmación automática al cliente</div><div class="small muted">Con número de caso y plazo del ANS</div></div><div class="it"><div class="strong">Gestión de la analista</div><div class="small muted">Pendiente</div></div></div>' + input('Respuesta al cliente', '<textarea rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px">Buen día. Su solicitud está en gestión; le confirmaremos el cierre por este medio.</textarea>'), '<button class="btn btn-o" data-close>Cerrar</button><button class="btn btn-p" data-close data-done="Respuesta enviada y caso actualizado.">Enviar respuesta</button>'); },
+    pqr: (b) => { const x = PQR[+b.dataset.k]; modal(x[0] + ', ' + x[1], '<div class="timeline-v"><div class="it cur"><div class="strong">Radicada por código QR</div><div class="small muted">' + x[2] + '</div></div><div class="it ' + (x[4] ? 'cur' : '') + '"><div class="strong">Ampliación de información</div><div class="small muted">' + x[4] + ' de 3 permitidas</div></div><div class="it ' + (/líder|video/.test(x[3]) ? 'cur' : '') + '"><div class="strong">Respuesta del líder</div><div class="small muted">Solicitada por el sistema</div></div><div class="it"><div class="strong">Respuesta al cliente</div><div class="small muted">' + x[5] + ' días hábiles restantes</div></div></div>', '<button class="btn btn-o" data-close data-done="Caso escalado a Jurídica.">Escalar a Jurídica</button><button class="btn btn-p" data-close data-done="Ampliación de información solicitada.">Pedir ampliación</button>'); },
+    acta: (b) => modal('Acta de comité, ' + b.dataset.k, '<div class="paper"><h4>Acta de comité de seguimiento</h4><div class="small muted" style="margin-bottom:12px">' + b.dataset.k + ' y Reval S.A.S. Periodo: ' + PREV_MONTH + '.</div>' + T(['Indicador', 'Meta', 'Resultado'], [['Cumplimiento de ANS', '95 %', '98,7 %'], ['Requerimientos atendidos en plazo', '95 %', '97,8 %'], ['Novedades operativas cerradas', '100 %', '100 %'], ['Evaluación del servicio', '4,0', '4,6']].map((r) => [r[0], '<span class="num">' + r[1] + '</span>', '<span class="num strong">' + r[2] + '</span>']), { align: ['', 'r', 'r'] }) + '<p class="small" style="margin-top:12px"><b>Compromisos:</b> mantener la validación de soportes antes de las 11:00 a. m. y socializar el acta con los líderes en la semana.</p><p class="small muted" style="margin-top:8px">Cifras generadas desde la bitácora de COI.</p></div>', '<button class="btn btn-o" data-close>Cerrar</button><button class="btn btn-p" data-close data-done="Acta descargada en PDF.">' + ic('download') + 'Descargar PDF</button>'),
+    reconfirmar: (b) => { b.outerHTML = tag('Confirmada', 'b-ok'); toast('Reconfirmación enviada por WhatsApp al mensajero.'); },
+  };
+
+  /* ================= Navegación ================= */
+  const MODULES = [
+    ['validacion', 'N1', 'Validación documental', 'filecheck'], ['novedades', 'N2', 'Novedades', 'inbox'], ['pqr', 'N3', 'PQR y encuestas', 'message'], ['alertas', 'N4', 'Alertas', 'bell'],
+    ['reporteria', 'N5', 'Reportería y comités', 'chart'], ['facturacion', 'N6', 'Facturación', 'receipt'], ['oficinas', 'N7', 'Oficinas', 'pin'], ['fincomercio', 'N8', 'Fincomercio', 'store'], ['ptr', 'N9', 'Transacciones en vivo', 'activity'],
+    ['malas', 'G1', 'Malas prácticas', 'alert'], ['papeleria', 'G2', 'Papelería', 'package'], ['usuarios', 'G3', 'Usuarios y planta', 'usercheck'], ['cheques', 'G4', 'Cheques y arqueos', 'wallet'], ['agrario', 'G5', 'Banco Agrario', 'building'], ['ingresos', 'G6', 'Correo de ingresos', 'mail'],
+    ['traza', 'TRAZA', 'TRAZA', 'flow'], ['inicio', 'N0', 'Tablero gerencial', 'home']
+  ];
+  const NAV = [
+    ['Monitoreo', [['inicio', 'Tablero gerencial', 'home'], ['analistas', 'Analistas', 'users'], ['procesos', 'Procesos', 'layers'], ['clientes', 'Clientes', 'building'], ['catalogo', 'Catálogo de actividades', 'list'], ['bitacora', 'Bitácora', 'clock']]],
+    ['Operación', [['validacion', 'Validación documental', 'filecheck'], ['novedades', 'Novedades', 'inbox', 12], ['pqr', 'PQR y encuestas', 'message'], ['alertas', 'Alertas', 'bell', 1], ['fincomercio', 'Fincomercio', 'store'], ['oficinas', 'Oficinas', 'pin']]],
+    ['Cifras', [['reporteria', 'Reportería y comités', 'chart'], ['facturacion', 'Facturación', 'receipt'], ['ptr', 'Transacciones en vivo', 'activity']]],
+    ['Módulos Apps Script', [['malas', 'Malas prácticas', 'alert', 'G1'], ['papeleria', 'Papelería', 'package', 'G2'], ['usuarios', 'Usuarios y planta', 'usercheck', 'G3'], ['cheques', 'Cheques y arqueos', 'wallet', 'G4'], ['agrario', 'Banco Agrario', 'building', 'G5'], ['ingresos', 'Correo de ingresos', 'mail', 'G6']]],
+    ['Herramientas', [['traza', 'TRAZA', 'flow'], ['implementacion', 'Plan de implementación', 'flag']]]
+  ];
+  let current = 'inicio';
+  const NAV_CLOSED = {};
+  const VIEW_LABEL = {};
+  NAV.forEach((g) => g[1].forEach((it) => { VIEW_LABEL[it[0]] = [g[0], it[1]]; }));
+  function renderNav(active) {
+    $('#nav').innerHTML = NAV.map((g, gi) => {
+      const hasActive = g[1].some((it) => it[0] === active);
+      const closed = NAV_CLOSED[gi] && !hasActive;
+      return '<div class="nav-group' + (closed ? ' closed' : '') + '"><button type="button" class="nav-gh" data-navg="' + gi + '" aria-expanded="' + !closed + '"><span>' + g[0] + '</span>' + ic('chevron', 'chev') + '</button><div class="nav-items">' +
+        g[1].map((it) => '<button type="button" data-go="' + it[0] + '" class="nav-item ' + (active === it[0] ? 'on' : '') + '" title="' + it[1] + '">' + ic(it[2]) + '<span class="ni-l">' + it[1] + '</span>' + (typeof it[3] === 'number' ? '<span class="count">' + it[3] + '</span>' : it[3] ? '<span class="tag">' + it[3] + '</span>' : '') + '</button>').join('') + '</div></div>';
+    }).join('');
+  }
+  function renderCrumbs(view, sub) {
+    const lbl = VIEW_LABEL[view] || (view === 'analista' ? ['Monitoreo', 'Analistas'] : view === 'cliente' ? ['Monitoreo', 'Clientes'] : ['Monitoreo', 'Tablero gerencial']);
+    let extra = '';
+    if (view === 'analista' && AN[sub]) extra = AN[sub].name;
+    if (view === 'cliente' && clients[sub]) extra = clients[sub].name;
+    if (view === 'traza' && sub) extra = sub;
+    $('#crumbs').innerHTML = '<span>' + lbl[0] + '</span>' + ic('chevron') + (extra ? '<span>' + lbl[1] + '</span>' + ic('chevron') + '<b>' + extra + '</b>' : '<b>' + lbl[1] + '</b>');
+  }
+  const NOTIFS = [['bad', 'Exceso de efectivo en BBVA Salitre', 'Hace 18 min', 'alertas'], ['warn', 'TRZ-0405 en prioridad crítica', 'CreSER, hoy', 'traza/TRZ-0405'], ['info', 'Comité BBVA listo para el 5 de noviembre', 'Reportería', 'reporteria'], ['ok', 'Soportes BBVA completos a las 10:42 a. m.', 'Validación documental', 'validacion']];
+  function renderNotifs() {
+    $('#dd-notif').innerHTML = '<div class="dd-h"><b>Notificaciones</b><button class="linkbtn" data-act="toast" data-k="Notificaciones marcadas como leídas.">Marcar como leídas</button></div>' + NOTIFS.map((n) => '<button class="ntf" data-go="' + n[3] + '"><span class="att-ic ' + n[0] + '">' + ic(n[0] === 'ok' ? 'check' : n[0] === 'info' ? 'clock' : 'alert') + '</span><span class="grow"><b>' + n[1] + '</b><small>' + n[2] + '</small></span></button>').join('') + '<button class="dd-f" data-go="bitacora">Ver toda la actividad</button>';
+  }
+  function go(path, keepScroll) {
+    timers.forEach(clearInterval); timers = [];
+    current = path || 'inicio';
+    const parts = current.split('/');
+    const view = parts[0];
+    const fn = V[view] || V.inicio;
+    const navKey = view === 'analista' ? 'analistas' : view === 'cliente' ? 'clientes' : (V[view] ? view : 'inicio');
+    renderNav(navKey);
+    renderCrumbs(view, parts[1]);
+    $$('.dd-menu.open').forEach((m) => m.classList.remove('open'));
+    const c = $('#content');
+    const isModule = MODULES.some((m) => m[0] === view) && view !== 'inicio';
+    if (!isModule && !(view === 'analista' && CTX.client)) CTX.client = null;
+    try { c.innerHTML = ctxBar(view) + fn(parts[1]); }
+    catch (err) { console.error(err); c.innerHTML = head('No se pudo abrir esta vista', 'Detalle técnico: ' + esc(err.message)); }
+    if (!keepScroll) { c.classList.remove('view-enter'); void c.offsetWidth; c.classList.add('view-enter'); }
+    if (!keepScroll) { window.scrollTo(0, 0); }
+    bindCharts();
+    highlightClient();
+    if (view === 'fincomercio') startFinTimer();
+    if (view === 'ptr') startPtr();
+    $('.side').classList.remove('open'); const sc = $('#scrim'); if (sc) sc.classList.remove('show'); document.body.classList.remove('no-scroll');
+    const vs = $('#viewas'); if (vs) vs.value = view === 'analista' && AN[parts[1]] ? parts[1] : '';
+  }
+  document.addEventListener('click', (e) => {
+    const goEl = e.target.closest('[data-go]');
+    if (goEl) { e.preventDefault(); if (goEl.closest('.search')) { $('#q').value = ''; $('#q-results').classList.remove('show'); } if (goEl.dataset.client) CTX.client = goEl.dataset.client; else if (goEl.closest('#nav, .search')) CTX.client = null; go(goEl.dataset.go); return; }
+    const act = e.target.closest('[data-act]');
+    if (act && ACTIONS[act.dataset.act]) { e.preventDefault(); ACTIONS[act.dataset.act](act); return; }
+    const tab = e.target.closest('[data-tab]');
+    if (tab) { const tb = tab.parentElement; $$('button', tb).forEach((b) => { b.classList.toggle('on', b === tab); const p = document.getElementById(b.dataset.tab); if (p) p.hidden = b !== tab; }); return; }
+    const a = e.target.closest('a[href^="#"]'); if (a) e.preventDefault();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('[data-go][tabindex]')) go(e.target.dataset.go); });
+  document.addEventListener('change', (e) => { if (e.target.matches('[data-dash-sel]')) { DASH.idx = +e.target.value; go('inicio', true); } if (e.target.matches('[data-cat-who]')) { CAT.who = e.target.value; go('catalogo', true); } if (e.target.matches('[data-tz]')) { TZF[e.target.dataset.tz] = e.target.value; go('traza', true); } });
+  let catTimer = null;
+  let tzTimer = null;
+  document.addEventListener('input', (e) => { if (e.target.matches('[data-tz-q]')) { clearTimeout(tzTimer); const v = e.target.value; tzTimer = setTimeout(() => { TZF.q = v; go('traza', true); const i = $('[data-tz-q]'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 250); } });
+  document.addEventListener('input', (e) => { if (e.target.matches('[data-cat-q]')) { clearTimeout(catTimer); const v = e.target.value; catTimer = setTimeout(() => { CAT.q = v; go('catalogo', true); const i = $('[data-cat-q]'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 250); } });
+
+  function setupSearch() {
+    const inp = $('#q'), box = $('#q-results');
+    const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const idx = D.analysts.map((a) => ['analista/' + a.id, a.name, 'Analista']).concat(Object.keys(clients).map((k) => ['cliente/' + k, clients[k].name, 'Cliente'])).concat(MODULES.map((m) => [m[0], m[2], 'Módulo ' + m[1]])).concat([['catalogo', 'Catálogo de actividades', 'Las 104 actividades']]).concat(TZ.map((t) => ['traza/' + t.id, t.id + ', ' + t.title, 'TRAZA']));
+    inp.addEventListener('input', () => {
+      const q = norm(inp.value.trim());
+      if (!q) { box.classList.remove('show'); return; }
+      const res = idx.filter((r) => norm(r[1]).indexOf(q) >= 0).slice(0, 8);
+      box.innerHTML = res.length ? res.map((r) => '<button type="button" data-go="' + r[0] + '">' + r[1] + '<span>' + r[2] + '</span></button>').join('') : '<div class="empty">Sin resultados para esa búsqueda</div>';
+      box.classList.add('show');
+    });
+    inp.addEventListener('blur', () => setTimeout(() => box.classList.remove('show'), 200));
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const b = $('[data-go]', box); if (b) { inp.value = ''; box.classList.remove('show'); go(b.dataset.go); } } });
+  }
+  function tickClock() { const n = new Date(); $('#clock').innerHTML = '<b>' + hhmm(n.getHours() * 60 + n.getMinutes()) + '</b>' + longDate(n); }
+  function setupViewAs() {
+    const s = $('#viewas');
+    s.innerHTML = '<option value="">Gerencia</option>' + D.analysts.map((a) => '<option value="' + a.id + '">' + a.name + '</option>').join('');
+    s.addEventListener('change', () => go(s.value ? 'analista/' + s.value : 'inicio'));
+  }
+  function brandMarks(size) {
+    const B = window.BRAND || {};
+    const rv = B.reval ? '<img class="logo-img" src="' + B.reval + '" alt="Reval">' : '<span class="wordmark ' + size + '" style="color:#fff">Reval<span class="dot">.</span></span>';
+    const mp = B.multipagas ? '<img class="logo-img" src="' + B.multipagas + '" alt="Multipagas">' : '<span class="wordmark mp ' + size + '" style="color:#fff">Multipagas<span class="dot">.</span></span>';
+    return rv + '<span class="brand-sep"></span>' + mp;
+  }
+  function enterApp() {
+    const btn = $('#enter'); btn.classList.add('loading'); btn.disabled = true; $('.btn-label', btn).textContent = 'Verificando credenciales';
+    setTimeout(() => {
+      const l = $('#login'); l.classList.add('leaving');
+      setTimeout(() => { l.hidden = true; l.classList.remove('leaving'); btn.classList.remove('loading'); btn.disabled = false; $('.btn-label', btn).textContent = 'Continuar con cuenta corporativa'; $('#app').hidden = false; go('inicio'); }, 380);
+    }, 900);
+  }
+  function start() {
+    $$('[data-marks]').forEach((el) => { el.innerHTML = brandMarks(el.dataset.marks); });
+    $('#enter').addEventListener('click', enterApp);
+    $('#other-acct').addEventListener('click', () => toast('En producción se abre el selector de cuentas corporativas.'));
+    $('#logout').addEventListener('click', () => { $$('.dd-menu.open').forEach((m) => m.classList.remove('open')); $('#app').hidden = true; $('#login').hidden = false; window.scrollTo(0, 0); });
+    const closeDrawer = () => { $('.side').classList.remove('open'); $('#scrim').classList.remove('show'); document.body.classList.remove('no-scroll'); };
+    $('#scrim').addEventListener('click', closeDrawer);
+    const autoCollapse = () => { const app = $('#app'); if (window.innerWidth > 900 && window.innerWidth <= 1180) app.classList.add('collapsed'); else if (window.innerWidth > 1180 && !app.dataset.userToggled) app.classList.remove('collapsed'); if (window.innerWidth > 900) closeDrawer(); };
+    autoCollapse(); window.addEventListener('resize', autoCollapse);
+    $('#menu').addEventListener('click', () => {
+      if (window.innerWidth <= 900) { const s = $('.side'); const open = !s.classList.contains('open'); s.classList.toggle('open', open); $('#scrim').classList.toggle('show', open); document.body.classList.toggle('no-scroll', open); return; }
+      $('#app').dataset.userToggled = '1';
+      const app = $('#app'); app.classList.toggle('collapsed');
+      $('#menu').title = app.classList.contains('collapsed') ? 'Expandir menú' : 'Contraer menú';
+    });
+    document.addEventListener('click', (e) => {
+      const dd = e.target.closest('[data-dd]');
+      if (dd) { const m = document.getElementById('dd-' + dd.dataset.dd); const was = m.classList.contains('open'); $$('.dd-menu.open').forEach((x) => x.classList.remove('open')); if (!was) m.classList.add('open'); e.stopPropagation(); return; }
+      const g = e.target.closest('[data-navg]');
+      if (g) { const gi = +g.dataset.navg; NAV_CLOSED[gi] = !NAV_CLOSED[gi]; g.parentElement.classList.toggle('closed'); g.setAttribute('aria-expanded', !g.parentElement.classList.contains('closed')); return; }
+      if (!e.target.closest('.dd-menu')) $$('.dd-menu.open').forEach((x) => x.classList.remove('open'));
+    }, true);
+    document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); const q = $('#q'); if (q && !$('#app').hidden) q.focus(); } });
+    renderNotifs(); setupSearch(); setupViewAs(); tickClock(); setInterval(tickClock, 30000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>

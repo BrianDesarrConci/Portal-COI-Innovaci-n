@@ -1,0 +1,17 @@
+{
+  "name": "portal-coi-apoyo-negocio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "COI · Gestión y Monitoreo de Apoyo al Negocio (React + Node.js)",
+  "workspaces": ["server", "client"],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev -w server\" \"npm:dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm start -w server",
+    "test": "npm test -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": { "node": ">=20" }
+}

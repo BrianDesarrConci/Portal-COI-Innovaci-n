@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>COI · Gestión y Monitoreo de Apoyo al Negocio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+  <script>window.BRAND = <?!= brandJson ?>;</script>
+</head>
+<body>
+  <!-- ===================== Ingreso ===================== -->
+  <div class="login" id="login">
+    <section class="login-brand">
+      <svg class="lg-grid" aria-hidden="true"><defs><pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2"/></pattern></defs><rect width="100%" height="100%" fill="url(#dots)"/></svg>
+      <svg class="lg-rings" viewBox="0 0 600 600" aria-hidden="true">
+        <circle cx="300" cy="300" r="290"/><circle cx="300" cy="300" r="236"/><circle cx="300" cy="300" r="182"/><circle cx="300" cy="300" r="128"/><circle cx="300" cy="300" r="74"/>
+        <circle class="arc-c" cx="300" cy="300" r="236" stroke-dasharray="260 1223"/>
+        <circle class="arc-g" cx="300" cy="300" r="128" stroke-dasharray="150 654" stroke-dashoffset="-330"/>
+        <circle class="node c" cx="503" cy="178" r="7"/><circle class="node g" cx="190" cy="408" r="6"/><circle class="node" cx="300" cy="64" r="4"/>
+      </svg>
+      <div class="lb-top"><div class="marks" data-marks="lg"></div><span class="env">Plataforma corporativa</span></div>
+      <div class="lb-mid">
+        <p class="lb-k">Gerencia de Gestión del Negocio</p>
+        <div class="prod-lock"><span class="prod-name">COI</span><span class="prod-tag">Gestión y Monitoreo<br>de Apoyo al Negocio</span></div>
+        <p class="lb-sub">La operación de 16 clientes y 104 actividades en un solo lugar, con acuerdos de servicio medidos y evidencia de cada paso.</p>
+        <ul class="lb-feats">
+          <li><span><svg class="ic" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><div><b>Monitoreo en tiempo real</b><small>Tablero gerencial diario, mensual, trimestral y semestral</small></div></li>
+          <li><span><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg></span><div><b>ANS y evaluaciones por cliente</b><small>Versión vigente de cada acuerdo y su medición</small></div></li>
+          <li><span><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></span><div><b>Procesos automatizados</b><small>Validación documental, alertas, reportería y facturación</small></div></li>
+        </ul>
+      </div>
+      <div class="lb-foot">© 2026 Reval S.A.S. y Multipagas S.A.S. Uso interno.</div>
+    </section>
+    <section class="login-side">
+      <div class="login-card">
+        <div class="lc-mark"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div>
+        <h2>Iniciar sesión en COI</h2>
+        <p class="muted">Ingrese con su cuenta corporativa. Los módulos visibles dependen de su rol.</p>
+        <div class="acct">
+          <span class="avatar">NP</span>
+          <div class="grow"><div class="strong">Nubia Parrado</div><div class="small muted">nubia.parrado@reval.com.co</div></div>
+          <span class="role-pill">Directora</span>
+        </div>
+        <button class="btn btn-p btn-lg btn-block" id="enter"><span class="btn-label">Continuar con cuenta corporativa</span><span class="spinner" aria-hidden="true"></span></button>
+        <div class="or"><span>o</span></div>
+        <button class="btn btn-o btn-block" id="other-acct" type="button">Usar otra cuenta</button>
+        <div class="lc-sec">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg>
+          <span>Sesión única protegida con el estándar Las Dos Llaves Universales. Su actividad queda registrada en la bitácora.</span>
+        </div>
+      </div>
+      <div class="login-links"><span>¿Problemas para ingresar? Radique una solicitud en TRAZA</span></div>
+    </section>
+  </div>
+
+  <!-- ===================== Aplicación ===================== -->
+  <div class="app" id="app" hidden>
+    <aside class="side" aria-label="Menú principal">
+      <div class="side-head">
+        <div class="marks" data-marks="sm"></div>
+        <div class="mono" aria-hidden="true">C<i></i></div>
+      </div>
+      <nav class="nav" id="nav" aria-label="Secciones"></nav>
+      <div class="side-foot">
+        <svg class="sf-rings" viewBox="0 0 200 200" aria-hidden="true"><circle cx="160" cy="160" r="120"/><circle cx="160" cy="160" r="88"/><circle cx="160" cy="160" r="56"/></svg>
+        <div class="sf-user"><span class="avatar">NP</span><div class="sf-txt"><b>Nubia Parrado</b><small>Directora</small></div></div>
+        <div class="sf-meta"><span class="dot-ok"></span><span class="sf-txt">Sincronizado hace 1 min, versión 1.0</span></div>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="top">
+        <button class="icon-btn" id="menu" aria-label="Abrir o contraer el menú" title="Contraer menú"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+        <span class="top-brand">COI</span>
+        <div class="crumbs" id="crumbs"></div>
+        <div class="search">
+          <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Buscar cliente, analista, módulo o radicado" autocomplete="off" aria-label="Buscar">
+          <kbd>Ctrl K</kbd>
+          <div class="results" id="q-results"></div>
+        </div>
+        <div class="top-right">
+          <div class="clock" id="clock"></div>
+          <div class="dd">
+            <button class="icon-btn" data-dd="notif" aria-label="Notificaciones"><svg class="ic" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="pip">4</span></button>
+            <div class="dd-menu" id="dd-notif"></div>
+          </div>
+          <div class="dd">
+            <button class="user-btn" data-dd="user" aria-label="Menú de usuario"><span class="avatar">NP</span><span class="ub-txt"><b>Nubia Parrado</b><small>Directora</small></span><svg class="ic" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="dd-menu right" id="dd-user">
+              <div class="ddu-head"><span class="avatar lg">NP</span><div><b>Nubia Parrado</b><small>nubia.parrado@reval.com.co</small><small>Directora</small></div></div>
+              <label class="ddu-row"><span>Ver COI como</span><select class="viewas" id="viewas" aria-label="Ver como"></select></label>
+              <button class="ddu-item" data-go="implementacion"><svg class="ic" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>Plan de implementación</button>
+              <button class="ddu-item" data-go="traza"><svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Soporte y solicitudes</button>
+              <button class="ddu-item danger" id="logout"><svg class="ic" viewBox="0 0 24 24"><path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4M6 12h10"/></svg>Cerrar sesión</button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main class="content" id="content"></main>
+    </div>
+  </div>
+  <div class="scrim" id="scrim"></div>
+  <div class="toast-wrap" id="toasts" aria-live="polite"></div>
+
+  <?!= include('Data'); ?>
+  <?!= include('App'); ?>
+</body>
+</html>

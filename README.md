@@ -46,10 +46,10 @@ Requiere Node.js 20 o superior.
 
 ```bash
 npm install        # instala server y client (workspaces)
-npm run dev        # API en :4000 y React en http://localhost:5173
+npm run dev        # desarrollo: abra http://localhost:5173 (el puerto 4000 es solo el API)
 npm test           # pruebas del API
 npm run build      # build de React en client/dist
-npm start          # producción: Node sirve API + React en :4000
+npm start          # producción: compila React y Node sirve todo en http://localhost:4000
 ```
 
 Variables de entorno (ver `.env.example`): `PORT`, `DATA_DIR` (carpeta de la base JSON de TRAZA) y,

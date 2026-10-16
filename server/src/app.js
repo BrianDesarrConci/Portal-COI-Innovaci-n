@@ -11,6 +11,14 @@ const MODULES_DIR = path.join(here, 'data', 'modules');
 
 const catalog = JSON.parse(await readFile(path.join(here, 'data', 'catalog.json'), 'utf8'));
 
+const DEV_PAGE = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>COI · API</title>
+<meta http-equiv="refresh" content="3;url=http://localhost:5173/"></head>
+<body style="font-family:Arial,sans-serif;padding:40px;color:#242A54;max-width:640px">
+<h2>Este es el API de COI</h2>
+<p>En modo desarrollo la aplicación se abre en <a href="http://localhost:5173/">http://localhost:5173</a>. Lo redirigimos en 3 segundos.</p>
+<p>Para servir todo desde este puerto, ejecute <code>npm start</code> (compila React y arranca Node).</p>
+</body></html>`;
+
 /** Crea la aplicación Express. Se exporta aparte de index.js para poder probarla. */
 export function createApp() {
   const app = express();
@@ -40,9 +48,12 @@ export function createApp() {
 
   // En producción, Node sirve también el build de React.
   const dist = path.resolve(here, '..', '..', 'client', 'dist');
-  if (fs.existsSync(dist)) {
+  if (fs.existsSync(path.join(dist, 'index.html'))) {
     app.use(express.static(dist));
     app.get('*', (_req, res) => res.sendFile(path.join(dist, 'index.html')));
+  } else {
+    // Sin build de React (modo desarrollo): la interfaz la sirve Vite en el puerto 5173.
+    app.get('*', (_req, res) => res.status(200).type('html').send(DEV_PAGE));
   }
 
   // eslint-disable-next-line no-unused-vars

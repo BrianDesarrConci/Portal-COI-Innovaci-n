@@ -111,6 +111,8 @@ test('cerrarNovedadesAutomaticamente cierra coberturas vencidas como SISTEMA AUT
   const lista = await G.obtenerListaCajeros();
   const caj = lista[5];
   const vencida = await G.registrarNovedad({ cajeroNombre: caj[9], oficina: caj[1], descripcion: 'Motivos familiares o personales', fechaInicio: '2026-01-02', diasAusencia: 2, reportadoPor: 'JMORENO' });
+  // V1 genera el ID con la hora en milisegundos (NOV-<ms>): se espera para que no coincidan.
+  await new Promise((r) => setTimeout(r, 5));
   const vigente = await G.registrarNovedad({ cajeroNombre: caj[9], oficina: caj[1], descripcion: 'Motivos de salud', fechaInicio: '2099-01-02', diasAusencia: 2, reportadoPor: 'JMORENO' });
   await G.asignarBackup(vencida.id, backupNombre, 'JMORENO');
   const otroBackup = String((await G.obtenerCajerosBackup())[0][9]).trim();

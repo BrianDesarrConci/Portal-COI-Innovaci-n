@@ -156,6 +156,10 @@ function SideNav({ active }) {
 function Search() {
   const { go, D, clients } = useApp();
   const traza = useApi('/api/traza');
+  const { pathname } = useLocation();
+  const { reload } = traza;
+  // Recarga los radicados al navegar, para encontrar también los recién creados.
+  useEffect(() => { reload(); }, [pathname, reload]);
   const [q, setQ] = useState('');
   const [show, setShow] = useState(false);
   const inp = useRef(null);

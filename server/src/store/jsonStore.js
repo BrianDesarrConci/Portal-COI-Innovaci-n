@@ -1,5 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Por defecto la base queda en server/var, sin importar desde dónde se arranque Node.
+const DEFAULT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'var');
 
 /**
  * Almacén JSON en disco, suficiente para la fase inicial (sin motor de base de datos).
@@ -7,7 +11,7 @@ import path from 'node:path';
  * (archivo temporal + rename) y se serializan en memoria.
  */
 export function createStore(name, seed) {
-  const dir = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), 'var'));
+  const dir = path.resolve(process.env.DATA_DIR || DEFAULT_DIR);
   const file = path.join(dir, name + '.json');
   let data;
   if (fs.existsSync(file)) {

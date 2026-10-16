@@ -4,3 +4,4 @@ dist/
 server/var/
 *.log
 .DS_Store
+var/

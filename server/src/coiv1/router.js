@@ -1,33 +1,24 @@
 /**
  * API de COI V1. Equivalente a google.script.run:
  *   POST /api/coiv1/rpc/:funcion   { "args": [ ... ] }   →   { "ok": true, "result": <lo que devuelve la función V1> }
- * Las funciones viven en server/src/coiv1/modules/*.js y server/src/coiv1/arqueos/*.js; cada archivo
- * exporta `functions = { nombreFuncionV1: async (...args) => ... }` con el mismo nombre y forma de
+ * Las funciones viven en server/src/coiv1/modules/*.js y server/src/coiv1/arqueos/*.js (listados en
+ * registry.js); cada archivo exporta `functions = { nombreFuncionV1: async (...args) => ... }` con el mismo nombre y forma de
  * respuesta que el código de Apps Script.
  */
 import { Router } from 'express';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { getDriver, sheetsManifest } from './spreadsheet.js';
 import { DriveFiles, readOutbox } from './gas.js';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const DIRS = ['modules', 'arqueos'];
+import { MODULES } from './registry.js';
 
 let registry = null;
 async function loadRegistry() {
   if (registry) return registry;
   const reg = {};
-  for (const d of DIRS) {
-    const dir = path.join(here, d);
-    if (!fs.existsSync(dir)) continue;
-    for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.js') && !x.startsWith('_')).sort()) {
-      const mod = await import(pathToFileURL(path.join(dir, f)).href);
-      for (const [name, fn] of Object.entries(mod.functions || {})) {
-        if (reg[name]) console.warn(`[COI V1] función duplicada ${name} (${d}/${f})`);
-        reg[name] = fn;
-      }
+  for (const [origen, mod] of MODULES) {
+    for (const [name, fn] of Object.entries(mod.functions || {})) {
+      if (reg[name]) console.warn(`[COI V1] función duplicada ${name} (${origen})`);
+      reg[name] = fn;
     }
   }
   const drv = getDriver();

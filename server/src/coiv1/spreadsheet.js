@@ -20,10 +20,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BOOKS, bookById } from './books.js';
 import { createSheetsDriver } from './sheetsApi.js';
+import { manifest, snapshotRows } from '../data/coiv1/index.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const SNAP_DIR = path.join(here, '..', 'data', 'coiv1');
-const manifest = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, 'manifest.json'), 'utf8'));
 
 // ---------- Serialización de celdas ----------
 export const reviveCell = (c) => (c && typeof c === 'object' && '$d' in c ? new Date(c.$d) : c);
@@ -51,7 +50,7 @@ function createSnapshotDriver() {
     const over = path.join(overlayDir(), file);
     let rows = [];
     if (fs.existsSync(over)) rows = JSON.parse(fs.readFileSync(over, 'utf8'));
-    else if (fs.existsSync(path.join(SNAP_DIR, file))) rows = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, file), 'utf8'));
+    else rows = snapshotRows(file) || [];
     cache.set(key, rows);
     return rows;
   }

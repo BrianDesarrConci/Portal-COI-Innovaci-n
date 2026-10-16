@@ -73,6 +73,20 @@ npm run build      # build de React en client/dist
 npm start          # producción: compila React y Node sirve todo en http://localhost:4000
 ```
 
+### Vercel
+
+`vercel.json` define dos servicios en un solo proyecto (un dominio):
+
+| Servicio | Carpeta | Tipo | Ruta pública |
+| --- | --- | --- | --- |
+| `client` | `client/` | Vite (React, estático, con fallback a `index.html`) | `/(.*)` |
+| `server` | `server/` | Express (función, entrada `server/server.js`) | `/api/(.*)` |
+
+El navegador llama al API con rutas relativas (`/api/...`) en el mismo dominio, así que no hay llamadas
+entre servicios ni *bindings*. En Vercel el disco solo permite escribir en `/tmp`: las escrituras de la
+demo (TRAZA, cambios sobre la copia de Sheets, bandeja de salida, archivos) son efímeras. Para datos
+persistentes configure `GOOGLE_SERVICE_ACCOUNT_JSON` (Google Sheets en vivo).
+
 Variables de entorno (ver `.env.example`): `PORT`, `DATA_DIR` (carpeta de la base JSON de TRAZA) y,
 en el cliente, `VITE_LOGO_REVAL_URL` / `VITE_LOGO_MULTIPAGAS_URL` para los logos oficiales.
 

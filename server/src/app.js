@@ -1,16 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'node:path';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { readFile } from 'node:fs/promises';
 import trazaRouter from './routes/traza.js';
 import coiv1Router from './coiv1/router.js';
+import { MODULE_DATA } from './data/modules/index.js';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const MODULES_DIR = path.join(here, 'data', 'modules');
-
-const catalog = JSON.parse(await readFile(path.join(here, 'data', 'catalog.json'), 'utf8'));
+const catalog = JSON.parse(fs.readFileSync(new URL('./data/catalog.json', import.meta.url), 'utf8'));
 
 /**
  * Crea la aplicación Express con el API. La interfaz React se monta en index.js
@@ -30,10 +25,10 @@ export function createApp() {
   app.get('/api/modules/:view', async (req, res, next) => {
     const { view } = req.params;
     if (!/^[a-z0-9-]+$/.test(view)) return res.status(400).json({ error: 'Nombre de módulo no válido' });
-    const file = path.join(MODULES_DIR, view + '.js');
-    if (!fs.existsSync(file)) return res.status(404).json({ error: 'Módulo sin datos: ' + view });
+    const load = Object.prototype.hasOwnProperty.call(MODULE_DATA, view) ? MODULE_DATA[view] : null;
+    if (!load) return res.status(404).json({ error: 'Módulo sin datos: ' + view });
     try {
-      const mod = await import(file);
+      const mod = await load();
       res.json(mod.default);
     } catch (err) { next(err); }
   });
@@ -42,7 +37,6 @@ export function createApp() {
   app.use('/api/coiv1', coiv1Router);
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
-
 
   // eslint-disable-next-line no-unused-vars
   app.use((err, _req, res, _next) => {

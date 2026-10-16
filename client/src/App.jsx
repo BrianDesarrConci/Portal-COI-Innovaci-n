@@ -5,6 +5,7 @@ import { AppProvider } from './context/AppContext.jsx';
 import { useApi } from './hooks/useApi.js';
 import Login from './layout/Login.jsx';
 import Shell from './layout/Shell.jsx';
+import Junta from './views/Junta.jsx';
 
 // Usuario de la demo. En producción llega del inicio de sesión corporativo.
 const USER = { name: 'Nubia Parrado', initials: 'NP', email: 'nubia.parrado@reval.com.co', role: 'Directora' };
@@ -24,6 +25,7 @@ export default function App() {
           <AppProvider catalog={catalog.data}>
             <Routes>
               <Route path="/" element={<Navigate to="/inicio" replace />} />
+              <Route path="/junta" element={<Junta />} />
               <Route path="/:view" element={<Shell user={USER} onLogout={() => setSession(false)} />} />
               <Route path="/:view/:sub" element={<Shell user={USER} onLogout={() => setSession(false)} />} />
             </Routes>

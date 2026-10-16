@@ -8,16 +8,13 @@
     "client"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"npm:dev -w server\" \"npm:dev -w client\"",
+    "dev": "npm run dev -w server",
     "build": "npm run build -w client",
     "prestart": "npm run build",
     "start": "npm start -w server",
     "test": "npm test -w server"
   },
-  "devDependencies": {
-    "concurrently": "^9.1.2"
-  },
   "engines": {
-    "node": ">=20"
+    "node": ">=18.18"
   }
 }

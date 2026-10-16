@@ -34,8 +34,8 @@ test('módulo inexistente o con nombre inválido', async () => {
   assert.equal((await fetch(base + '/api/modules/..%2Fcatalog')).status, 400);
 });
 
-test('la raíz responde (sin build muestra la guía de desarrollo)', async () => {
-  const r = await fetch(base + '/');
-  assert.equal(r.status, 200);
-  assert.match(await r.text(), /COI/);
+test('ruta de API inexistente responde 404 en JSON', async () => {
+  const r = await fetch(base + '/api/no-existe');
+  assert.equal(r.status, 404);
+  assert.ok((await r.json()).error);
 });

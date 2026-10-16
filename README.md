@@ -27,8 +27,9 @@ Es la migración a **React + Node.js** del demo construido en Google Apps Script
 └── docs/referencia-gas/    Demo original en Apps Script
 ```
 
-En desarrollo, Vite (puerto 5173) redirige `/api` al servidor Node (puerto 4000). En producción,
-Node sirve el build de React y el API desde el mismo puerto.
+Node sirve el API y la interfaz desde **un solo puerto** (4000): en desarrollo monta Vite como
+middleware (con recarga en caliente) y en producción sirve el build de React. Así funciona igual en
+local y en StackBlitz.
 
 ## Módulos
 
@@ -42,11 +43,14 @@ Node sirve el build de React y el API desde el mismo puerto.
 
 ## Uso
 
-Requiere Node.js 20 o superior.
+Requiere Node.js 18.18 o superior.
+
+**StackBlitz:** abra el repositorio (stackblitz.com/github/…); `.stackblitzrc` instala y ejecuta
+`npm run dev` solo, y la vista previa aparece en el panel de StackBlitz (no en `localhost`).
 
 ```bash
 npm install        # instala server y client (workspaces)
-npm run dev        # desarrollo: abra http://localhost:5173 (el puerto 4000 es solo el API)
+npm run dev        # desarrollo: abra http://localhost:4000
 npm test           # pruebas del API
 npm run build      # build de React en client/dist
 npm start          # producción: compila React y Node sirve todo en http://localhost:4000

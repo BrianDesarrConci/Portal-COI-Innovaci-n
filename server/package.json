@@ -5,12 +5,15 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "dev": "node --watch src/index.js",
+    "dev": "node src/index.js --dev",
     "start": "node src/index.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "vite": "^5.4.11"
   }
 }

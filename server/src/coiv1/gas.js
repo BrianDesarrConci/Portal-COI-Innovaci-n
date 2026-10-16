@@ -77,8 +77,9 @@ export const LockService = {
       async waitLock(ms = 30000) {
         let r; const mine = new Promise((res) => { r = res; });
         const prev = tail; tail = prev.then(() => mine);
-        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('No se pudo obtener el bloqueo en ' + ms + ' ms')), ms));
-        await Promise.race([prev, timeout]);
+        let timer;
+        const timeout = new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('No se pudo obtener el bloqueo en ' + ms + ' ms')), ms); });
+        try { await Promise.race([prev, timeout]); } finally { clearTimeout(timer); }
         release = r; return true;
       },
       async tryLock(ms) { try { return await this.waitLock(ms); } catch { return false; } },

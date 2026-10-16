@@ -87,6 +87,11 @@ entre servicios ni *bindings*. En Vercel el disco solo permite escribir en `/tmp
 demo (TRAZA, cambios sobre la copia de Sheets, bandeja de salida, archivos) son efímeras. Para datos
 persistentes configure `GOOGLE_SERVICE_ACCOUNT_JSON` (Google Sheets en vivo).
 
+Servicios externos (n8n, API de PTR, etc.): no son servicios de este proyecto de Vercel, así que no usan
+*bindings*; su URL y credenciales van en variables de entorno del proyecto (`N8N_BASE_URL`, `N8N_API_KEY`,
+ver `.env.example`) y el servidor las lee con `process.env`. Si alguno se despliega dentro de este mismo
+proyecto como servicio, se agrega en `vercel.json` con un binding en el servicio `server`.
+
 Variables de entorno (ver `.env.example`): `PORT`, `DATA_DIR` (carpeta de la base JSON de TRAZA) y,
 en el cliente, `VITE_LOGO_REVAL_URL` / `VITE_LOGO_MULTIPAGAS_URL` para los logos oficiales.
 

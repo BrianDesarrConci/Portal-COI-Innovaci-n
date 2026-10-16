@@ -108,6 +108,7 @@ export default function Shell({ user, onLogout }) {
                     {Object.values(AN).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
                 </label>
+                <button className="ddu-item" onClick={() => go('junta')}><Icon name="sparkle" />Modo Comité (presentación)</button>
                 <button className="ddu-item" onClick={() => go('implementacion')}><Icon name="flag" />Plan de implementación</button>
                 <button className="ddu-item" onClick={() => go('traza')}><Icon name="message" />Soporte y solicitudes</button>
                 <button className="ddu-item danger" onClick={onLogout}><Icon name="logout" />Cerrar sesión</button>

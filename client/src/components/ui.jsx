@@ -1,7 +1,8 @@
 // Componentes de presentación de COI. Equivalen a los ayudantes HTML del demo
 // (head, kpi, card, T, tabs, gasFrame, spark, lineChart, hbars, docRow, listRow).
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Icon from './Icon.jsx';
+import CountUp from './CountUp.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { ST } from '../lib/model.js';
 import { fmt } from '../lib/format.js';
@@ -37,7 +38,7 @@ export function Kpi({ label, value, sub, icon, unit }) {
   return (
     <div className="card kpi">
       <div className="lbl"><span className="kx-ic"><Icon name={icon} /></span>{label}</div>
-      <div className="val num">{value}{unit && <small>{unit}</small>}</div>
+      <div className="val num"><CountUp value={value} />{unit && <small>{unit}</small>}</div>
       {sub && <div className="sub">{sub}</div>}
     </div>
   );
@@ -117,7 +118,7 @@ export function Spark({ values, w = 120, h = 32, color = 'var(--green)' }) {
   const last = pts[pts.length - 1];
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
-      <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path className="ln-draw" pathLength="1" d={d} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx={last[0]} cy={last[1]} r="2.8" fill={color} />
     </svg>
   );
@@ -132,8 +133,17 @@ export function LineChart({ series, labels, w = 720, h = 220, min: minO, max: ma
   const x = (i) => pl + (i / (labels.length - 1)) * (W - pl - pr);
   const y = (v) => pt + (1 - (v - min) / (max - min)) * (H - pt - pb);
   const step = Math.ceil(labels.length / 8);
+  const gid = 'lg' + useId().replace(/:/g, '');
   return (
     <svg className="chart" viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={label}>
+      <defs>
+        {series.map((s, si) => s.area && (
+          <linearGradient key={si} id={gid + si} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor={s.color} stopOpacity="0.28" />
+            <stop offset="1" stopColor={s.color} stopOpacity="0" />
+          </linearGradient>
+        ))}
+      </defs>
       {[0, 1, 2, 3, 4].map((k) => { const v = min + (k / 4) * (max - min); return (
         <g key={'g' + k}><line className="grid-l" x1={pl} x2={W - pr} y1={y(v)} y2={y(v)} /><text x={pl - 8} y={y(v) + 4} textAnchor="end">{fmtO ? fmtO(v) : fmt(v)}</text></g>
       ); })}
@@ -142,8 +152,8 @@ export function LineChart({ series, labels, w = 720, h = 220, min: minO, max: ma
         const d = s.data.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
         return (
           <g key={'s' + si}>
-            {s.area && <path d={`${d} L${x(s.data.length - 1)} ${y(min)} L${x(0)} ${y(min)}Z`} fill={s.color} opacity="0.08" />}
-            <path d={d} fill="none" stroke={s.color} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" strokeDasharray={s.dash ? '5 5' : undefined} />
+            {s.area && <path className="area-in" d={`${d} L${x(s.data.length - 1)} ${y(min)} L${x(0)} ${y(min)}Z`} fill={`url(#${gid + si})`} />}
+            <path className={s.dash ? undefined : 'ln-draw'} pathLength={s.dash ? undefined : 1} d={d} fill="none" stroke={s.color} strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" strokeDasharray={s.dash ? '5 5' : undefined} />
           </g>
         );
       })}
@@ -194,5 +204,11 @@ export const areaStyle = { width: '100%', border: '1px solid var(--line)', borde
 /** Estado de carga / error de datos del API dentro de una vista. */
 export function Loading({ error }) {
   if (error) return <div className="card" style={{ padding: 24 }}><b>No se pudieron cargar los datos.</b><p className="muted small">{error.message}</p></div>;
-  return <div className="card" style={{ padding: 24 }}><span className="muted">Cargando…</span></div>;
+  return (
+    <div className="sk-wrap" aria-busy="true" aria-label="Cargando">
+      <div className="sk sk-title" />
+      <div className="grid g4">{[0, 1, 2, 3].map((i) => <div key={i} className="card sk-card"><div className="sk sk-line w40" /><div className="sk sk-num" /><div className="sk sk-line w70" /></div>)}</div>
+      <div className="card sk-card mt"><div className="sk sk-line w30" />{[0, 1, 2, 3, 4].map((i) => <div key={i} className="sk sk-row" />)}</div>
+    </div>
+  );
 }

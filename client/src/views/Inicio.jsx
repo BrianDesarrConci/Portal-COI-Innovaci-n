@@ -10,6 +10,7 @@ import { MODULES } from '../lib/nav.js';
 import { buildSeries, makeEvalFor, periodDef, PERIOD_OPTS, PERIOD_TYPES, inRange, agg, buckets, isoLocal } from './monitoreo/dashboard.js';
 import { ComboChart, Delta, Donut, Gauge, Heatmap } from './monitoreo/charts.jsx';
 import Pulse from './monitoreo/Pulse.jsx';
+import CountUp from '../components/CountUp.jsx';
 
 // Periodo elegido: se conserva al salir y volver al tablero, como en el demo.
 const DASH = { type: 'mes', idx: 0 };
@@ -122,7 +123,7 @@ function Dashboard({ app, data, dash, setPeriod, SERIES, evalFor, NOW, NOW_MIN }
   const kcard = (label, val, unit, dlt, sp, icon, color) => (
     <div className="card kx">
       <div className="kx-top"><span className="kx-ic" style={{ '--c': color }}><Icon name={icon} /></span><span className="kx-l">{label}</span></div>
-      <div className="kx-v num">{val}{unit && <small>{unit}</small>}</div>
+      <div className="kx-v num"><CountUp value={val} />{unit && <small>{unit}</small>}</div>
       <div className="kx-b">{dlt}{sp.length > 1 && <Spark values={sp} w={92} h={26} color={color} />}</div>
     </div>
   );
@@ -141,12 +142,13 @@ function Dashboard({ app, data, dash, setPeriod, SERIES, evalFor, NOW, NOW_MIN }
             {opts.map((o) => <option key={o[0]} value={o[0]}>{o[1]}</option>)}
           </select>
           <button className="btn btn-o" onClick={() => toast('Informe de ' + P.label + ' generado en PDF.')}><Icon name="download" />Informe del periodo</button>
+          <button className="btn btn-board" onClick={() => go('junta')}><Icon name="sparkle" />Presentar al comité</button>
         </div>
       </div>
 
       <section className="hero">
         <div className="hero-g">
-          <div className="gauge-box"><Gauge v={A.index} /><div className="gauge-c"><b className="num">{fmt(A.index, 1)}</b><span>de 100</span></div></div>
+          <div className="gauge-box"><Gauge v={A.index} /><div className="gauge-c"><b className="num"><CountUp value={fmt(A.index, 1)} /></b><span>de 100</span></div></div>
           <div>
             <div className="hero-k">Índice de servicio</div>
             <div className="hero-p">{P.label}{P.partial ? ', en curso' : ''}</div>
@@ -154,7 +156,7 @@ function Dashboard({ app, data, dash, setPeriod, SERIES, evalFor, NOW, NOW_MIN }
           </div>
         </div>
         <div className="hero-stats">
-          {heroStats.map((s) => <div key={s[0]} className="hs"><span>{s[0]}</span><b className="num">{s[1]}</b><small>{s[2]}</small></div>)}
+          {heroStats.map((s) => <div key={s[0]} className="hs"><span>{s[0]}</span><b className="num"><CountUp value={s[1]} /></b><small>{s[2]}</small></div>)}
         </div>
         <p className="hero-read"><Icon name="sparkle" /><span>{reading}</span></p>
       </section>

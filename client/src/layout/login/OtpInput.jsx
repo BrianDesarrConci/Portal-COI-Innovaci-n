@@ -39,7 +39,8 @@ const OtpInput = forwardRef(function OtpInput({ digits, onChange, onSubmit, disa
 
   return (
     <div className={'lx-otp' + (invalid ? ' invalid' : '')} role="group" aria-labelledby={labelledBy} aria-describedby={describedBy}>
-      {digits.map((d, i) => (
+      {digits.map((d, i) => [
+        i === length / 2 && <span key="sep" className="lx-otp-sep" aria-hidden="true" />,
         <input
           key={i}
           ref={(el) => { boxes.current[i] = el; }}
@@ -56,8 +57,8 @@ const OtpInput = forwardRef(function OtpInput({ digits, onChange, onSubmit, disa
           onKeyDown={(e) => onKeyDown(i, e)}
           onPaste={(e) => { e.preventDefault(); fill(i, e.clipboardData.getData('text')); }}
           onFocus={(e) => e.target.select()}
-        />
-      ))}
+        />,
+      ])}
     </div>
   );
 });

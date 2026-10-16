@@ -64,11 +64,21 @@ function createSnapshotDriver() {
     fs.writeFileSync(file + '.tmp', JSON.stringify(rows));
     fs.renameSync(file + '.tmp', file);
   }
-  const extra = new Map(); // hojas creadas con insertSheet
+  // Hojas creadas con insertSheet: se recuerdan en $DATA_DIR/coiv1/sheets.json para sobrevivir reinicios.
+  const extraFile = () => path.join(overlayDir(), 'sheets.json');
+  const readExtra = () => { try { return JSON.parse(fs.readFileSync(extraFile(), 'utf8')); } catch { return {}; } };
   return {
     name: 'snapshot',
-    sheetNames: (book) => Object.keys(manifest[book] || {}).concat(extra.get(book) || []),
-    addSheet(book, sheet) { extra.set(book, (extra.get(book) || []).concat(sheet)); save(book, sheet, []); },
+    sheetNames: (book) => Object.keys(manifest[book] || {}).concat((readExtra()[book] || []).filter((n) => !(manifest[book] || {})[n])),
+    addSheet(book, sheet) {
+      const ex = readExtra();
+      if (!(ex[book] || []).includes(sheet)) {
+        ex[book] = (ex[book] || []).concat(sheet);
+        fs.mkdirSync(overlayDir(), { recursive: true });
+        fs.writeFileSync(extraFile(), JSON.stringify(ex, null, 1));
+      }
+      if (!load(book, sheet).length) save(book, sheet, []);
+    },
     async read(book, sheet) { return revive(load(book, sheet)); },
     async write(book, sheet, mutate) {
       const rows = load(book, sheet).map((r) => r.slice());

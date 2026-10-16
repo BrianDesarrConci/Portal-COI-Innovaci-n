@@ -32,8 +32,13 @@ export function V1SessionProvider({ children }) {
         const [u, t, m] = await Promise.all([gas('obtenerUsuarios'), gas('obtenerTablaPermisos'), fetch('/api/coiv1/meta').then((x) => x.json())]);
         setUsuarios(u); setTabla(t); setMeta(m);
         let pref = null; try { pref = sessionStorage.getItem(KEY); } catch { /* */ }
-        // Por defecto: el primer usuario ACTIVO con más módulos habilitados en PERMISOS.
-        const score = (name) => { const row = t.find((r) => r[0] === name); return row ? row.slice(1).filter((x) => String(x).toUpperCase() === 'SI').length : 0; };
+        // Por defecto (demo): quien tenga llave de Arqueos «Analista» (ve toda la red); si no, el
+        // usuario ACTIVO con más módulos habilitados en PERMISOS.
+        const score = (name) => {
+          const u0 = u.find((r) => r[0] === name);
+          const row = t.find((r) => r[0] === name);
+          return (u0 && String(u0[5]).trim().toUpperCase() === 'ANALISTA' ? 100 : 0) + (row ? row.slice(1).filter((x) => String(x).toUpperCase() === 'SI').length : 0);
+        };
         const activos = u.filter((r) => String(r[4]).toUpperCase() !== 'INACTIVO');
         const def = (pref && activos.find((r) => r[0] === pref)) || activos.slice().sort((a, b) => score(b[0]) - score(a[0]))[0];
         if (def) await entrar(def[0]);
@@ -41,8 +46,16 @@ export function V1SessionProvider({ children }) {
     })();
   }, [entrar]);
 
-  /** ¿El usuario de la sesión tiene habilitado el módulo? (mismas llaves que la hoja PERMISOS). */
-  const puede = useCallback((modulo) => !!(sesion && sesion.permisos && sesion.permisos[modulo]), [sesion]);
+  /**
+   * ¿Puede ver el módulo? Regla de aplicarPermisos() en js.html de V1: los usuarios que no son
+   * ADMIN ven todo; a los ADMIN solo se les ocultan los módulos en NO de la hoja PERMISOS.
+   */
+  const puede = useCallback((modulo) => {
+    if (!sesion) return false;
+    if (String(sesion.rol || '').toUpperCase().trim() !== 'ADMIN') return true;
+    const p = sesion.permisos || {};
+    return !(modulo in p) || !!p[modulo];
+  }, [sesion]);
   const value = useMemo(() => ({ usuarios, tabla, sesion, meta, error, entrar, puede }), [usuarios, tabla, sesion, meta, error, entrar, puede]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -73,15 +86,16 @@ export function V1Bar() {
 }
 
 /** Bloquea el contenido si el usuario no tiene el módulo habilitado en PERMISOS (como showSection de V1). */
-export function V1Guard({ modulo, children }) {
+export function V1Guard({ modulo, children, permitir = false }) {
   const { sesion, puede, error } = useV1();
   if (error) return <div className="card" style={{ padding: 24 }}><b>No se pudo iniciar COI V1.</b><p className="muted small">{error.message}</p></div>;
   if (!sesion) return <div className="card" style={{ padding: 24 }}><span className="muted">Abriendo sesión de COI V1…</span></div>;
-  if (!puede(modulo)) {
+  // `permitir`: entrada alternativa propia del aplicativo (p. ej. Arqueos con su llave).
+  if (!puede(modulo) && !permitir) {
     return (
       <div className="card v1-locked">
         <Icon name="lock" />
-        <div><b>Módulo no habilitado para {sesion.nombre}</b><p className="muted small">En la hoja PERMISOS el módulo «{modulo}» está en NO para este usuario. Cambie de usuario o habilítelo en Administración.</p></div>
+        <div><b>Módulo no habilitado para {sesion.nombre}</b><p className="muted small">El usuario es ADMIN y en la hoja PERMISOS el módulo «{modulo}» está en NO (regla de COI V1). Cambie de usuario con «Ver como» o habilítelo en Administración.</p></div>
       </div>
     );
   }

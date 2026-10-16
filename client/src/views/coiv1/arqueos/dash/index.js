@@ -1,11 +1,13 @@
-// Pestañas de tableros de Control de Arqueos (las implementa el módulo de tableros).
+// Pestañas de tableros de Control de Arqueos (COI V1).
 // Cada componente recibe { user } con la forma de currentUser de V1: { rol, idUsuario, nombre, correo }.
-import { PageHead } from '../../../../components/ui.jsx';
-const Pend = (t) => function Pendiente() { return <PageHead title={t} sub="En migración." />; };
-export const DashboardTab = Pend('Dashboard');
-export const LideresTab = Pend('Cumplimiento por líder');
-export const NovedadesTab = Pend('Faltantes y sobrantes');
-export const ClientesTab = Pend('Por cliente / oficina');
-export const RegionalTab = Pend('Regional y zona');
-export const AnaliticaTab = Pend('Analítica');
-export const TendenciasTab = Pend('Tendencias');
+//  - DashboardTab: "Mi cumplimiento" (Lider) o "Dashboard Regional / Global" (Regional, Analista).
+//  - LideresTab, NovedadesTab, ClientesTab, RegionalTab, AnaliticaTab, TendenciasTab.
+// Las acciones de gestión de la pestaña de novedades se piden con el evento de ventana
+// `coi:arqueos:gestion` (cancelable; detail = { id, accion: 'gestionar' | 'responder' | 'detalle', novedad }).
+export { DashboardTab } from './DashboardTab.jsx';
+export { LideresTab } from './LideresTab.jsx';
+export { NovedadesTab } from './NovedadesTab.jsx';
+export { ClientesTab } from './ClientesTab.jsx';
+export { RegionalTab } from './RegionalTab.jsx';
+export { AnaliticaTab } from './AnaliticaTab.jsx';
+export { TendenciasTab } from './TendenciasTab.jsx';

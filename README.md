@@ -35,11 +35,28 @@ local y en StackBlitz.
 
 | Grupo | Vistas |
 | --- | --- |
+| COI V1 Opciones | Migración completa de COI V1: Inicio, Granja de Usuarios (bajas y backups), Experiencia de Cliente (PQR), Centro de captura, Control de Arqueos (registro FOR-GOR, gestión, normalizaciones, tableros, analítica y tendencias), Brain RT y Administración (usuarios y permisos) |
 | Monitoreo | Tablero gerencial (N0), Analistas, Procesos, Clientes (ANS y evaluaciones), Catálogo de actividades, Bitácora |
 | Operación | Validación documental (N1), Novedades (N2), PQR y encuestas (N3), Alertas (N4), Oficinas (N7), Fincomercio (N8) |
 | Cifras | Reportería y comités (N5), Facturación (N6), Transacciones en vivo (N9) |
 | Módulos Apps Script | Malas prácticas (G1), Papelería (G2), Usuarios y planta (G3), Cheques y arqueos (G4), Banco Agrario (G5), Correo de ingresos (G6) |
 | Herramientas | TRAZA (solicitudes con bitácora real), Plan de implementación |
+
+## COI V1 sobre Google Sheets
+
+Los módulos de COI V1 conservan sus bases de Google Sheets y su lógica de Apps Script:
+
+- `server/src/coiv1/spreadsheet.js` reproduce `SpreadsheetApp` (filas como arreglos, índices desde 1)
+  y `server/src/coiv1/gas.js` los servicios `Utilities`, `LockService`, `CacheService`, `MailApp`, etc.
+- `POST /api/coiv1/rpc/<función>` equivale a `google.script.run`: mismos nombres, parámetros y respuestas
+  que `Código.gs` (fuente de referencia en `docs/referencia-coi-v1/`, sin secretos).
+- **Datos:** por defecto, copia de los libros COI V1, Granja de Usuarios y Directorio Nacional en
+  `server/src/data/coiv1` (sin contraseñas; cédulas, teléfonos y correos personales enmascarados).
+  Con `GOOGLE_SERVICE_ACCOUNT_JSON` (cuenta de servicio con acceso a los libros) se usa Google Sheets en vivo.
+- En la demo los correos no se envían: quedan en la bandeja de salida (Administración) y los soportes
+  generados se sirven desde `/api/coiv1/files`.
+- Permisos como en V1: los usuarios no ADMIN ven todo; a los ADMIN se les ocultan los módulos en NO de la
+  hoja PERMISOS. Control de Arqueos también admite la entrada propia con la llave de arqueos.
 
 ## Uso
 

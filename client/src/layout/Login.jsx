@@ -1,61 +1,225 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import BrandMarks from './BrandMarks.jsx';
 import { useOverlay } from '../components/Overlays.jsx';
+import Constellation from './login/Constellation.jsx';
+import OtpInput from './login/OtpInput.jsx';
+import { CoiMark, Counters, Ticker } from './login/StageParts.jsx';
+import './login/login.css';
 
+const CODE_LEN = 6;
+const EMPTY = Array(CODE_LEN).fill('');
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function greeting(d = new Date()) {
+  const h = d.getHours();
+  if (h >= 5 && h < 12) return 'Buenos días';
+  if (h >= 12 && h < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+
+/**
+ * Ingreso a COI en dos pasos (Las Dos Llaves Universales).
+ * Fases: account → validating → code → verifying → success → leaving → onEnter().
+ */
 export default function Login({ user, onEnter }) {
-  const [loading, setLoading] = useState(false);
-  const [leaving, setLeaving] = useState(false);
   const { toast } = useOverlay();
-  const enter = () => {
-    setLoading(true);
-    setTimeout(() => { setLeaving(true); setTimeout(onEnter, 380); }, 900);
+  const [phase, setPhase] = useState('account');
+  const [digits, setDigits] = useState(EMPTY);
+  const [error, setError] = useState('');
+  const timers = useRef([]);
+  const otpRef = useRef(null);
+  const continueRef = useRef(null);
+  const vizRef = useRef(null);
+  const enteredRef = useRef(false);
+
+  const later = useCallback((fn, ms) => { timers.current.push(window.setTimeout(fn, ms)); }, []);
+  useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), []);
+
+  const firstName = (user?.name || '').split(' ')[0];
+  const hello = useMemo(() => greeting(), []);
+  const code = digits.join('');
+  const complete = code.length === CODE_LEN;
+  const step = phase === 'account' || phase === 'validating' ? 1 : 2;
+
+  const startAccount = () => {
+    if (phase !== 'account') return;
+    setPhase('validating');
+    later(() => setPhase('code'), reducedMotion() ? 200 : 850);
   };
+
+  const verify = useCallback(() => {
+    if (phase !== 'code') return;
+    if (!complete) { setError(`Ingrese los ${CODE_LEN} dígitos del código.`); return; }
+    setError('');
+    setPhase('verifying');
+    const fast = reducedMotion();
+    later(() => setPhase('success'), fast ? 300 : 1100);
+    later(() => setPhase('leaving'), fast ? 900 : 2100);
+    later(() => { if (!enteredRef.current) { enteredRef.current = true; onEnter(); } }, fast ? 1100 : 2850);
+  }, [phase, complete, later, onEnter]);
+
+  // Envío automático al completar los 6 dígitos.
+  useEffect(() => {
+    if (phase === 'code' && complete) { const id = window.setTimeout(verify, 220); return () => window.clearTimeout(id); }
+    return undefined;
+  }, [phase, complete, verify]);
+
+  useEffect(() => { if (phase === 'code') otpRef.current?.focus(digits.findIndex((d) => !d) === -1 ? CODE_LEN - 1 : digits.findIndex((d) => !d)); }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const back = () => { setDigits(EMPTY); setError(''); setPhase('account'); window.setTimeout(() => continueRef.current?.focus(), 0); };
+  const onDigits = (next) => { setDigits(next); if (error) setError(''); };
+
+  const status = {
+    account: '',
+    validating: 'Validando la cuenta corporativa.',
+    code: `Primera llave validada. Ingrese el código de ${CODE_LEN} dígitos.`,
+    verifying: 'Verificando el código.',
+    success: 'Identidad verificada. Abriendo COI.',
+    leaving: 'Identidad verificada. Abriendo COI.',
+  }[phase];
+
   return (
-    <div className={'login' + (leaving ? ' leaving' : '')}>
-      <section className="login-brand">
-        <svg className="lg-grid" aria-hidden="true"><defs><pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" /></pattern></defs><rect width="100%" height="100%" fill="url(#dots)" /></svg>
-        <svg className="lg-rings" viewBox="0 0 600 600" aria-hidden="true">
-          <circle cx="300" cy="300" r="290" /><circle cx="300" cy="300" r="236" /><circle cx="300" cy="300" r="182" /><circle cx="300" cy="300" r="128" /><circle cx="300" cy="300" r="74" />
-          <circle className="arc-c" cx="300" cy="300" r="236" strokeDasharray="260 1223" />
-          <circle className="arc-g" cx="300" cy="300" r="128" strokeDasharray="150 654" strokeDashoffset="-330" />
-          <circle className="node c" cx="503" cy="178" r="7" /><circle className="node g" cx="190" cy="408" r="6" /><circle className="node" cx="300" cy="64" r="4" />
-        </svg>
-        <div className="lb-top"><BrandMarks size="lg" /><span className="env">Plataforma corporativa</span></div>
-        <div className="lb-mid">
-          <p className="lb-k">Gerencia de Gestión del Negocio</p>
-          <div className="prod-lock"><span className="prod-name">COI</span><span className="prod-tag">Gestión y Monitoreo<br />de Apoyo al Negocio</span></div>
-          <p className="lb-sub">La operación de 16 clientes y 104 actividades en un solo lugar, con acuerdos de servicio medidos y evidencia de cada paso.</p>
-          <ul className="lb-feats">
-            <li><span><Icon name="activity" /></span><div><b>Monitoreo en tiempo real</b><small>Tablero gerencial diario, mensual, trimestral y semestral</small></div></li>
-            <li><span><Icon name="shield" /></span><div><b>ANS y evaluaciones por cliente</b><small>Versión vigente de cada acuerdo y su medición</small></div></li>
-            <li><span><Icon name="sparkle" /></span><div><b>Procesos automatizados</b><small>Validación documental, alertas, reportería y facturación</small></div></li>
+    <div className={'lx' + (phase === 'leaving' ? ' is-leaving' : '')}>
+      {/* ---------- Escenario de marca ---------- */}
+      <section className="lx-stage" aria-labelledby="lx-title">
+        <div className="lx-dots" aria-hidden="true" />
+        <Constellation className="lx-canvas" anchorRef={vizRef} />
+        <div className="lx-scrim" aria-hidden="true" />
+
+        <header className="lx-top">
+          <BrandMarks size="lg" />
+          <span className="lx-env"><span className="lx-env-dot" aria-hidden="true" />Plataforma corporativa</span>
+        </header>
+
+        <div className="lx-viz" ref={vizRef} aria-hidden="true" />
+
+        <div className="lx-hero">
+          <div className="lx-lock">
+            <CoiMark size={44} />
+            <span className="lx-lock-name">COI</span>
+            <span className="lx-lock-sep" aria-hidden="true" />
+            <span className="lx-lock-tag">Gestión y Monitoreo<br />de Apoyo al Negocio</span>
+          </div>
+          <p className="lx-eyebrow">Gerencia de Gestión del Negocio</p>
+          <h1 id="lx-title" className="lx-h1">Toda la operación, <span className="lx-grad">medida y a la vista.</span></h1>
+          <p className="lx-lede">16 clientes y 104 actividades en un solo lugar, con acuerdos de servicio medidos en tiempo real y evidencia de cada paso.</p>
+        </div>
+
+        <div className="lx-bottom">
+          <Counters />
+          <Ticker />
+        </div>
+      </section>
+
+      {/* ---------- Acceso ---------- */}
+      <main className="lx-side">
+        <div className="lx-card" data-phase={phase}>
+          <div className="lx-card-head">
+            <span className="lx-secure"><Icon name="lock" />Acceso seguro</span>
+            <span className="lx-stepof num" aria-hidden="true">Paso {step} de 2</span>
+          </div>
+
+          <h2 className="lx-hello">{hello}, {firstName}</h2>
+          <p className="lx-intro">Ingrese con su cuenta corporativa. Los módulos visibles dependen de su rol.</p>
+
+          <div className="lx-acct">
+            <span className="lx-avatar" aria-hidden="true">{user.initials}</span>
+            <div className="lx-acct-id">
+              <div className="lx-acct-name">{user.name}</div>
+              <div className="lx-acct-mail">{user.email}</div>
+            </div>
+            <span className="lx-role">{user.role}</span>
+          </div>
+
+          <div className="lx-keys" role="group" aria-label="Las Dos Llaves Universales">
+            <div className="lx-keys-title"><Icon name="shield" />Las Dos Llaves Universales</div>
+            <ol className="lx-steps">
+              <li className={step > 1 ? 'done' : 'current'} aria-current={step === 1 ? 'step' : undefined}>
+                <span className="lx-step-n">{step > 1 ? <Icon name="check" /> : '1'}</span>
+                <span className="lx-step-t"><span className="lx-step-k">Llave 1</span><span className="lx-step-l">Cuenta corporativa</span></span>
+              </li>
+              <li className={phase === 'success' || phase === 'leaving' ? 'done' : step === 2 ? 'current' : ''} aria-current={step === 2 ? 'step' : undefined}>
+                <span className="lx-step-n">{phase === 'success' || phase === 'leaving' ? <Icon name="check" /> : '2'}</span>
+                <span className="lx-step-t"><span className="lx-step-k">Llave 2</span><span className="lx-step-l">Código de verificación</span></span>
+              </li>
+            </ol>
+            <div className="lx-progress" aria-hidden="true"><span style={{ transform: `scaleX(${phase === 'success' || phase === 'leaving' ? 1 : step === 2 ? 0.5 : phase === 'validating' ? 0.25 : 0.04})` }} /></div>
+          </div>
+
+          <div className="lx-panel-wrap">
+            {step === 1 && (
+              <div className="lx-panel" key="p1">
+                <button ref={continueRef} type="button" className={'lx-btn lx-btn-primary' + (phase === 'validating' ? ' is-busy' : '')}
+                  onClick={startAccount} aria-disabled={phase === 'validating'}>
+                  <span className="lx-btn-label">{phase === 'validating' ? 'Validando cuenta' : 'Continuar con cuenta corporativa'}</span>
+                  {phase === 'validating' ? <span className="lx-spin" aria-hidden="true" /> : <Icon name="chevron" className="lx-btn-ic" />}
+                </button>
+                <div className="lx-or"><span>o</span></div>
+                <button type="button" className="lx-btn lx-btn-ghost" disabled={phase === 'validating'}
+                  onClick={() => toast('En producción se abre el selector de cuentas corporativas.')}>Usar otra cuenta</button>
+                <p className="lx-note"><Icon name="lock" />Después de su cuenta corporativa, confirmará su identidad con un código temporal de {CODE_LEN} dígitos.</p>
+              </div>
+            )}
+
+            {(phase === 'code' || phase === 'verifying') && (
+              <form className="lx-panel" key="p2" noValidate onSubmit={(e) => { e.preventDefault(); verify(); }}>
+                <div className="lx-code-head">
+                  <span id="lx-code-l" className="lx-code-l">Código de verificación</span>
+                  <button type="button" className="lx-link" onClick={back} disabled={phase === 'verifying'}><Icon name="back" />Volver</button>
+                </div>
+                <p id="lx-code-d" className="lx-code-d">Ingrese el código de {CODE_LEN} dígitos generado por su autenticador corporativo.</p>
+                <OtpInput ref={otpRef} digits={digits} onChange={onDigits} onSubmit={verify}
+                  disabled={phase === 'verifying'} invalid={!!error} labelledBy="lx-code-l" describedBy="lx-code-d lx-code-hint" />
+                {error ? <p className="lx-err" role="alert"><Icon name="alert" />{error}</p>
+                  : <p id="lx-code-hint" className="lx-hint"><Icon name="sparkle" />Código de demostración: cualquier combinación de {CODE_LEN} dígitos</p>}
+                <button type="submit" className={'lx-btn lx-btn-primary' + (phase === 'verifying' ? ' is-busy' : '')} aria-disabled={phase === 'verifying'}>
+                  <span className="lx-btn-label">{phase === 'verifying' ? 'Verificando código' : 'Verificar e ingresar'}</span>
+                  {phase === 'verifying' ? <span className="lx-spin" aria-hidden="true" /> : <Icon name="chevron" className="lx-btn-ic" />}
+                </button>
+              </form>
+            )}
+
+            {(phase === 'success' || phase === 'leaving') && (
+              <div className="lx-panel lx-success" key="p3">
+                <svg className="lx-check" viewBox="0 0 64 64" aria-hidden="true">
+                  <circle className="lx-check-ring" cx="32" cy="32" r="29" />
+                  <path className="lx-check-tick" d="M20 33.5l8 8 16-17" />
+                </svg>
+                <div>
+                  <div className="lx-success-t">Identidad verificada</div>
+                  <div className="lx-success-d">Preparando su tablero de control…</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <p className="lx-sr" role="status" aria-live="polite">{status}</p>
+        </div>
+
+        <footer className="lx-foot">
+          <ul className="lx-trust">
+            <li><Icon name="usercheck" />Sesión única</li>
+            <li><Icon name="lock" />Las Dos Llaves Universales</li>
+            <li><Icon name="list" />Actividad registrada en bitácora</li>
           </ul>
-        </div>
-        <div className="lb-foot">© 2026 Reval S.A.S. y Multipagas S.A.S. Uso interno.</div>
-      </section>
-      <section className="login-side">
-        <div className="login-card">
-          <div className="lc-mark"><Icon name="lock" /></div>
-          <h2>Iniciar sesión en COI</h2>
-          <p className="muted">Ingrese con su cuenta corporativa. Los módulos visibles dependen de su rol.</p>
-          <div className="acct">
-            <span className="avatar">{user.initials}</span>
-            <div className="grow"><div className="strong">{user.name}</div><div className="small muted">{user.email}</div></div>
-            <span className="role-pill">{user.role}</span>
-          </div>
-          <button className={'btn btn-p btn-lg btn-block' + (loading ? ' loading' : '')} disabled={loading} onClick={enter}>
-            <span className="btn-label">{loading ? 'Verificando credenciales' : 'Continuar con cuenta corporativa'}</span><span className="spinner" aria-hidden="true" />
-          </button>
-          <div className="or"><span>o</span></div>
-          <button className="btn btn-o btn-block" type="button" onClick={() => toast('En producción se abre el selector de cuentas corporativas.')}>Usar otra cuenta</button>
-          <div className="lc-sec">
-            <Icon name="shield" />
-            <span>Sesión única protegida con el estándar Las Dos Llaves Universales. Su actividad queda registrada en la bitácora.</span>
+          <p className="lx-help">¿Problemas para ingresar? Radique una solicitud en <b>TRAZA</b></p>
+          <p className="lx-copy">© 2026 Reval S.A.S. y Multipagas S.A.S. Uso interno.</p>
+        </footer>
+      </main>
+
+      {/* ---------- Transición de marca ---------- */}
+      {phase === 'leaving' && (
+        <div className="lx-curtain" aria-hidden="true">
+          <div className="lx-curtain-mark">
+            <CoiMark size={72} />
+            <div>
+              <div className="lx-curtain-name">COI</div>
+              <div className="lx-curtain-tag">Gestión y Monitoreo de Apoyo al Negocio</div>
+            </div>
           </div>
         </div>
-        <div className="login-links"><span>¿Problemas para ingresar? Radique una solicitud en TRAZA</span></div>
-      </section>
+      )}
     </div>
   );
 }

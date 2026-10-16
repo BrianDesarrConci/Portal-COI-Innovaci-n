@@ -259,3 +259,7 @@ body {
   *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
   .ln-draw { stroke-dashoffset: 0; }
 }
+
+/* Entrada del portal después de la cortina del inicio de sesión */
+.app { animation: app-in .6s var(--ease-out) both; }
+@keyframes app-in { from { opacity: 0; } }

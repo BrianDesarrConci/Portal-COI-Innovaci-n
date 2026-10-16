@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import trazaRouter from './routes/traza.js';
+import coiv1Router from './coiv1/router.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const MODULES_DIR = path.join(here, 'data', 'modules');
@@ -18,7 +19,7 @@ const catalog = JSON.parse(await readFile(path.join(here, 'data', 'catalog.json'
 export function createApp() {
   const app = express();
   app.use(cors());
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '40mb' }));
 
   app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'coi-api', time: new Date().toISOString() }));
 
@@ -38,6 +39,7 @@ export function createApp() {
   });
 
   app.use('/api/traza', trazaRouter);
+  app.use('/api/coiv1', coiv1Router);
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 

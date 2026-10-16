@@ -7,6 +7,7 @@ export const MODULES = [
 ];
 export const NAV = [
   ['Monitoreo', [['inicio', 'Tablero gerencial', 'home'], ['analistas', 'Analistas', 'users'], ['procesos', 'Procesos', 'layers'], ['clientes', 'Clientes', 'building'], ['catalogo', 'Catálogo de actividades', 'list'], ['bitacora', 'Bitácora', 'clock']]],
+  ['COI V1 Opciones', [['coiv1', 'Inicio COI V1', 'home', 'V1'], ['granja', 'Granja de Usuarios', 'users'], ['experiencia', 'Experiencia de Cliente', 'message'], ['captura', 'Centro de captura', 'inbox'], ['arqueos', 'Control de Arqueos', 'wallet'], ['brain', 'Brain RT', 'activity'], ['adminv1', 'Administración', 'shield']]],
   ['Operación', [['validacion', 'Validación documental', 'filecheck'], ['novedades', 'Novedades', 'inbox', 12], ['pqr', 'PQR y encuestas', 'message'], ['alertas', 'Alertas', 'bell', 1], ['fincomercio', 'Fincomercio', 'store'], ['oficinas', 'Oficinas', 'pin']]],
   ['Cifras', [['reporteria', 'Reportería y comités', 'chart'], ['facturacion', 'Facturación', 'receipt'], ['ptr', 'Transacciones en vivo', 'activity']]],
   ['Módulos Apps Script', [['malas', 'Malas prácticas', 'alert', 'G1'], ['papeleria', 'Papelería', 'package', 'G2'], ['usuarios', 'Usuarios y planta', 'usercheck', 'G3'], ['cheques', 'Cheques y arqueos', 'wallet', 'G4'], ['agrario', 'Banco Agrario', 'building', 'G5'], ['ingresos', 'Correo de ingresos', 'mail', 'G6']]],

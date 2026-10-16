@@ -1,0 +1,97 @@
+<section id="novedades" class="section" style="display:none;">
+    <div class="header-section" style="margin-bottom: 20px;">
+        <h2 style="color: #002e5b;"><i class="fas fa-bolt" style="color:#e67e22;"></i> Granja de Usuarios </h2>
+        <p style="color: #666;">Registra bajas de personal y asigna reemplazos desde un solo lugar.</p>
+    </div>
+
+    <div class="card" style="border-top: 5px solid #e67e22; margin-bottom: 25px;">
+        <h3 style="color: #e67e22;"><i class="fas fa-plus-circle"></i> 1. Registrar Nueva Novedad (Baja)</h3>
+        <!-- Reemplaza el bloque de cuadrícula dentro del registro de novedades por este -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 10px;">
+    <div>
+        <label style="font-weight: bold; font-size: 0.9rem;">Funcionario que reporta baja:</label>
+        <input id="nov-cajero" list="lista-cajeros" placeholder="Escribe para buscar..." style="width:100%; padding:10px; margin-top:5px; border-radius:5px; border:1px solid #ddd;">
+        <datalist id="lista-cajeros"></datalist>
+    </div>
+    <div>
+        <label style="font-weight: bold; font-size: 0.9rem;">Motivo de la ausencia:</label>
+        <select id="nov-descripcion" style="width:100%; padding:10px; margin-top:5px; border-radius:5px; border:1px solid #ddd;">
+            <option value="">-- Selecciona un motivo --</option>
+            <option value="Motivos de salud">Motivos de salud</option>
+            <option value="Motivos familiares o personales">Motivos familiares o personales</option>
+            <option value="Motivos académicos o de capacitación">Motivos académicos o de capacitación</option>
+            <option value="Motivos administrativos o empresariales">Motivos administrativos o empresariales</option>
+            <option value="Motivos disciplinarios o injustificados">Motivos disciplinarios o injustificados</option>
+            <option value="Fuerza mayor o situaciones extraordinarias">Fuerza mayor o situaciones extraordinarias</option>
+            <option value="Licencias legales y derechos laborales">Licencias legales y derechos laborales</option>
+            <option value="OTRO">Otro...</option>
+        </select>
+        <input type="text"
+       id="nov-descripcion-otro"
+       placeholder="Escriba el motivo..."
+       style="display:none; width:100%; padding:10px; margin-top:8px; border-radius:5px; border:1px solid #ddd;">
+    </div>
+    <!-- NUEVOS CAMPOS -->
+    <div>
+        <label style="font-weight: bold; font-size: 0.9rem;">Fecha Inicio de Ausencia:</label>
+        <input type="date" id="nov-fecha-inicio" style="width:100%; padding:10px; margin-top:5px; border-radius:5px; border:1px solid #ddd;">
+    </div>
+    <div>
+        <label style="font-weight: bold; font-size: 0.9rem;">Días de Ausencia:</label>
+        <input type="number" id="nov-dias" min="1" placeholder="Ej: 3" style="width:100%; padding:10px; margin-top:5px; border-radius:5px; border:1px solid #ddd;">
+    </div>
+</div>
+        <button onclick="enviarReporteNovedad()" style="margin-top:15px; width:100%; background:#e67e22; color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; transition: 0.3s;">
+            <i class="fas fa-bullhorn"></i> PUBLICAR ALERTA DE REEMPLAZO
+        </button>
+    </div>
+
+<div id="panel-novedad" style="display:none;">
+        
+        <div class="card" style="border-top: 5px solid #d32f2f; background: #fff8f8; margin-bottom: 25px;">
+            <h3 style="color: #d32f2f;"><i class="fas fa-exclamation-triangle"></i> 2. Bajas Pendientes de Cobertura</h3>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Haz clic en "Gestionar" para activar la búsqueda de backup para esa oficina.</p>
+            <div id="cont-novedades-pendientes">
+                <p style="color:#aaa;"><i class="fas fa-spinner fa-spin"></i> Cargando alertas activas...</p>
+            </div>
+        </div>
+
+<div id="panel-backups" class="card" style="border-top: 5px solid #27ae60; margin-bottom: 25px; display:none;">
+    <h3 style="color: #27ae60;"><i class="fas fa-user-shield"></i> 3. Selección de Personal Backup</h3>
+
+    <div id="info-novedad-activa" style="display:none; margin-bottom:15px;"></div>
+
+    <div id="tabla-backups">
+        <p style="color:#aaa;"><i class="fas fa-spinner fa-spin"></i> Buscando personal disponible...</p>
+    </div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+  <h3 style="color:#002e5b;"><i class="fas fa-history"></i> Historial de Novedades Atendidas</h3>
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+      <thead>
+        <tr style="background:#002e5b; color:white; text-align:left;">
+          <th style="padding:10px;">ID</th>
+          <th style="padding:10px;">Fecha Inicio</th>
+          <th style="padding:10px;">Cajero / Funcionario</th>
+          <th style="padding:10px;">Oficina</th>
+          <th style="padding:10px;">Motivo</th>
+          <th style="padding:10px; color:#f39c12;">Backup Asignado</th>
+          <th style="padding:10px;">Días</th>
+          <th style="padding:10px;">Estado</th>
+          <th style="padding:10px;">Acciones</th>
+        </tr>
+      </thead>
+      <!-- IMPORTANTE: Este ID debe existir exactamente así -->
+      <tbody id="tabla-historial-novedades-body">
+        <tr>
+          <td colspan="9" style="padding:15px; text-align:center;">Cargando historial de soluciones...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+    </div>
+</section>

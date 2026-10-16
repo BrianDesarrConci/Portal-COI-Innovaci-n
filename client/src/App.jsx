@@ -6,6 +6,8 @@ import { useApi } from './hooks/useApi.js';
 import Login from './layout/Login.jsx';
 import Shell from './layout/Shell.jsx';
 import Junta from './views/Junta.jsx';
+import { V1SessionProvider } from './views/coiv1/V1Session.jsx';
+import './views/coiv1/v1.css';
 
 // Usuario de la demo. En producción llega del inicio de sesión corporativo.
 const USER = { name: 'Nubia Parrado', initials: 'NP', email: 'nubia.parrado@reval.com.co', role: 'Directora' };
@@ -23,6 +25,7 @@ export default function App() {
         : !catalog.data ? <div className="content"><span className="muted">Cargando COI…</span></div>
         : (
           <AppProvider catalog={catalog.data}>
+            <V1SessionProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/inicio" replace />} />
               <Route path="/junta" element={<Junta />} />
@@ -30,6 +33,7 @@ export default function App() {
               <Route path="/:view/:sub" element={<Shell user={USER} onLogout={() => setSession(false)} />} />
             </Routes>
             <ModalHost />
+            </V1SessionProvider>
           </AppProvider>
         )}
     </OverlayProvider>

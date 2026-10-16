@@ -1,0 +1,97 @@
+{
+ "coiv1": {
+  "Usuarios": {
+   "file": "coiv1__Usuarios.json",
+   "rows": 37,
+   "cols": 7
+  },
+  "PERMISOS": {
+   "file": "coiv1__PERMISOS.json",
+   "rows": 29,
+   "cols": 8
+  },
+  "Novedades": {
+   "file": "coiv1__Novedades.json",
+   "rows": 23,
+   "cols": 12
+  },
+  "Arqueos": {
+   "file": "coiv1__Arqueos.json",
+   "rows": 1115,
+   "cols": 38
+  },
+  "Sesiones_Arqueo": {
+   "file": "coiv1__Sesiones_Arqueo.json",
+   "rows": 284,
+   "cols": 14
+  },
+  "Gestion_Novedades": {
+   "file": "coiv1__Gestion_Novedades.json",
+   "rows": 0,
+   "cols": 12
+  },
+  "Normalizaciones": {
+   "file": "coiv1__Normalizaciones.json",
+   "rows": 3,
+   "cols": 9
+  },
+  "Tipologias": {
+   "file": "coiv1__Tipologias.json",
+   "rows": 11,
+   "cols": 2
+  },
+  "Festivos": {
+   "file": "coiv1__Festivos.json",
+   "rows": 2,
+   "cols": 1
+  },
+  "Alias_Lideres": {
+   "file": "coiv1__Alias_Lideres.json",
+   "rows": 0,
+   "cols": 3
+  },
+  "Oficinas": {
+   "file": "coiv1__Oficinas.json",
+   "rows": 2,
+   "cols": 15
+  },
+  "ANS Especializadas": {
+   "file": "coiv1__ANS_Especializadas.json",
+   "rows": 263,
+   "cols": 8
+  }
+ },
+ "granja": {
+  "GRANJA_DE_USUARIOS_JULLY": {
+   "file": "granja__GRANJA_DE_USUARIOS_JULLY.json",
+   "rows": 1498,
+   "cols": 40
+  },
+  "DATOS MANUALES": {
+   "file": "granja__DATOS_MANUALES.json",
+   "rows": 1495,
+   "cols": 40
+  },
+  "REPORTE": {
+   "file": "granja__REPORTE.json",
+   "rows": 7,
+   "cols": 7
+  }
+ },
+ "directorio": {
+  "DIRECTORIO NACIONAL": {
+   "file": "directorio__DIRECTORIO_NACIONAL.json",
+   "rows": 1798,
+   "cols": 78
+  },
+  "OFICINAS CERRADAS": {
+   "file": "directorio__OFICINAS_CERRADAS.json",
+   "rows": 55,
+   "cols": 11
+  }
+ },
+ "_meta": {
+  "extraido": "2026-10-16T17:51:06",
+  "nota": "Copia de demostración de los Sheets de COI V1. Sin contraseñas; cédulas, teléfonos y correos personales enmascarados."
+ }
+}

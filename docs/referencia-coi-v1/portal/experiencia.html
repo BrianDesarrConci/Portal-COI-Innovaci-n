@@ -1,0 +1,106 @@
+<!-- ============================================================
+     MÓDULO PQR - EXPERIENCIA DE CLIENTE
+     Pega este bloque REEMPLAZANDO la sección id="reportes" en tu index.html
+     ============================================================ -->
+
+<section id="reportes" class="section" style="display:none;">
+
+  <!-- ENCABEZADO -->
+  <div style="margin-bottom:25px;">
+    <h2 style="color:#002e5b; margin:0;">
+      <i class="fas fa-headset"></i> Experiencia de Cliente — Radicación PQR
+    </h2>
+    <p style="color:#666; margin-top:5px;">
+      Registra Peticiones, Quejas y Reclamos. Al guardar se genera el PDF de confirmación y queda registrado en el libro de PQR.
+    </p>
+  </div>
+
+  <!-- FORMULARIO PQR -->
+  <div class="card" style="border-top: 5px solid #002e5b; max-width: 800px;">
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+      <!-- Código PTR -->
+      <div class="form-group">
+        <label><i class="fas fa-barcode"></i> Código PTR <span style="color:red">*</span></label>
+        <input type="text" id="pqr-codigo-ptr" placeholder="Ej: PTR-2026-001"
+               style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; box-sizing:border-box;">
+      </div>
+
+      <!-- Fecha y Hora -->
+      <div class="form-group">
+        <label><i class="fas fa-calendar-alt"></i> Fecha y Hora <span style="color:red">*</span></label>
+        <input type="datetime-local" id="pqr-fecha"
+               style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; box-sizing:border-box;">
+      </div>
+
+      <!-- Tipificación -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label><i class="fas fa-tags"></i> Tipificación de Novedad <span style="color:red">*</span></label>
+        <select id="pqr-tipificacion"
+                style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; box-sizing:border-box;">
+          <option value="">-- Selecciona el tipo --</option>
+          <option value="Petición">📋 Petición</option>
+          <option value="Queja">😤 Queja</option>
+          <option value="Reclamo">⚠️ Reclamo</option>
+          <option value="Sugerencia">💡 Sugerencia</option>
+          <option value="Felicitación">🌟 Felicitación</option>
+          <option value="Solicitud de información">ℹ️ Solicitud de información</option>
+        </select>
+      </div>
+
+      <!-- Descripción -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label><i class="fas fa-align-left"></i> Descripción <span style="color:red">*</span></label>
+        <textarea id="pqr-descripcion" rows="5"
+                  placeholder="Describe detalladamente la situación del cliente..."
+                  style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; box-sizing:border-box; resize:vertical;"></textarea>
+      </div>
+
+      <!-- Adjuntar Soporte -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label><i class="fas fa-paperclip"></i> Adjuntar Soporte (opcional)</label>
+        <div id="zona-adjunto"
+             style="border:2px dashed #adb5bd; border-radius:8px; padding:20px; text-align:center; cursor:pointer; background:#f8f9fa; transition:0.3s;"
+             onclick="document.getElementById('pqr-archivo').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#002e5b';"
+             ondragleave="this.style.borderColor='#adb5bd';"
+             ondrop="manejarDrop(event)">
+          <i class="fas fa-cloud-upload-alt" style="font-size:2rem; color:#adb5bd;"></i>
+          <p style="margin:8px 0 0; color:#666;">Arrastra un archivo o haz clic para seleccionar</p>
+          <small style="color:#adb5bd;">PNG, JPG, PDF — máx. 5 MB</small>
+        </div>
+        <input type="file" id="pqr-archivo" accept=".png,.jpg,.jpeg,.pdf"
+               style="display:none;" onchange="mostrarArchivoSeleccionado(this)">
+        <div id="pqr-archivo-info" style="margin-top:8px; font-size:0.85rem; color:#27ae60; font-weight:bold;"></div>
+      </div>
+
+    </div><!-- /grid -->
+
+    <!-- BOTÓN REGISTRAR -->
+    <div style="margin-top:25px; text-align:right;">
+      <button onclick="registrarPQR()"
+              style="background:#002e5b; color:white; padding:14px 35px; border:none; border-radius:8px; font-size:1rem; font-weight:bold; cursor:pointer; transition:0.3s;"
+              onmouseover="this.style.background='#004080'"
+              onmouseout="this.style.background='#002e5b'">
+        <i class="fas fa-paper-plane"></i>&nbsp; RADICAR PQR Y GENERAR PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- HISTORIAL PQR -->
+  <div class="card" style="margin-top:30px; border-top:5px solid #27ae60;">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <h3 style="color:#002e5b; margin:0;"><i class="fas fa-list-alt"></i> Historial de PQR Radicados</h3>
+      <input type="text" id="buscar-pqr" placeholder="🔍 Buscar en historial..."
+             oninput="filtrarHistorialPQR(this.value)"
+             style="padding:8px 12px; border:1px solid #ddd; border-radius:6px; width:250px;">
+    </div>
+    <div id="tabla-historial-pqr" style="margin-top:15px; overflow-x:auto;">
+      <p style="color:#aaa;"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</p>
+    </div>
+  </div>
+
+
+
+</section>

@@ -1,0 +1,63 @@
+<section id="auditorias-fincomercio" class="section" style="display:none;">
+    <div class="header-section" style="margin-bottom:20px;">
+        <h2 style="color:#002e5b;">
+            <i class="fas fa-clipboard-check" style="color:#e67e22;"></i>
+            Auditorías Fincomercio
+        </h2>
+        <p style="color:#666;">
+            Plataforma de auditorías Fincomercio.
+        </p>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+        <iframe
+            id="iframeAuditorias"
+            src="https://script.google.com/macros/s/AKfycbyJbcEqPE6YDsZ-lNjRHuHzg0oAs6x0Z3lyeClEJZ9GtaU3QTdC6srRsrM18GJZzXfVGg/exec"
+            width="100%"
+            height="900"
+            style="border:none;">
+        </iframe>
+    </div>
+</section>
+
+<section id="control-apertura" class="section" style="display:none;">
+    <div class="header-section" style="margin-bottom:20px;">
+        <h2 style="color:#002e5b;">
+            <i class="fas fa-key" style="color:#e67e22;"></i>
+            Control de Apertura
+        </h2>
+        <p style="color:#666;">
+            Plataforma de Control de Apertura.
+        </p>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+        <!-- Se corrigió la URL eliminando /a/macros/reval.com.co/ -->
+        <iframe
+            id="iframeApertura"
+            src="https://script.google.com/macros/s/AKfycbyi-eDnjoVT2IBqM9_9JJFHYiq1J3qwWv_1XC_stc6JWkWYgqIKW5DlQ700joLmiPz8/exec"
+            width="100%"
+            height="900"
+            style="border:none;">
+        </iframe>
+    </div>
+</section>
+
+<section id="negocio" class="section" style="display:none;">
+    <h2 style="color:#002e5b;margin-bottom:20px;">
+        🤖 Negocios
+    </h2>
+    <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+        gap:20px;
+        margin-bottom:35px;">
+        <div class="card acceso-card" onclick="showSection('auditorias-fincomercio')">
+            <i class="fas fa-file-signature" style="font-size:40px;color:#3498db;"></i>
+            <h3>Fincomercio</h3>
+        </div>
+
+        <div class="card acceso-card" onclick="showSection('control-apertura')">
+            <i class="fas fa-rocket" style="font-size:40px;color:#9b59b6;"></i>
+            <h3>Control de Apertura</h3>
+        </div>
+    </div>
+</section>

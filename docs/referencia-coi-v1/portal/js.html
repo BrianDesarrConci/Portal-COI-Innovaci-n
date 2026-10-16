@@ -1,0 +1,812 @@
+<script>
+  let usuarioActivo = { nombre: "", rol: "", llave_arqueos: "" };
+  let editIndex = null;
+  let gestionSeleccionada = null;
+  let listaBackupsActual = [];
+
+// ==========================================
+// --- LOGIN Y RUTEO INICIAL ---
+// ==========================================
+function intentarLogin() {
+  const user = document.getElementById('userLogin').value;
+  const pass = document.getElementById('passLogin').value;
+  const errDiv = document.getElementById('loginError');
+  if (errDiv) errDiv.style.display = 'none';
+  
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res && res.success) {
+        usuarioActivo = res;
+        
+        // --- NUEVO: PREPARAR EL IFRAME DE ARQUEOS EN SEGUNDO PLANO ---
+        if (usuarioActivo.llave_arqueos) {
+          const iframe = document.getElementById('iframeArqueos');
+          if (iframe) {
+            const baseUrl = iframe.getAttribute('data-arqueos-url');
+            if (baseUrl) {
+              const urlEmbebido = baseUrl + "?usuario=" + encodeURIComponent(usuarioActivo.nombre) + "&llave=" + encodeURIComponent(usuarioActivo.llave_arqueos);
+              iframe.src = urlEmbebido;
+            }
+          }
+        }
+        // -------------------------------------------------------------
+
+        aplicarPermisos();
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('displayNombre').innerText = res.nombre || "Usuario";
+        document.getElementById('displayRol').innerText = res.rol || "Sin Rol";
+        aplicarTemaYPermisos();
+      } else {
+        if (errDiv) {
+          errDiv.innerText = res ? res.msg : "Error desconocido en el servidor";
+          errDiv.style.display = 'block';
+        }
+      }
+    })
+    .withFailureHandler(err => {
+      if (errDiv) {
+        errDiv.innerText = "Error crítico de red: " + err.message;
+        errDiv.style.display = 'block';
+      }
+    })
+    .validarCredenciales(user, pass);
+}
+
+function aplicarTemaYPermisos() {
+  if (!usuarioActivo || !usuarioActivo.rol) {
+    console.error("No se detectó rol de usuario");
+    return;
+  }
+
+  const rol = usuarioActivo.rol.toString().toUpperCase().trim();
+
+  document.body.classList.remove('admin-theme', 'visualizador-theme');
+
+  if (rol === "ADMIN") {
+    document.body.classList.add('admin-theme');
+  } else {
+    document.body.classList.add('visualizador-theme');
+  }
+
+  // TODOS entran al inicio del aplicativo
+  showSection('inicio');
+
+  aplicarPermisos();
+}
+
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  const target = document.getElementById(id);
+  if (target) target.style.display = 'block';
+  if (el) el.classList.add('active');
+  
+  if (id === 'novedades') iniciarModuloNovedades();
+  if (id === 'reportes') cargarDatos();
+  if (id === 'usuarios-disponibles') cargarDirectorio();
+  if (id === 'ingreso') cargarOficinasSelectorArqueo(); 
+  if (id === 'reportes') iniciarModuloPQR();
+  
+  // OJO: Ya no se llama a iniciarAccesoArqueos() porque el iframe carga en segundo plano.
+}
+
+function cerrarSesion() { location.reload(); }
+
+function abrirBrainRT() {
+    window.open("https://oacreval-idgsoiclq8pt-ia.analytics.ocp.oraclecloud.com/ui/dv/?pageid=visualAnalyzer&reportmode=full&reportpath=%2F%40Catalog%2Fshared%2FPROYECTO%20RT%2FBRAIN%20RT", "_blank");
+}
+
+function abrirTablero() {
+    window.open("https://oacreval-idgsoiclq8pt-ia.analytics.ocp.oraclecloud.com/ui/dv/?pageid=visualAnalyzer&reportmode=full&reportpath=%2F%40Catalog%2Fshared%2FTablero%20de%20control%2FPanel%20de%20Gesti%C3%B3n%20Transaccional&viewermode=false", "_blank");
+}
+
+// ==========================================
+// --- REPORTES ---
+// ==========================================
+function cargarDatos() {
+  const div = document.getElementById('contenedor-tabla');
+  div.innerHTML = "Cargando...";
+  google.script.run.withSuccessHandler(datos => {
+    let html = `<table><tr><th>Oficina</th><th>Marca</th><th>Abril</th><th>Mayo</th>`;
+    if (usuarioActivo.rol === "ADMIN") html += `<th>Acciones</th>`;
+    html += `</tr>`;
+    datos.forEach((f, i) => {
+      html += `<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[2]}</td><td>${f[3]}</td>`;
+      if (usuarioActivo.rol === "ADMIN") {
+        html += `<td><button onclick="prepararEdicion(${i},'${f[0]}','${f[1]}',${f[2]},${f[3]})">✏️</button></td>`;
+      }
+      html += `</tr>`;
+    });
+    div.innerHTML = html + "</table>";
+  }).obtenerDatos();
+}
+
+// ==========================================
+// --- DIRECTORIO ---
+// ==========================================
+function cargarDirectorio() {
+  const div = document.getElementById('tabla-directorio');
+  div.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Cargando directorio completo...";
+  google.script.run.withSuccessHandler(datos => {
+    if (!datos || datos.length === 0) {
+      div.innerHTML = "No se encontraron datos en el directorio.";
+      return;
+    }
+    let html = `<table><tr><th>Nombre</th><th>Oficina</th><th>Ciudad</th><th>Cédula</th><th>Negocio</th></tr>`;
+    datos.forEach(f => {
+      html += `<tr>
+        <td><b>${f[6] || ''}</b></td>
+        <td>${f[1] || ''}</td>
+        <td>${f[4] || ''}</td>
+        <td>${f[5] || ''}</td>
+        <td><span class="badge">${f[7] || ''}</span></td>
+      </tr>`;
+    });
+    div.innerHTML = html + "</table>";
+  }).obtenerDirectorioUsuarios();
+}
+
+// ==========================================
+// --- FILTRO GENÉRICO DE TABLAS ---
+// ==========================================
+function filtrarTabla(idContenedor, texto) {
+  const filtro = texto.toUpperCase();
+  const tabla = document.getElementById(idContenedor).getElementsByTagName("table")[0];
+  if (!tabla) return;
+  const filas = tabla.getElementsByTagName("tr");
+  for (let i = 1; i < filas.length; i++) {
+    const visible = Array.from(filas[i].cells).some(td => td.innerText.toUpperCase().includes(filtro));
+    filas[i].style.display = visible ? "" : "none";
+  }
+}
+
+// ==========================================
+// --- MÓDULO NOVEDADES Y BACKUPS ---
+// ==========================================
+function calcularDistanciaKM(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function iniciarModuloNovedades() {
+
+  const rol = usuarioActivo.rol.toString().toUpperCase().trim();
+
+  cargarSelectorCajeros();
+
+  if (rol === "ADMIN") {
+    document.getElementById('panel-admin-novedad').style.display = 'block';
+    cargarNovedadesPendientes();
+  }
+
+  // TODOS cargan su historial
+  cargarHistorialNovedadesCompleto();
+}
+
+function cargarSelectorCajeros() {
+  const input = document.getElementById('nov-cajero');
+  const lista = document.getElementById('lista-cajeros');
+  if (!input || !lista) return;
+  input.placeholder = "Buscando personal...";
+  google.script.run.withSuccessHandler(datos => {
+    input.placeholder = "Busca por Nombre o Cédula...";
+    lista.innerHTML = "";
+    datos.forEach(f => {
+      const nombre = f[9] || "Sin Nombre";
+      const oficina = f[1] || "Sin Oficina";
+      const option = document.createElement('option');
+      option.value = `${nombre}|${oficina}`;
+      option.text = `C.C. ${f[8]} — ${nombre} (${oficina})`;
+      lista.appendChild(option);
+    });
+  }).obtenerListaCajeros();
+}
+
+function enviarReporteNovedad() {
+  const val = document.getElementById('nov-cajero').value;
+  const fechaInicio = document.getElementById('nov-fecha-inicio').value;
+  const dias = document.getElementById('nov-dias').value;
+  const motivo = document.getElementById("nov-descripcion").value === "OTRO" ? document.getElementById("nov-descripcion-otro").value.trim() : document.getElementById("nov-descripcion").value;
+  if (!val || !motivo || !fechaInicio || !dias) {
+    alert("⚠️ Por favor completa todos los campos.");
+    return;
+  }
+  const partes = val.split('|');
+  if (partes.length < 2) {
+    alert("⚠️ El formato del cajero es incorrecto. Selecciona uno de la lista.");
+    return;
+  }
+  console.log("USUARIO QUE CREA LA NOVEDAD:", usuarioActivo.nombre);
+console.log("ROL:", usuarioActivo.rol);
+
+google.script.run.withSuccessHandler(res => {
+    alert(res.msg || "Proceso terminado");
+    if (res.success) {
+      document.getElementById('nov-cajero').value = "";
+      document.getElementById('nov-descripcion').value = "";
+      document.getElementById('nov-descripcion-otro').value = "";
+      document.getElementById('nov-descripcion-otro').style.display = "none";
+      document.getElementById('nov-fecha-inicio').value = "";
+      document.getElementById('nov-dias').value = "";
+      if (usuarioActivo && usuarioActivo.rol.toUpperCase() === "ADMIN") {
+        cargarNovedadesPendientes();
+      }
+    }
+  }).registrarNovedad({
+    cajeroNombre: partes[0].trim(),
+    oficina: partes[1].trim(),
+    descripcion: motivo,
+    fechaInicio: fechaInicio, 
+    diasAusencia: dias,
+    reportadoPor: usuarioActivo ? usuarioActivo.nombre : "Admin"
+  });
+}
+
+function cargarNovedadesPendientes() {
+  const cont = document.getElementById('cont-novedades-pendientes');
+  if (!cont) return;
+
+  google.script.run
+    .withSuccessHandler(function(novedades) {
+
+      if (!novedades || novedades.length === 0) {
+        cont.innerHTML = "<p style='padding:10px;'>✅ No hay alertas pendientes.</p>";
+        return;
+      }
+
+      let html = "";
+
+      novedades.forEach(n => {
+        html += `
+          <div class="card" style="border-left:5px solid #d32f2f; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <b style="color:#d32f2f;">${n.cajero}</b><br>
+              <small>Oficina: ${n.oficina} | Motivo: ${n.descripcion}</small>
+            </div>
+
+            <button
+              onclick="prepararAsignacion('${n.id}','${n.cajero}','${n.oficina}')"
+              class="btn-primary"
+              style="padding:5px 15px; background-color:#e67e22; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold;">
+              Gestionar
+            </button>
+          </div>`;
+      });
+
+      cont.innerHTML = html;
+
+    })
+    .withFailureHandler(function(err) {
+      cont.innerHTML = "Error al cargar alertas: " + err.message;
+    })
+
+    .obtenerNovedadesPendientes(
+      usuarioActivo.nombre,
+      usuarioActivo.rol
+    );
+}
+function prepararAsignacion(id, nombreCajero, oficinaNombre) {
+  const divTabla = document.getElementById('tabla-backups');
+  const info = document.getElementById('info-novedad-activa');
+  gestionSeleccionada = null;
+  info.style.display = "none";
+  info.innerHTML = "";
+  divTabla.innerHTML = "";
+  divTabla.style.display = 'block';
+  divTabla.innerHTML = "<p><i class='fas fa-spinner fa-spin'></i> Buscando los mejores backups...</p>";
+  info.style.display = 'block';
+  info.innerHTML = `<div style="background:#002e5b; color:white; padding:10px; border-radius:5px;">🔍 Analizando perfiles para cubrir <b>${oficinaNombre}</b>...</div>`;
+  google.script.run.withSuccessHandler(listaCompleta => {
+    const oficinaAfectada = listaCompleta.find(f => f[1] === oficinaNombre);
+    if (!oficinaAfectada) { alert("No se encontraron datos para la oficina: " + oficinaNombre); return; }
+    const datosOrigen = { ciudad: oficinaAfectada[4], lon: parseFloat(oficinaAfectada[5]) || 0, lat: parseFloat(oficinaAfectada[6]) || 0, negocio: oficinaAfectada[7] };
+    gestionSeleccionada = { id, nombre: nombreCajero, oficina: oficinaNombre };
+    aplicarFiltroInteligente(datosOrigen, nombreCajero);
+  }).obtenerListaCajeros();
+}
+
+function aplicarFiltroInteligente(origen, nombrePersonaDeBaja) {
+  document.getElementById("panel-backups").style.display = "block";
+  google.script.run.withSuccessHandler(backups => {
+    const candidatos = backups.map(b => {
+      const nombreCandidato = b[9] ? b[9].toString().trim().toUpperCase() : "";
+      const personaABorrar = nombrePersonaDeBaja ? nombrePersonaDeBaja.trim().toUpperCase() : "";
+      if (nombreCandidato === personaABorrar || nombreCandidato === "") return null;
+      let pts = 0;
+      const formatearCoordenada = (val) => {
+        if (!val) return 0;
+        let n = parseFloat(val.toString().replace(',', '.'));
+        if (Math.abs(n) > 180) {
+          let s = n.toString().replace('.', '');
+          let posicionPunto = s.startsWith('-') ? 3 : 2;
+          n = parseFloat(s.slice(0, posicionPunto) + "." + s.slice(posicionPunto));
+        }
+        return n;
+      };
+      const lonB = formatearCoordenada(b[5]);
+      const latB = formatearCoordenada(b[6]);
+      const lonO = formatearCoordenada(origen.lon);
+      const latO = formatearCoordenada(origen.lat);
+      const dist = calcularDistanciaKM(latO, lonO, latB, lonB);
+      const ciudadCandidato = (b[4] || "").toString().trim().toUpperCase();
+      const ciudadOficina = (origen.ciudad || "").toString().trim().toUpperCase();
+      if (ciudadCandidato === ciudadOficina && ciudadCandidato !== "") pts += 100;
+      const negocioOficina = (origen.negocio || "").toString().trim().toUpperCase();
+      const negocioCandidato = (b[7] || "").toString().trim().toUpperCase();
+      if (negocioCandidato === negocioOficina && negocioCandidato !== "") pts += 50;
+      pts -= dist;
+      return { nombre: b[9], oficina: b[1], ciudad: b[4], negocio: b[7], telefono: b[21], distancia: dist.toFixed(1), puntos: Math.round(pts) };
+    }).filter(c => c !== null);
+    candidatos.sort((a, b) => b.puntos - a.puntos);
+    listaBackupsActual = candidatos;
+    renderizarTablaFiltrada(listaBackupsActual);
+  }).obtenerCajerosBackup();
+}
+
+function renderizarTablaFiltrada(candidatos) {
+  const panel = document.getElementById("panel-backups");
+  const div = document.getElementById("tabla-backups");
+  if (!gestionSeleccionada) { if (panel) panel.style.display = "none"; return; }
+  if (panel) panel.style.display = "block";
+  if (!candidatos || candidatos.length === 0) { div.innerHTML = "<p style='color:#e67e22;'>⚠️ No se encontraron candidatos disponibles.</p>"; return; }
+  let html = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <input id="buscar-backup" type="text" placeholder="🔍 Buscar backup..." onkeyup="filtrarBackups()" style="width:65%; padding:10px; border:1px solid #ccc; border-radius:6px;">
+      <span id="contador-backups" style="font-weight:bold; color:#002e5b;">👥 ${candidatos.length} disponibles</span>
+    </div>
+    <table><thead><tr><th>Puntaje</th><th>Nombre</th><th>Oficina Base</th><th>Ciudad</th><th>Negocio</th><th>Distancia</th><th>Acción</th></tr></thead>
+    <tbody id="tbody-backups">${construirFilasBackups(candidatos)}</tbody></table>
+    <button onclick="cancelarGestion()" style="margin-top:12px; background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-times"></i> Cancelar gestión</button>`;
+  div.innerHTML = html;
+}
+
+function construirFilasBackups(candidatos) {
+  let html = "";
+  candidatos.forEach(c => {
+    const pts = Math.round(c.puntos);
+    const colorScore = pts > 100 ? "#27ae60" : pts > 50 ? "#f39c12" : "#7f8c8d";
+    html += `<tr>
+      <td style="text-align:center;"><span style="background:${colorScore}; color:white; padding:3px 8px; border-radius:10px; font-weight:bold; font-size:0.8rem;">${pts} pts</span></td>
+      <td><b>${c.nombre}</b></td><td>${c.oficina}</td><td>${c.ciudad}</td><td><span class="badge">${c.negocio || "—"}</span></td><td style="font-weight:bold;">${c.distancia} km</td>
+      <td>
+        <button onclick="procesarAsignacionBackup('${gestionSeleccionada.id}','${c.nombre}')" style="background:#27ae60;color:white;border:none;padding:8px 12px;border-radius:5px;cursor:pointer;">Asignar</button>
+        <button onclick="enviarWhatsApp('${c.nombre}','${c.telefono}','${gestionSeleccionada.oficina}','${gestionSeleccionada.negocio}')" style="background:#25D366;color:white;border:none;padding:8px 12px;border-radius:5px;cursor:pointer;">📱 Mensaje</button>
+      </td></tr>`;
+  });
+  return html;
+}
+
+function cancelarGestion() {
+  resetGestion();
+  cargarNovedadesPendientes();
+}
+
+function procesarAsignacionBackup(idNovedad, nombreBackupSeleccionado) {
+  if (!nombreBackupSeleccionado) { alert("Por favor, seleccione un backup válido."); return; }
+  google.script.run.withSuccessHandler(function(res) {
+    if (res && res.success) {
+      alert(res.msg);
+      resetGestion();
+      cargarNovedadesPendientes();
+      cargarHistorialNovedadesCompleto();
+    } else { alert("⚠️ " + (res ? res.msg : "Error desconocido")); }
+  }).withFailureHandler(function(err) { alert("❌ Error de comunicación con el servidor: " + err.message); })
+  .asignarBackup(idNovedad, nombreBackupSeleccionado, usuarioActivo.nombre);
+}
+
+function cargarHistorialNovedades() {
+  const div = document.getElementById('tabla-historial');
+  div.innerHTML = "<p style='color:#aaa;'>Cargando historial...</p>";
+  google.script.run.withSuccessHandler(datos => {
+    if (!datos || datos.length === 0) { div.innerHTML = "<p style='color:#aaa;'>No hay registros en el historial.</p>"; return; }
+    let html = `<table><tr><th>Cajero Baja</th><th>Oficina</th><th>Backup Asignado</th><th>Fecha</th></tr>`;
+    datos.forEach(h => { html += `<tr><td>${h[2] || ''}</td><td>${h[3] || ''}</td><td style="color:#27ae60; font-weight:bold;">${h[6] || ''}</td><td style="font-size:0.8rem; color:#888;">${h[7] || ''}</td></tr>`; });
+    div.innerHTML = html + "</table>";
+  }).obtenerHistorialNovedades();
+  document.getElementById("panel-backups").style.display = "none";
+  gestionSeleccionada = null;
+}
+
+function enviarWhatsApp(nombre, telefono, oficina, negocio) {
+  if (!telefono || telefono === "" || telefono === "undefined") { alert("⚠️ No hay teléfono registrado para " + nombre); return; }
+  var num = telefono.toString().replace(/\D/g, '');
+  if (!num.startsWith('57')) num = '57' + num;
+  var msg = "Hola *" + nombre + "*, se requiere tu apoyo en la oficina *" + oficina + "* para el negocio *" + negocio + "*. Me comunicaré contigo en unos minutos para ampliar la informacion.";
+  window.open("https://wa.me/" + num + "?text=" + encodeURIComponent(msg), '_blank');
+}
+
+function iniciarModuloPQR() {
+  const ahora = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const fechaLocal = `${ahora.getFullYear()}-${pad(ahora.getMonth()+1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+  const campo = document.getElementById('pqr-fecha');
+  if (campo) campo.value = fechaLocal;
+  cargarHistorialPQR();
+}
+
+function manejarDrop(event) {
+  event.preventDefault();
+  document.getElementById('zona-adjunto').style.borderColor = '#adb5bd';
+  const archivo = event.dataTransfer.files[0];
+  if (archivo) {
+    window._pqrArchivoActual = archivo;
+    mostrarInfoArchivo(archivo);
+  }
+}
+
+
+function cargarHistorialNovedadesCompleto() {
+  const tablaBody = document.getElementById('tabla-historial-novedades-body');
+  if (!tablaBody) return;
+
+  google.script.run
+    .withSuccessHandler(function(datos) {
+
+      if (!datos || datos.length === 0) {
+        tablaBody.innerHTML = `
+          <tr>
+            <td colspan='9' style='padding:15px; text-align:center;'>
+              📋 No hay solicitudes atendidas en seguimiento activo.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      let html = "";
+
+      datos.forEach(row => {
+
+        let acciones = "";
+        const estadoActual = (row.estado || "").toUpperCase().trim();
+
+        if (estadoActual === "CUBIERTA") {
+
+          acciones = `
+            <button onclick="extenderNovedad('${row.id}')"
+              style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; margin-right:5px; font-weight:bold;">
+              <i class="fas fa-calendar-plus"></i> Extender
+            </button>
+
+            <button onclick="cerrarNovedad('${row.id}')"
+              style="background:#27ae60; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-weight:bold;">
+              <i class="fas fa-check-circle"></i> Cerrar
+            </button>`;
+
+        } else {
+
+          acciones = `
+            <span style="color:#7f8c8d; font-weight:bold;">
+              <i class="fas fa-lock"></i> Resuelta
+            </span>`;
+        }
+
+        html += `
+          <tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:10px;">${row.id || ''}</td>
+
+            <td style="padding:10px;">
+              ${row.fechaInicio || row.fechaReporte || ''}
+            </td>
+
+            <td style="padding:10px;">
+              <b>${row.cajero || ''}</b>
+            </td>
+
+            <td style="padding:10px;">
+              ${row.oficina || ''}
+            </td>
+
+            <td style="padding:10px;">
+              ${row.descripcion || ''}
+            </td>
+
+            <td style="padding:10px; color:#002e5b; font-weight:bold;">
+              ${row.backup || 'Ninguno'}
+            </td>
+
+            <td style="padding:10px; text-align:center;">
+              <b>${row.diasAusencia || '0'}</b>
+            </td>
+
+            <td style="padding:10px;">
+              <span class="badge-${estadoActual.toLowerCase()}">
+                ${estadoActual}
+              </span>
+            </td>
+
+            <td style="padding:10px;">
+              ${acciones}
+            </td>
+          </tr>`;
+      });
+
+      tablaBody.innerHTML = html;
+
+    })
+    .withFailureHandler(err => {
+
+      tablaBody.innerHTML = `
+        <tr>
+          <td colspan='9'
+            style='padding:15px; text-align:center; color:red;'>
+            Error: ${err.message}
+          </td>
+        </tr>`;
+    })
+
+    // AQUÍ ESTÁ EL CAMBIO
+.obtenerHistorialCompletoBackend(
+  usuarioActivo.nombre,
+  usuarioActivo.rol
+);
+}
+
+
+function cerrarNovedad(idNovedad) {
+  if (!confirm("¿Estás seguro de que deseas CERRAR esta novedad? El backup volverá a estar disponible.")) return;
+  google.script.run.withSuccessHandler(res => {
+    alert(res.msg);
+    if (res.success) { cargarHistorialNovedadesCompleto(); if (typeof cargarNovedadesPendientes === 'function') cargarNovedadesPendientes(); }
+  }).procesarAccionNovedad({ id: idNovedad, accion: "CERRAR", adminNombre: usuarioActivo.nombre });
+}
+
+function extenderNovedad(idNovedad) {
+  const diasNuevos = prompt("¿Cuántos días adicionales deseas sumarle a esta ausencia?");
+  if (diasNuevos === null) return;
+  const diasNum = parseInt(diasNuevos);
+  if (isNaN(diasNum) || diasNum <= 0) { alert("⚠️ Por favor ingresa un número de días válido."); return; }
+  google.script.run.withSuccessHandler(res => {
+    alert(res.msg);
+    if (res.success) cargarHistorialNovedadesCompleto();
+  }).procesarAccionNovedad({ id: idNovedad, accion: "EXTENDER", dias: diasNum });
+}
+
+function toggleSubmenuArqueos() {
+  const submenu = document.getElementById('submenu-arqueos');
+  const icon = document.getElementById('icon-arqueos-toggle');
+  const abierto = submenu.style.display === 'block';
+  submenu.style.display = abierto ? 'none' : 'block';
+  icon.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
+  if (!abierto) showSection('ingreso', document.getElementById('menu-ingreso'));
+}
+
+function mostrarSubmoduloArqueo(letra, el) {
+  showSection('ingreso', document.getElementById('menu-ingreso'));
+  document.querySelectorAll('.nav-subitem').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.submod-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('submod-panel-' + letra).classList.add('active');
+}
+
+document.getElementById("nov-descripcion").addEventListener("change", function () {
+  const otro = document.getElementById("nov-descripcion-otro");
+  if (this.value === "OTRO") { otro.style.display = "block"; otro.required = true; } 
+  else { otro.style.display = "none"; otro.required = false; otro.value = ""; }
+});
+
+function resetGestion() {
+  gestionSeleccionada = null;
+  const panel = document.getElementById("panel-backups");
+  if (panel) panel.style.display = "none";
+  const info = document.getElementById("info-novedad-activa");
+  if (info) { info.style.display = "none"; info.innerHTML = ""; }
+  const tabla = document.getElementById("tabla-backups");
+  if (tabla) { tabla.style.display = "block"; tabla.innerHTML = ""; }
+}
+
+function filtrarBackups() {
+  const texto = document.getElementById("buscar-backup").value.toUpperCase().trim();
+  const filtrados = listaBackupsActual.filter(c => {
+    return (c.nombre.toUpperCase().includes(texto) || c.oficina.toUpperCase().includes(texto) || c.ciudad.toUpperCase().includes(texto) || (c.negocio || "").toUpperCase().includes(texto));
+  });
+  document.getElementById("tbody-backups").innerHTML = construirFilasBackups(filtrados);
+  document.getElementById("contador-backups").innerHTML = `👥 ${filtrados.length} disponibles`;
+}
+
+function copiarTexto(id) { navigator.clipboard.writeText(document.getElementById(id).innerText); alert("Usuario copiado."); }
+function copiarPasswordBrain() { navigator.clipboard.writeText(document.getElementById("brainPassword").dataset.pass); alert("Contraseña copiada."); }
+
+function toggleSubmenuNegocios(){
+    const submenu = document.getElementById("submenu-negocios");
+    const icono = document.getElementById("icon-negocios-toggle");
+    if(submenu.style.display === "none"){
+        submenu.style.display = "block";
+        icono.classList.remove("fa-chevron-down");
+        icono.classList.add("fa-chevron-up");
+    }else{
+        submenu.style.display = "none";
+        icono.classList.remove("fa-chevron-up");
+        icono.classList.add("fa-chevron-down");
+    }
+}
+
+// ==========================================
+// --- GESTIÓN DE PERMISOS Y USUARIOS ---
+// ==========================================
+
+
+function aplicarPermisos() {
+
+  if (!usuarioActivo || !usuarioActivo.rol) return;
+
+  const rol = usuarioActivo.rol.toString().toUpperCase().trim();
+
+  // ==========================================
+  // USUARIOS QUE NO SON ADMIN
+  // ==========================================
+  // Ven TODO el aplicativo.
+  // No se aplican las restricciones de PERMISOS.
+  if (rol !== "ADMIN") {
+
+    document.querySelectorAll('[id^="menu-"]').forEach(elemento => {
+      elemento.style.display = "flex";
+    });
+
+    document.querySelectorAll('[id^="card-"]').forEach(card => {
+      card.style.display = "block";
+    });
+
+    return;
+  }
+
+  // ==========================================
+  // ADMIN
+  // ==========================================
+  // ADMIN conserva el sistema de permisos actual.
+  if (!usuarioActivo.permisos) return;
+
+  Object.keys(usuarioActivo.permisos).forEach(modulo => {
+
+    const elemento = document.getElementById("menu-" + modulo);
+
+    if (elemento) {
+      elemento.style.display =
+        usuarioActivo.permisos[modulo] ? "flex" : "none";
+    }
+
+    const card = document.getElementById("card-" + modulo);
+
+    if (card) {
+      card.style.display =
+        usuarioActivo.permisos[modulo] ? "block" : "none";
+    }
+
+  });
+}
+
+function cargarPermisos(){
+  google.script.run.withSuccessHandler(construirTablaPermisos).obtenerTablaPermisos();
+}
+
+function construirTablaPermisos(datos){
+  let html = `<table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#002e5b;color:white;">`;
+  datos[0].forEach(columna => { html += `<th style="padding:10px;">${columna}</th>`; });
+  html += `</tr></thead><tbody>`;
+  for(let i=1;i<datos.length;i++){
+    html += "<tr>";
+    for(let j=0;j<datos[i].length;j++){
+      if(j==0){ html += `<td style="padding:10px;font-weight:bold;">${datos[i][j]}</td>`; }
+      else{
+        const checked = datos[i][j]=="SI" ? "checked" : "";
+        html += `<td style="text-align:center;"><input type="checkbox" data-usuario="${datos[i][0]}" data-modulo="${datos[0][j]}" ${checked} onchange="activarGuardarPermisos()"></td>`;
+      }
+    }
+    html += "</tr>";
+  }
+  html += "</tbody></table>";
+  document.getElementById("tablaPermisos").innerHTML = html;
+}
+
+function abrirPermisos(){ showSection("admin-permisos"); cargarPermisos(); }
+
+function cargarUsuarios(){
+  google.script.run.withSuccessHandler(datos => { renderizarTablaUsuarios(datos); })
+  .withFailureHandler(err => { document.getElementById("tablaUsuarios").innerHTML = `<p style="color:red;">Error al cargar usuarios.<br>${err.message}</p>`; })
+  .obtenerUsuarios();
+}
+
+function renderizarTablaUsuarios(datos){
+  let html = `<table class="tabla-reval"><thead><tr><th>Usuario</th><th>Rol</th><th>Correo</th><th>Acciones</th><th>Estado</th></tr></thead><tbody>`;
+  datos.forEach(u=>{
+    html += `<tr><td>${u[0]}</td><td>${u[2]}</td><td>${u[3]}</td>
+      <td>
+        <button class="btn-icon btn-editar" data-user="${u[0]}" onclick="editarUsuario('${u[0]}')" title="Editar usuario"><i class="fas fa-edit"></i></button>
+        <button class="btn-icon btn-password" data-user="${u[0]}" title="Cambiar contraseña"><i class="fas fa-key"></i></button>
+        <button class="btn-icon btn-bloquear" data-user="${u[0]}" title="Activar / Desactivar"><i class="fas fa-user-slash"></i></button>
+      </td>
+      <td><span class="estado-activo">🟢 Activo</span></td></tr>`;
+  });
+  html += `</tbody></table>`;
+  document.getElementById("tablaUsuarios").innerHTML = html;
+}
+
+function abrirUsuarios(){ showSection("admin-usuarios"); cargarUsuarios(); }
+
+function activarGuardarPermisos(){
+  const btn = document.getElementById("btnGuardarPermisos");
+  btn.disabled = false;
+  btn.classList.remove("btn-disabled");
+  btn.classList.add("btn-success");
+}
+
+function guardarPermisos(){
+  const checks = document.querySelectorAll("#tablaPermisos input[type='checkbox']");
+  let permisos = {};
+  checks.forEach(check => {
+    const usuario = check.dataset.usuario;
+    const modulo = check.dataset.modulo;
+    if(!permisos[usuario]) permisos[usuario] = {};
+    permisos[usuario][modulo] = check.checked;
+  });
+  google.script.run.withSuccessHandler(() => {
+    document.getElementById("btnGuardarPermisos").disabled = true;
+    alert("Permisos actualizados correctamente.");
+  }).withFailureHandler(err => { alert(err.message); }).guardarPermisos(permisos);
+}
+
+function abrirModalUsuario(){
+  document.querySelector("#modalUsuario h2").innerHTML = '<i class="fas fa-user-plus"></i> Nuevo Usuario';
+  document.getElementById("modalUsuario").style.display = "flex";
+}
+
+function cerrarModalUsuario(){ document.getElementById("modalUsuario").style.display = "none"; }
+
+function guardarNuevoUsuario(){
+  const usuario = document.getElementById("nuevoUsuario").value.trim();
+  const password = document.getElementById("nuevoPassword").value.trim();
+  const correo = document.getElementById("nuevoCorreo").value.trim();
+  const rol = document.getElementById("nuevoRol").value;
+  const estado = document.getElementById("nuevoEstado").value;
+  
+  if(!usuario || !password || !correo){ alert("Debes completar todos los campos."); return; }
+  
+  const datos = { usuario, password, correo, rol, estado };
+  const proceso = (modoUsuario === "crear") ? "crearUsuario" : "actualizarUsuario";
+  
+  google.script.run.withSuccessHandler(res=>{
+    if(res.success){
+      alert(modoUsuario === "crear" ? "Usuario creado correctamente." : "Usuario actualizado correctamente.");
+      cerrarModalUsuario();
+      cargarUsuarios();
+    } else { alert(res.msg); }
+  }).withFailureHandler(err=>{ alert(err.message); })[proceso](datos);
+}
+
+function editarUsuario(usuario){
+  modoUsuario = "editar";
+  google.script.run.withSuccessHandler(res=>{
+    if(!res.success){ alert(res.msg); return; }
+    abrirModalUsuario();
+    document.querySelector("#modalUsuario h2").innerHTML = '<i class="fas fa-user-edit"></i> Editar Usuario';
+    document.getElementById("nuevoUsuario").value = res.usuario;
+    document.getElementById("nuevoPassword").value = res.password;
+    document.getElementById("nuevoCorreo").value = res.correo;
+    document.getElementById("nuevoRol").value = res.rol;
+    document.getElementById("nuevoEstado").value = res.estado;
+    document.getElementById("nuevoUsuario").disabled = true;
+  }).obtenerUsuario(usuario);
+}
+
+function iniciarModuloNovedades() {
+
+  cargarSelectorCajeros();
+
+  const panel = document.getElementById('panel-novedad');
+
+  if (panel) {
+    panel.style.display = 'block';
+  }
+
+  // ADMIN → todas
+  // NO ADMIN → solo las propias
+  cargarNovedadesPendientes();
+
+  // ADMIN → historial completo
+  // NO ADMIN → solo su historial
+  cargarHistorialNovedadesCompleto();
+}
+
+</script>

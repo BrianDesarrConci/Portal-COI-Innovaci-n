@@ -24,6 +24,13 @@ import Agrario from './Agrario.jsx';
 import Ingresos from './Ingresos.jsx';
 import Traza from './Traza.jsx';
 import Implementacion from './Implementacion.jsx';
+import Coiv1Inicio from './coiv1/Coiv1Inicio.jsx';
+import Granja from './coiv1/Granja.jsx';
+import Experiencia from './coiv1/Experiencia.jsx';
+import Captura from './coiv1/Captura.jsx';
+import Arqueos from './coiv1/Arqueos.jsx';
+import Brain from './coiv1/Brain.jsx';
+import AdminV1 from './coiv1/AdminV1.jsx';
 
 const VIEWS = {
   inicio: Inicio,
@@ -51,5 +58,12 @@ const VIEWS = {
   ingresos: Ingresos,
   traza: Traza,
   implementacion: Implementacion,
+  coiv1: Coiv1Inicio,
+  granja: Granja,
+  experiencia: Experiencia,
+  captura: Captura,
+  arqueos: Arqueos,
+  brain: Brain,
+  adminv1: AdminV1,
 };
 export default VIEWS;

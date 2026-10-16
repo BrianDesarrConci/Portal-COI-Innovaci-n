@@ -1,0 +1,190 @@
+<section id="administracion" class="section" style="display:none;">
+
+    <div class="header-section">
+        <h2 style="color:#002e5b;">
+            <i class="fas fa-user-shield"></i>
+            Panel Administrativo
+        </h2>
+
+        <p>
+            Administra usuarios, permisos y configuración de REVAL.
+        </p>
+
+        <div style="
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+margin-top:25px;">
+
+<div class="card acceso-card" onclick="abrirUsuarios()">
+    <i class="fas fa-users-cog" style="font-size:40px;color:#3498db;"></i>
+    <h3>Usuarios</h3>
+    <p>Administra los usuarios del sistema.</p>
+</div>
+
+    <div class="card acceso-card" onclick="abrirPermisos()">
+        <i class="fas fa-user-lock" style="font-size:40px;color:#27ae60;"></i>
+        <h3>Permisos</h3>
+        <p>Controla qué módulos puede utilizar cada usuario.</p>
+    </div>
+
+    <div class="card acceso-card">
+        <i class="fas fa-history" style="font-size:40px;color:#f39c12;"></i>
+        <h3>Auditoría</h3>
+        <p>Consulta los registros del sistema.</p>
+    </div>
+
+    <div class="card acceso-card">
+        <i class="fas fa-cogs" style="font-size:40px;color:#9b59b6;"></i>
+        <h3>Configuración</h3>
+        <p>Parámetros generales de REVAL.</p>
+    </div>
+
+</div>
+
+    </div>
+    
+</section>
+
+<section id="admin-permisos" class="section" style="display:none;">
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+
+    <div>
+        <h2 style="color:#002e5b;">
+            <i class="fas fa-user-lock"></i>
+            Permisos por Módulo
+        </h2>
+
+        <p>Define los módulos disponibles para cada usuario.</p>
+    </div>
+
+        <button
+        id="btnGuardarPermisos"
+        class="btn-success"
+        onclick="guardarPermisos()"
+        disabled>
+
+        <i class="fas fa-save"></i>
+        Guardar cambios
+
+    </button>
+
+</div>
+
+    <div id="tablaPermisos">
+        <p style="text-align:center;color:#888;">
+            <i class="fas fa-spinner fa-spin"></i>
+            Cargando permisos...
+
+        </p>
+    </div>
+
+</div>
+
+</section>
+
+<section id="admin-usuarios" class="section" style="display:none;">
+
+    <div class="header-section">
+        <h2 style="color:#002e5b;">
+            <i class="fas fa-users"></i>
+            Administración de Usuarios
+        </h2>
+
+        <p>
+            Administra los usuarios registrados en REVAL.
+        </p>
+    </div>
+
+    <div class="card">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+
+            <input
+                id="buscarUsuario"
+                type="text"
+                placeholder="🔍 Buscar usuario..."
+                style="width:320px;padding:10px;border:1px solid #ddd;border-radius:8px;">
+
+            <button id="btnNuevoUsuario"
+        class="btn-success"
+        onclick="abrirModalUsuario()">
+
+    <i class="fas fa-user-plus"></i>
+    Nuevo Usuario
+
+</button>
+
+        </div>
+
+        <div id="tablaUsuarios">
+
+            <p style="text-align:center;color:#888;">
+                <i class="fas fa-spinner fa-spin"></i>
+                Cargando usuarios...
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+<div id="modalUsuario" class="modal" style="display:none;">
+
+    <div class="modal-content">
+
+        <h2>
+            <i class="fas fa-user-plus"></i>
+            Nuevo Usuario
+        </h2>
+
+        <label>Usuario</label>
+        <input id="nuevoUsuario">
+
+        <label>Contraseña</label>
+        <input id="nuevoPassword" type="password">
+
+        <label>Correo</label>
+        <input id="nuevoCorreo">
+
+        <label>Rol</label>
+
+        <select id="nuevoRol">
+
+            <option>ADMIN</option>
+            <option>Lider</option>
+            <option>VISUALIZADOR</option>
+
+        </select>
+
+        <label>Estado</label>
+
+        <select id="nuevoEstado">
+
+            <option>ACTIVO</option>
+            <option>INACTIVO</option>
+
+        </select>
+
+        <div style="margin-top:20px;text-align:right;">
+
+            <button onclick="cerrarModalUsuario()">
+
+                Cancelar
+
+            </button>
+
+            <button class="btn-success"
+                    onclick="guardarNuevoUsuario()">
+
+                Guardar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>

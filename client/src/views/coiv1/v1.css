@@ -1,0 +1,14 @@
+/* Franja de sesión COI V1 y estados comunes de los módulos migrados. */
+.v1-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 18px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-xs, 0 1px 2px rgba(36,42,84,.06)); font-size: 13px; }
+.v1-bar-tag { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 11.5px; letter-spacing: .6px; color: #fff; background: linear-gradient(160deg, var(--navy), var(--navy-deep)); padding: 4px 10px; border-radius: 999px; }
+.v1-bar-tag .ic { width: 13px; height: 13px; color: var(--cyan); }
+.v1-bar-user { color: var(--ink-2); }
+.v1-bar-user b { color: var(--navy); }
+.v1-bar-sel { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; color: var(--muted); }
+.v1-bar-sel select { height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; background: #fff; color: var(--navy); font-weight: 600; max-width: 220px; }
+.v1-bar-src { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.v1-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 25%, transparent); }
+.v1-dot.live { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 25%, transparent); }
+.v1-locked { display: flex; gap: 14px; align-items: flex-start; padding: 24px; }
+.v1-locked > .ic { width: 28px; height: 28px; color: var(--muted); }
+@media (max-width: 900px) { .v1-bar-sel { margin-left: 0; } }

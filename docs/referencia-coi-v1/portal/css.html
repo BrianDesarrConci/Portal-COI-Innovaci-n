@@ -1,0 +1,684 @@
+<style>
+  :root { 
+    --sidebar-bg: #1a1c23; --main-bg: #f8f9fa; --accent: #4e73df; 
+    --success: #1cc88a; --warning: #f39c12; --danger: #e74c3c;
+  }
+  
+  body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: var(--main-bg); overflow: hidden; }
+
+  /* TEMAS POR ROL */
+  .sidebar.admin-theme { background: #002e5b !important; } /* Azul REVAL */
+  .sidebar.user-theme { background: #28a745 !important; }  /* Verde REVAL */
+
+  .sidebar { width: 250px; color: white; display: flex; flex-direction: column; transition: 0.3s; }
+  .sidebar-header { padding: 25px; text-align: center; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .nav-item { padding: 15px 25px; color: #adb5bd; cursor: pointer; display: flex; align-items: center; }
+  .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; }
+  .nav-item.active { border-left: 4px solid white; }
+  .nav-item i { margin-right: 15px; width: 20px; }
+
+  .content { flex-grow: 1; padding: 40px; overflow-y: auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1c23; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+  .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; color: #333; }
+  
+  input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+  button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+  
+  table { width: 100%; border-collapse: collapse; background: white; }
+  th { text-align: left; padding: 12px; background: #f8f9fc; color: #4e73df; border-bottom: 2px solid #eee; }
+  td { padding: 12px; border-bottom: 1px solid #eee; }
+  .badge { background: #eef2ff; color: #4e73df; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+  .btn-edit { background: var(--warning); margin-right: 5px; }
+  .btn-delete { background: var(--danger); }
+
+  .nav-item:last-child:hover {
+    background: rgba(231, 76, 60, 0.2) !important; /* Rojo suave */
+    color: #e74c3c !important;
+}
+
+.card {
+  overflow-x: auto; /* Esto permite mover la tabla a los lados en el celular */
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px; /* Obliga a la tabla a no amontonarse */
+}
+
+th, td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+/* --- COLORES DINÁMICOS --- */
+  /* Tema por defecto (Gris) */
+  :root { --primary-reval: #636e72; } 
+
+  /* Tema Admin: Azul Reval */
+  body.admin-theme { --primary-reval: #002e5b !important; }
+
+  /* Tema Visualizador: Verde Reval */
+  body.visualizador-theme { --primary-reval: #27ae60 !important; }
+
+  /* Aplicación del color a la Sidebar */
+  .sidebar {
+    background-color: var(--primary-reval) !important;
+    transition: background-color 0.4s ease;
+  }
+  
+  /* Color de los iconos y texto del header según el tema */
+  header b, header span {
+    color: var(--primary-reval);
+  }
+
+/* --- ESTILOS PARA EL ASISTENTE IA --- */
+#chat-window {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+}
+
+#chat-window::-webkit-scrollbar {
+  width: 6px;
+}
+
+#chat-window::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+/* --- TEMAS POR ROL (Para que el login active los colores) --- */
+.admin-theme .sidebar {
+  background-color: #002e5b; /* Azul Reval */
+}
+
+.visualizador-theme .sidebar {
+  background-color: #27ae60; /* Verde para diferenciar */
+}
+
+/* --- ESTILO DE LAS TABLAS --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: white;
+}
+
+th {
+  background-color: #f8f9fa;
+  padding: 12px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  color: #333;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  background: #e0e0e0;
+}
+/* Estilo especial para el botón Brain RT */
+.nav-item i.fa-brain {
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover i.fa-brain {
+  transform: scale(1.2);
+   /* Un color amarillo/dorado para que resalte */
+}
+
+#tabla-backups {
+    display: none; /* Se mantendrá oculto hasta que presiones Gestionar */
+}
+
+/* --- ESTILOS DEL MÓDULO DE ARQUEO --- */
+.arqueo-container {
+  padding: 10px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.arqueo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.arqueo-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #002e5b;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.tabla-arqueo {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-arqueo th {
+  text-align: left;
+  font-size: 0.8rem;
+  color: #888;
+  padding-bottom: 10px;
+}
+
+.tabla-arqueo td {
+  padding: 8px 0;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.tabla-arqueo input {
+  width: 80px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.row-separator {
+  background: #f8f9fa;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #002e5b;
+  text-transform: uppercase;
+}
+
+/* Resumen Lado Derecho */
+.box-total {
+  background: #eef5ff;
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 5px solid #002e5b;
+  margin-bottom: 20px;
+}
+
+.box-total label { font-size: 0.75rem; color: #555; }
+#total-conteo { font-size: 2rem; font-weight: 800; color: #002e5b; }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+}
+
+.box-diferencia {
+  border-top: 2px dashed #eee;
+  padding-top: 15px;
+  margin-bottom: 20px;
+}
+
+#total-diferencia { font-size: 1.5rem; font-weight: bold; }
+#etiqueta-diferencia { font-weight: bold; text-transform: uppercase; font-size: 0.7rem; }
+
+.btn-guardar-arqueo {
+  width: 100%;
+  background: #002e5b;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-guardar-arqueo:hover { background: #004080; }
+
+@media (max-width: 768px) {
+  .arqueo-grid { grid-template-columns: 1fr; }
+}
+
+/**
+ * Registra el arqueo de caja en la hoja de cálculo.
+ * @param {Object} datos - Objeto con usuario, fecha, totales y observaciones.
+ */
+function registrarArqueo(datos) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let hojaArqueos = ss.getSheetByName("ARQUEOS");
+
+    // 1. Si la hoja no existe, la creamos con sus encabezados
+    if (!hojaArqueos) {
+      hojaArqueos = ss.insertSheet("ARQUEOS");
+      const encabezados = ["Fecha y Hora", "Cajero / Usuario", "Efectivo Físico", "Saldo en Libros", "Diferencia", "Observaciones"];
+      
+      hojaArqueos.getRange(1, 1, 1, encabezados.length)
+        .setValues([encabezados])
+        .setBackground("#002e5b")
+        .setFontColor("white")
+        .setFontWeight("bold");
+      
+      // Congelar la primera fila
+      hojaArqueos.setFrozenRows(1);
+    }
+
+    // 2. Insertar los datos en la siguiente fila disponible
+    hojaArqueos.appendRow([
+      datos.fecha,
+      datos.usuario,
+      datos.totalFisico,
+      datos.saldoLibros,
+      datos.diferencia,
+      datos.observaciones
+    ]);
+
+    // 3. Dar formato de moneda a las columnas de dinero (C, D y E)
+    const ultimaFila = hojaArqueos.getLastRow();
+    hojaArqueos.getRange(ultimaFila, 3, 1, 3).setNumberFormat("$ #,##0");
+
+    // 4. (Opcional) Color automático para la diferencia
+    const celdaDiferencia = hojaArqueos.getRange(ultimaFila, 5);
+    if (datos.diferencia < 0) {
+      celdaDiferencia.setFontColor("red"); // Faltante
+    } else if (datos.diferencia > 0) {
+      celdaDiferencia.setFontColor("blue"); // Sobrante
+    } else {
+      celdaDiferencia.setFontColor("green"); // Cuadrado
+    }
+
+    return { success: true, mensaje: "Arqueo registrado correctamente" };
+
+  } catch (error) {
+    console.error("Error en registrarArqueo: " + error.toString());
+    throw new Error("No se pudo guardar el arqueo: " + error.message);
+  }
+}
+
+.nav-subitem { padding-left: 55px !important; font-size: 0.85rem; opacity: 0.85; }
+.nav-subitem:hover, .nav-subitem.active { opacity: 1; }
+.nav-subitem.active { border-left: 4px solid white; }
+
+/* ===== LOGIN MODERNO ===== */
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 1000px;
+  background: white;
+  border-radius: 32px;
+  overflow: hidden;
+  display: flex;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.login-left {
+  width: 40%;
+  background: linear-gradient(135deg, #1a1e3b, #242a54);
+  color: white;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.login-left h1 {
+  font-size: 42px;
+  margin: 0 0 10px;
+}
+
+.linea {
+  width: 50px;
+  height: 4px;
+  background: #008c39;
+  border-radius: 10px;
+  margin-bottom: 25px;
+}
+
+.login-left p {
+  color: #dbeafe;
+  line-height: 1.7;
+}
+
+.secure-box {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255,255,255,0.08);
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.login-right {
+  width: 60%;
+  padding: 60px;
+}
+
+.login-right h2 {
+  font-size: 34px;
+  color: #242a54;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #64748b;
+  margin-bottom: 35px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #f8fafc;
+  transition: all .2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #008c39;
+  box-shadow: 0 0 0 4px rgba(0,140,57,.12);
+  background: white;
+}
+
+.btn-login {
+  width: 100%;
+  background: #008c39;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s ease;
+  box-shadow: 0 10px 25px rgba(0,140,57,.3);
+}
+
+.btn-login:hover {
+  background: #00702e;
+  transform: translateY(-2px);
+}
+
+.login-error {
+  color: #dc2626;
+  margin-top: 15px;
+  font-weight: 600;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .login-card {
+    flex-direction: column;
+  }
+
+  .login-left,
+  .login-right {
+    width: 100%;
+    padding: 35px 25px;
+  }
+
+  .login-left h1 {
+    font-size: 32px;
+  }
+}
+
+.copy-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+}
+
+.copy-btn:hover {
+    transform: scale(1.1);
+}
+
+.acceso-card{
+
+cursor:pointer;
+
+transition:.25s;
+
+text-align:center;
+
+padding:25px;
+
+}
+
+.acceso-card:hover{
+
+transform:translateY(-6px);
+
+box-shadow:0 12px 30px rgba(0,0,0,.15);
+
+}
+
+.acceso-card h3{
+
+margin-top:18px;
+
+color:#002e5b;
+
+}
+
+.acceso-card p{
+
+color:#666;
+
+line-height:1.6;
+
+font-size:.92rem;
+
+}
+
+.nav-subitem{
+    padding-left:40px !important;
+    font-size:.92rem;
+}
+
+.btn-success{
+    background:#27ae60;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:.2s;
+}
+
+.btn-success:hover{
+    background:#229954;
+    transform:translateY(-1px);
+}
+
+.btn-icon{
+
+    width:34px;
+    height:34px;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    margin:0 2px;
+
+    transition:.2s;
+
+}
+
+
+.btn-editar{
+
+    background:#3498db;
+    color:white;
+
+}
+
+.btn-password{
+
+    background:#f39c12;
+    color:white;
+
+}
+
+.btn-bloquear{
+
+    background:#e74c3c;
+    color:white;
+
+}
+
+.btn-icon:hover{
+
+    transform:scale(1.08);
+
+}
+
+.btn-success:disabled{
+
+    background:#bfc9ca !important;
+    color:#ffffff;
+    cursor:not-allowed;
+    opacity:.7;
+
+}
+
+.modal{
+
+    position:fixed;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(0,0,0,.45);
+
+    display:none;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:9999;
+
+}
+
+.modal-content{
+
+    width:500px;
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:25px;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
+
+    animation:aparecerModal .25s ease;
+
+}
+
+@keyframes aparecerModal{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(-20px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.modal-content label{
+
+    display:block;
+
+    margin-top:15px;
+
+    margin-bottom:5px;
+
+    font-weight:600;
+
+}
+
+.modal-content input,
+.modal-content select{
+
+    width:100%;
+
+    padding:10px;
+
+    border:1px solid #dcdcdc;
+
+    border-radius:8px;
+
+    box-sizing:border-box;
+
+}
+
+</style>

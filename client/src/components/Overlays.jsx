@@ -25,9 +25,8 @@ export function OverlayProvider({ children }) {
   }, []);
 
   return (
-    <OverlayCtx.Provider value={{ toast, modal: openModal, closeModal }}>
+    <OverlayCtx.Provider value={{ toast, modal: openModal, closeModal, current: modal }}>
       {children}
-      {modal && <Modal {...modal} onClose={closeModal} />}
       <div className="toast-wrap" aria-live="polite">
         {toasts.map((t) => (
           <div key={t.id} className="toast" style={t.fading ? { transition: 'opacity .3s', opacity: 0 } : undefined}>
@@ -57,6 +56,15 @@ function Modal({ title, body, foot, onClose }) {
 }
 
 export const useOverlay = () => useContext(OverlayCtx);
+
+/**
+ * Punto donde se pinta el modal abierto. Va dentro de AppProvider para que el
+ * contenido del modal pueda usar useApp() (tablas, avatares, enlaces).
+ */
+export function ModalHost() {
+  const { current, closeModal } = useOverlay();
+  return current ? <Modal {...current} onClose={closeModal} /> : null;
+}
 
 /** Botón de pie de modal: cierra la ventana y, si trae `done`, muestra ese aviso. */
 export function ModalBtn({ done, className = 'btn btn-p', onClick, children }) {

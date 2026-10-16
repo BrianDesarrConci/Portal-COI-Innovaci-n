@@ -21,7 +21,8 @@ export function AppProvider({ catalog, children }) {
     navigate('/' + (path || 'inicio'), { state: opts.keepScroll ? { keepScroll: true } : undefined });
   }, [navigate]);
 
-  const value = useMemo(() => ({ ...model, model, go, ctxClient, setCtxClient, ...overlay }), [model, go, ctxClient, overlay]);
+  const { toast, modal, closeModal } = overlay;
+  const value = useMemo(() => ({ ...model, model, go, ctxClient, setCtxClient, toast, modal, closeModal }), [model, go, ctxClient, toast, modal, closeModal]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { OverlayProvider } from './components/Overlays.jsx';
+import { ModalHost, OverlayProvider } from './components/Overlays.jsx';
 import { AppProvider } from './context/AppContext.jsx';
 import { useApi } from './hooks/useApi.js';
 import Login from './layout/Login.jsx';
@@ -27,6 +27,7 @@ export default function App() {
               <Route path="/:view" element={<Shell user={USER} onLogout={() => setSession(false)} />} />
               <Route path="/:view/:sub" element={<Shell user={USER} onLogout={() => setSession(false)} />} />
             </Routes>
+            <ModalHost />
           </AppProvider>
         )}
     </OverlayProvider>

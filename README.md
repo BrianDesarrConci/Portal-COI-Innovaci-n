@@ -31,16 +31,22 @@ Node sirve el API y la interfaz desde **un solo puerto** (4000): en desarrollo m
 middleware (con recarga en caliente) y en producción sirve el build de React. Así funciona igual en
 local y en StackBlitz.
 
-## Módulos
+## Organización del portal
 
-| Grupo | Vistas |
+Menú por negocio (no por origen técnico):
+
+| Grupo | Contenido |
 | --- | --- |
-| COI V1 Opciones | Migración completa de COI V1: Inicio, Granja de Usuarios (bajas y backups), Experiencia de Cliente (PQR), Centro de captura, Control de Arqueos (registro FOR-GOR, gestión, normalizaciones, tableros, analítica y tendencias), Brain RT y Administración (usuarios y permisos) |
-| Monitoreo | Tablero gerencial (N0), Analistas, Procesos, Clientes (ANS y evaluaciones), Catálogo de actividades, Bitácora |
-| Operación | Validación documental (N1), Novedades (N2), PQR y encuestas (N3), Alertas (N4), Oficinas (N7), Fincomercio (N8) |
-| Cifras | Reportería y comités (N5), Facturación (N6), Transacciones en vivo (N9) |
-| Módulos Apps Script | Malas prácticas (G1), Papelería (G2), Usuarios y planta (G3), Cheques y arqueos (G4), Banco Agrario (G5), Correo de ingresos (G6) |
-| Herramientas | TRAZA (solicitudes con bitácora real), Plan de implementación |
+| Inicio | Tablero gerencial (con la franja «Operación en vivo» de datos reales) y Modo Comité |
+| Clientes | Portafolio de los 19 clientes por segmento y un espacio **Cliente 360** por cliente: resumen, red de oficinas, personal, arqueos, acuerdo y operación y, si aplica, su módulo especializado (Fincomercio, Banco Agrario, Porvenir) |
+| Operación | Validación documental, Novedades y requerimientos, PQR y experiencia (radicación real + seguimiento), Alertas, Torre de oficinas, Papelería |
+| Control y riesgo | Control de arqueos (COI V1 completo), Cheques y valores, Malas prácticas |
+| Personas | Granja de usuarios, Planta por negocio, Equipo de analistas |
+| Cifras | Reportería y comités, Facturación y conciliación, Correo de ingresos, Transacciones en vivo, Brain RT |
+| Herramientas | Centro de captura, TRAZA, Catálogo de actividades, Procesos, Bitácora, Plan de implementación |
+| Administración | Usuarios y permisos |
+
+El registro único de clientes está en `client/src/lib/clientes.js`.
 
 ## COI V1 sobre Google Sheets
 

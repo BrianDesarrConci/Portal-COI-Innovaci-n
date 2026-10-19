@@ -202,3 +202,35 @@ test('resumenInicioV1 entrega los contadores del inicio', async () => {
   assert.equal(r.pqr.radicadas, 3);
   assert.ok(r.usuarios.activos <= r.usuarios.total);
 });
+
+test('resumenTableroReal agrega arqueos de la red, personas y PQR con datos reales', async () => {
+  const r = await I.resumenTableroReal('2026-10');
+  assert.equal(r.mes, '2026-10');
+  const a = r.arqueos;
+  assert.ok(!a.error, a.error);
+  assert.equal(a.mes, '2026-10');
+  assert.equal(a.mesAnterior, '2026-09');
+  assert.equal(a.meta, 30);
+  assert.equal(a.metaGlobal, a.lideres.total * a.meta);
+  assert.ok(a.validos > 0 && a.validos <= a.totalArqueos);
+  assert.equal(a.pct, Math.round(a.validos / a.metaGlobal * 100));
+  const l = a.lideres;
+  assert.equal(l.enMeta + l.enRuta + l.enRiesgo + l.criticos + l.sinIniciar, l.total);
+  assert.ok(a.novedades.montoSobrante >= 0 && a.novedades.montoFaltante >= 0);
+  assert.equal(a.novedades.montoNeto, a.novedades.montoSobrante - a.novedades.montoFaltante);
+  assert.ok(Array.isArray(a.serie) && a.serie.every((v, i) => i === 0 || v >= a.serie[i - 1]));
+  assert.ok(a.anterior && a.anterior.validos > 0);
+  assert.ok(a.oficinas.conArqueo <= a.oficinas.total);
+  assert.ok(a.clientes.every((c) => !['ADMIN', 'SUPERNUMERARIO'].includes(c.cliente)));
+
+  const p = r.personas;
+  assert.ok(p.pendientes > 0 && p.backupsDisponibles > 100);
+  assert.equal(p.total, p.pendientes + p.cubiertas + p.resueltas);
+  assert.ok(p.oficinasAfectadas >= 1 && p.oficinasAfectadas <= p.pendientes);
+  assert.ok(p.coberturaPct >= 0 && p.coberturaPct <= 100);
+
+  assert.equal(r.pqr.radicadas, 3);
+  assert.equal(Object.values(r.pqr.porTipo).reduce((s, n) => s + n, 0), 3);
+  assert.ok(r.pqr.ultima && r.pqr.ultima.id);
+  assert.ok(r.red.oficinas > 100);
+});

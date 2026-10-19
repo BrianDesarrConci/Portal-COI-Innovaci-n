@@ -11,6 +11,7 @@ import { buildSeries, makeEvalFor, periodDef, PERIOD_OPTS, PERIOD_TYPES, inRange
 import { ComboChart, Delta, Donut, Gauge, Heatmap } from './monitoreo/charts.jsx';
 import Pulse from './monitoreo/Pulse.jsx';
 import CountUp from '../components/CountUp.jsx';
+import LiveOps from './hub/LiveOps.jsx';
 
 // Periodo elegido: se conserva al salir y volver al tablero, como en el demo.
 const DASH = { type: 'mes', idx: 0 };
@@ -133,7 +134,7 @@ function Dashboard({ app, data, dash, setPeriod, SERIES, evalFor, NOW, NOW_MIN }
   return (
     <>
       <div className="dash-head">
-        <div><h1 className="dash-title">Tablero gerencial</h1><p className="muted">Lectura de la operación de Apoyo al Negocio por periodo.</p></div>
+        <div><h1 className="dash-title">Tablero gerencial</h1><p className="muted">Datos reales de la red y lectura de la operación de Apoyo al Negocio por periodo.</p></div>
         <div className="dash-ctrl">
           <div className="seg seg-lg">
             {PERIOD_TYPES.map((s) => <button key={s[0]} className={s[0] === P.type ? 'on' : ''} onClick={() => setPeriod({ type: s[0], idx: 0 })}>{s[1]}</button>)}
@@ -146,12 +147,15 @@ function Dashboard({ app, data, dash, setPeriod, SERIES, evalFor, NOW, NOW_MIN }
         </div>
       </div>
 
+      <LiveOps />
+      <div className="hub-divider"><span>Lectura por periodo</span><small>Índice de servicio y actividades del catálogo · {P.label}{P.partial ? ', en curso' : ''} · datos simulados</small></div>
+
       <section className="hero">
         <div className="hero-g">
           <div className="gauge-box"><Gauge v={A.index} /><div className="gauge-c"><b className="num"><CountUp value={fmt(A.index, 1)} /></b><span>de 100</span></div></div>
           <div>
             <div className="hero-k">Índice de servicio</div>
-            <div className="hero-p">{P.label}{P.partial ? ', en curso' : ''}</div>
+            <div className="hero-p">{P.label}{P.partial ? ', en curso' : ''}<span className="hub-sim" title="Indicadores calculados con el catálogo de actividades (demostración), no con los libros reales">Simulado</span></div>
             <div className="hero-d"><Delta a={A.index} b={B.index} unit=" pts" /> <span>frente a {P.unitName}</span></div>
           </div>
         </div>

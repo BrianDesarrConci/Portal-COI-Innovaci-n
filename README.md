@@ -33,20 +33,17 @@ local y en StackBlitz.
 
 ## Organización del portal
 
-Menú por negocio (no por origen técnico):
-
-| Grupo | Contenido |
+| Grupo del menú | Opciones |
 | --- | --- |
-| Inicio | Tablero gerencial (con la franja «Operación en vivo» de datos reales) y Modo Comité |
-| Clientes | Portafolio de los 19 clientes por segmento y un espacio **Cliente 360** por cliente: resumen, red de oficinas, personal, arqueos, acuerdo y operación y, si aplica, su módulo especializado (Fincomercio, Banco Agrario, Porvenir) |
-| Operación | Validación documental, Novedades y requerimientos, PQR y experiencia (radicación real + seguimiento), Alertas, Torre de oficinas, Papelería |
-| Control y riesgo | Control de arqueos (COI V1 completo), Cheques y valores, Malas prácticas |
-| Personas | Granja de usuarios, Planta por negocio, Equipo de analistas |
-| Cifras | Reportería y comités, Facturación y conciliación, Correo de ingresos, Transacciones en vivo, Brain RT |
-| Herramientas | Centro de captura, TRAZA, Catálogo de actividades, Procesos, Bitácora, Plan de implementación |
-| Administración | Usuarios y permisos |
+| Monitoreo | Tablero gerencial (con la franja «Operación en vivo» de datos reales), Analistas, Procesos, Clientes (portafolio y espacio Cliente 360 por cliente), Catálogo de actividades, Bitácora |
+| COI V1 Opciones | Inicio COI V1, Granja de Usuarios, Experiencia de Cliente, Centro de captura, Control de Arqueos, Brain RT, Administración |
+| Operación | Validación documental (N1), Novedades (N2), PQR y encuestas (N3), Alertas (N4), Fincomercio (N8), Oficinas (N7) |
+| Cifras | Reportería y comités (N5), Facturación (N6), Transacciones en vivo (N9) |
+| Módulos Apps Script | Malas prácticas (G1), Papelería (G2), Usuarios y planta (G3), Cheques y arqueos (G4), Banco Agrario (G5), Correo de ingresos (G6) |
+| Herramientas | TRAZA, Plan de implementación |
 
-El registro único de clientes está en `client/src/lib/clientes.js`.
+Desde «Clientes» se abre el espacio Cliente 360 de cada uno de los 19 clientes (`client/src/lib/clientes.js`),
+con su red de oficinas, personal, arqueos, acuerdo de servicio y, si lo tiene, su módulo especializado.
 
 ## COI V1 sobre Google Sheets
 

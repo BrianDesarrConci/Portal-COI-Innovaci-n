@@ -65,7 +65,7 @@ export default function Shell({ user, onLogout }) {
     setUserToggled(true); setCollapsed((c) => !c);
   };
 
-  const lbl = VIEW_LABEL[view] || (view === 'analista' ? ['Personas', 'Equipo de analistas'] : view === 'cliente' ? ['Clientes', 'Todos los clientes'] : ['Inicio', 'Tablero gerencial']);
+  const lbl = VIEW_LABEL[view] || (view === 'analista' ? ['Monitoreo', 'Analistas'] : view === 'cliente' ? ['Monitoreo', 'Clientes'] : view === 'junta' ? ['Monitoreo', 'Modo Comité'] : ['Monitoreo', 'Tablero gerencial']);
   let extra = '';
   if (view === 'analista' && AN[sub]) extra = AN[sub].name;
   if (view === 'cliente') extra = (CLIENTE[sub] && CLIENTE[sub].nombre) || (clients[sub] && clients[sub].name) || '';
@@ -78,7 +78,7 @@ export default function Shell({ user, onLogout }) {
           <BrandMarks size="sm" />
           <div className="mono" aria-hidden="true">C<i /></div>
         </div>
-        <SideNav active={activeClient ? null : navKey} activeClient={activeClient} />
+        <SideNav active={navKey} activeClient={activeClient} />
         <div className="side-foot">
           <svg className="sf-rings" viewBox="0 0 200 200" aria-hidden="true"><circle cx="160" cy="160" r="120" /><circle cx="160" cy="160" r="88" /><circle cx="160" cy="160" r="56" /></svg>
           <div className="sf-user"><span className="avatar">{user.initials}</span><div className="sf-txt"><b>{user.name}</b><small>{user.role}</small></div></div>

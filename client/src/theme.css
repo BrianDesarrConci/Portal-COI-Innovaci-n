@@ -271,7 +271,7 @@ body {
 .nav-sub-toggle .chev { width: 13px; height: 13px; transition: transform .2s var(--ease-out); }
 .nav-clients.open .nav-sub-toggle .chev { transform: rotate(90deg); }
 .nav-client-list { display: none; margin: 2px 0 0 10px; padding-left: 10px; border-left: 1px solid rgba(255, 255, 255, 0.08); }
-.nav-clients.open .nav-client-list { display: block; }
+.nav-clients.open .nav-client-list { display: block; max-height: 320px; overflow-y: auto; overscroll-behavior: contain; }
 .nav-client-q { display: flex; align-items: center; gap: 6px; margin: 4px 4px 8px 0; padding: 0 8px; height: 30px; border-radius: 8px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); }
 .nav-client-q .ic { width: 13px; height: 13px; color: var(--navy-text); flex: none; }
 .nav-client-q input { width: 100%; background: transparent; border: 0; outline: 0; color: #fff; font-size: 12.5px; }

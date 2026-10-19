@@ -135,7 +135,7 @@ export default function Shell({ user, onLogout }) {
 function SideNav({ active, activeClient }) {
   const { go } = useApp();
   const [closed, setClosed] = useState({});
-  const [showClients, setShowClients] = useState(true);
+  const [showClients, setShowClients] = useState(false);
   const [q, setQ] = useState('');
   const list = q.trim() ? CLIENTES.filter((c) => norm(c.nombre).includes(norm(q.trim()))) : CLIENTES;
   return (

@@ -69,7 +69,7 @@ export function V1Bar() {
   const fecha = meta && meta.extraido ? new Date(meta.extraido).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
   return (
     <div className="v1-bar">
-      <span className="v1-bar-tag"><Icon name="layers" />COI V1</span>
+      <span className="v1-bar-tag" title="Módulo migrado de COI V1 con datos de Google Sheets"><Icon name="layers" />Datos reales</span>
       <span className="v1-bar-user"><b>{sesion.nombre}</b> · {sesion.rol}{sesion.llave_arqueos ? ' · Arqueos: ' + sesion.llave_arqueos : ''}</span>
       <label className="v1-bar-sel">
         <span>Ver como</span>

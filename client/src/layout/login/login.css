@@ -16,7 +16,7 @@
 .lx-stage {
   position: relative; isolation: isolate; overflow: hidden;
   display: grid; grid-template-rows: auto 1fr auto;
-  padding: 44px 64px 36px; color: #fff;
+  padding: 44px clamp(48px, 7vw, 150px) 36px; color: #fff;
   background: linear-gradient(165deg, var(--navy) 0%, var(--navy-deep) 100%);
 }
 .lx-stage::after { /* filo de marca en el borde con la columna de acceso */
@@ -27,13 +27,7 @@
 .lx-top .marks { display: flex; align-items: center; gap: 18px; }
 .lx-top .brand-sep { width: 1px; height: 26px; background: rgba(255, 255, 255, 0.28); }
 
-.lx-mid {
-  align-self: center; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .92fr);
-  gap: clamp(32px, 4vw, 72px); align-items: center;
-}
-.lx-hero { position: relative; z-index: 1; max-width: 540px; animation: lx-in .7s .05s var(--lx-ease) both; }
-.lx-art { justify-self: center; width: 100%; max-width: min(560px, 64vh); animation: lx-fade 1s .2s var(--lx-ease) both; }
-.lx-emblem { display: block; width: 100%; height: auto; }
+.lx-hero { position: relative; z-index: 1; align-self: center; max-width: 620px; animation: lx-in .7s .05s var(--lx-ease) both; }
 .lx-lock { display: flex; align-items: center; gap: 12px; color: #fff; }
 .lx-lock-name { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: -0.5px; line-height: 1; }
 .lx-lock-sep { width: 1px; height: 30px; background: rgba(255, 255, 255, 0.22); }
@@ -51,22 +45,19 @@
 
 .lx-stage-foot { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 16px; font-size: 12px; color: color-mix(in srgb, var(--navy-text) 80%, var(--navy)); }
 
-/* Emblema "red COI" */
-.lx-emblem line, .lx-emblem circle { vector-effect: non-scaling-stroke; }
-.lx-em-ticks line { stroke: rgba(255, 255, 255, 0.10); stroke-width: 1; }
-.lx-em-ticks line.major { stroke: rgba(255, 255, 255, 0.22); }
-.lx-em-rings circle { fill: none; stroke: rgba(255, 255, 255, 0.09); stroke-width: 1; }
-.lx-em-spokes line { stroke: rgba(255, 255, 255, 0.07); stroke-width: 1; }
-.lx-em-arc { transform-origin: 300px 300px; }
-.lx-em-arc circle { fill: none; stroke-width: 3; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 300px 300px; }
-.lx-em-arc-c circle { stroke: var(--cyan); }
-.lx-em-arc-g circle { stroke: var(--green); }
-.lx-em-arc-c { animation: lx-rot 140s linear infinite; }
-.lx-em-arc-g { animation: lx-rot 110s linear infinite reverse; }
-.lx-em-nodes circle { fill: var(--navy-deep); stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.4; animation: lx-node 24s linear infinite; }
-.lx-em-core-ring { fill: none; stroke: rgba(255, 255, 255, 0.16); stroke-width: 1; }
-.lx-em-core { fill: var(--navy); stroke: rgba(255, 255, 255, 0.28); stroke-width: 1.2; }
-.lx-em-text { fill: #fff; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: -0.5px; }
+
+/* Marca tipográfica, antetítulo y pilares */
+.lx-wordmark { position: relative; display: inline-block; font-family: var(--font-display); font-weight: 700; line-height: 1; letter-spacing: -0.02em; color: #fff; padding-right: .32em; }
+.lx-wordmark i { position: absolute; right: 0; bottom: .08em; width: .2em; height: .2em; border-radius: 50%; background: var(--cyan); }
+.lx-eyebrow { margin-top: 40px; display: flex; align-items: center; gap: 12px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
+.lx-eyebrow::before { content: ''; width: 28px; height: 2px; border-radius: 2px; background: var(--cyan); }
+.lx-eyebrow + .lx-h1 { margin-top: 14px; }
+.lx-pillars { list-style: none; display: grid; gap: 18px; margin-top: 34px; }
+.lx-pillars li { display: flex; gap: 14px; align-items: flex-start; }
+.lx-pillar-ic { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 9px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.04); color: var(--cyan); }
+.lx-pillar-ic .ic { width: 18px; height: 18px; }
+.lx-pillars b { display: block; font-size: 14.5px; font-weight: 600; color: #fff; }
+.lx-pillars small { display: block; margin-top: 2px; font-size: 13px; color: var(--navy-text); }
 
 /* ---------- Columna de acceso ---------- */
 .lx-side {
@@ -157,7 +148,7 @@
   background: linear-gradient(165deg, var(--navy) 0%, var(--navy-deep) 100%);
   animation: lx-fade .4s var(--lx-ease) both;
 }
-.lx-curtain-mark { display: flex; align-items: center; gap: 16px; color: #fff; animation: lx-in .45s .15s var(--lx-ease) both; }
+.lx-curtain-mark { display: flex; align-items: center; justify-content: center; text-align: center; gap: 16px; color: #fff; animation: lx-in .45s .15s var(--lx-ease) both; }
 .lx-curtain-name { font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 1; }
 .lx-curtain-tag { margin-top: 6px; font-size: 13px; color: var(--navy-text); }
 
@@ -167,10 +158,6 @@
 @keyframes lx-rot { to { transform: rotate(360deg); } }
 @keyframes lx-draw { to { stroke-dashoffset: 0; } }
 @keyframes lx-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
-@keyframes lx-node {
-  0%, 4.5% { fill: var(--cyan); stroke: var(--cyan); }
-  7%, 100% { fill: var(--navy-deep); stroke: rgba(255, 255, 255, 0.55); }
-}
 
 /* ---------- Adaptación ---------- */
 @media (max-width: 1280px) {
@@ -179,16 +166,15 @@
 @media (max-width: 1080px) {
   .lx { grid-template-columns: minmax(0, 1fr) 460px; }
   .lx-side { padding: 32px 24px; }
-  .lx-mid { grid-template-columns: 1fr; }
-  .lx-art { display: none; }
-}
+    }
 @media (max-width: 900px) {
   .lx { display: block; overflow-y: auto; overflow-x: hidden; }
   .lx-stage { display: block; padding: 28px 20px 30px; }
   .lx-stage::after { top: auto; left: 0; width: auto; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--green)); }
   .lx-hero { margin-top: 28px; }
   .lx-h1 { margin-top: 22px; font-size: 26px; }
-  .lx-lede, .lx-facts, .lx-stage-foot { display: none; }
+  .lx-lede, .lx-facts, .lx-pillars, .lx-stage-foot { display: none; }
+  .lx-eyebrow { margin-top: 24px; }
   .lx-side { padding: 24px 16px 32px; justify-content: flex-start; }
   .lx-card { padding: 26px 20px 20px; }
 }

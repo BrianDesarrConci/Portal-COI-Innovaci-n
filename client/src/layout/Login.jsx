@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import BrandMarks from './BrandMarks.jsx';
 import { useOverlay } from '../components/Overlays.jsx';
-import CoiEmblem from './login/CoiEmblem.jsx';
 import OtpInput from './login/OtpInput.jsx';
-import { CoiMark } from './login/StageParts.jsx';
 import './login/login.css';
 
 const CODE_LEN = 6;
@@ -19,6 +17,14 @@ function greeting(d = new Date()) {
 }
 
 const FACTS = [['16', 'Clientes con ANS'], ['104', 'Actividades monitoreadas'], ['11', 'Procesos transversales']];
+const PILARES = [
+  ['activity', 'Monitoreo de la operación', 'Tablero gerencial diario, mensual y por periodo.'],
+  ['shield', 'Acuerdos de servicio medidos', 'Cumplimiento de ANS y evaluaciones por cliente.'],
+  ['list', 'Trazabilidad completa', 'Evidencia y bitácora de cada actividad.']
+];
+
+/** Marca de producto tipográfica: "COI" con el punto cian de la marca. */
+const Wordmark = ({ size = 30 }) => <span className="lx-wordmark" style={{ fontSize: size }}>COI<i aria-hidden="true" /></span>;
 
 /**
  * Ingreso a COI en dos pasos (Las Dos Llaves Universales).
@@ -92,23 +98,25 @@ export default function Login({ user, onEnter }) {
       <section className="lx-stage" aria-labelledby="lx-title">
         <header className="lx-top"><BrandMarks size="lg" /></header>
 
-        <div className="lx-mid">
         <div className="lx-hero">
           <div className="lx-lock">
-            <CoiMark size={40} />
-            <span className="lx-lock-name">COI</span>
+            <Wordmark />
             <span className="lx-lock-sep" aria-hidden="true" />
             <span className="lx-lock-tag">Gestión y Monitoreo<br />de Apoyo al Negocio</span>
           </div>
+          <p className="lx-eyebrow">Gerencia de Gestión del Negocio</p>
           <h1 id="lx-title" className="lx-h1">Operación, servicio y cumplimiento en un solo lugar.</h1>
-          <p className="lx-lede">Plataforma de la Gerencia de Gestión del Negocio para gestionar y medir los acuerdos de servicio con nuestros clientes.</p>
+          <p className="lx-lede">Plataforma para gestionar y medir los acuerdos de servicio de Reval S.A.S. y Multipagas S.A.S. con sus clientes.</p>
+          <ul className="lx-pillars">
+            {PILARES.map(([ic, t, d]) => (
+              <li key={t}><span className="lx-pillar-ic"><Icon name={ic} /></span><div><b>{t}</b><small>{d}</small></div></li>
+            ))}
+          </ul>
           <dl className="lx-facts">
             {FACTS.map(([n, l]) => (
               <div key={l}><dt className="num">{n}</dt><dd>{l}</dd></div>
             ))}
           </dl>
-        </div>
-        <div className="lx-art"><CoiEmblem /></div>
         </div>
 
         <footer className="lx-stage-foot">
@@ -194,9 +202,8 @@ export default function Login({ user, onEnter }) {
       {phase === 'leaving' && (
         <div className="lx-curtain" aria-hidden="true">
           <div className="lx-curtain-mark">
-            <CoiMark size={56} />
             <div>
-              <div className="lx-curtain-name">COI</div>
+              <div className="lx-curtain-name"><Wordmark size={44} /></div>
               <div className="lx-curtain-tag">Gestión y Monitoreo de Apoyo al Negocio</div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import * as core from './modules/core.js';
 import * as granja from './modules/granja.js';
 import * as inicio from './modules/inicio.js';
 import * as pqr from './modules/pqr.js';
+import * as cliente360 from './modules/cliente360.js';
 import * as controlArqueos from './arqueos/controlArqueos.js';
 
 export const MODULES = [
@@ -12,5 +13,6 @@ export const MODULES = [
   ['modules/granja.js', granja],
   ['modules/inicio.js', inicio],
   ['modules/pqr.js', pqr],
+  ['modules/cliente360.js', cliente360],
   ['arqueos/controlArqueos.js', controlArqueos]
 ];

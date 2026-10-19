@@ -263,3 +263,25 @@ body {
 /* Entrada del portal después de la cortina del inicio de sesión */
 .app { animation: app-in .6s var(--ease-out) both; }
 @keyframes app-in { from { opacity: 0; } }
+
+/* ---------- Menú: espacios por cliente ---------- */
+.nav-clients { margin: 2px 0 6px; }
+.nav-sub-toggle { width: 100%; display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 11.5px; font-weight: 600; color: color-mix(in srgb, var(--navy-text) 85%, var(--navy)); border-radius: 8px; }
+.nav-sub-toggle:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+.nav-sub-toggle .chev { width: 13px; height: 13px; transition: transform .2s var(--ease-out); }
+.nav-clients.open .nav-sub-toggle .chev { transform: rotate(90deg); }
+.nav-client-list { display: none; margin: 2px 0 0 10px; padding-left: 10px; border-left: 1px solid rgba(255, 255, 255, 0.08); }
+.nav-clients.open .nav-client-list { display: block; }
+.nav-client-q { display: flex; align-items: center; gap: 6px; margin: 4px 4px 8px 0; padding: 0 8px; height: 30px; border-radius: 8px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); }
+.nav-client-q .ic { width: 13px; height: 13px; color: var(--navy-text); flex: none; }
+.nav-client-q input { width: 100%; background: transparent; border: 0; outline: 0; color: #fff; font-size: 12.5px; }
+.nav-client-q input::placeholder { color: color-mix(in srgb, var(--navy-text) 75%, var(--navy)); }
+.nav-seg + .nav-seg { margin-top: 6px; }
+.nav-seg-h { padding: 4px 8px 2px; font-size: 10px; font-weight: 600; letter-spacing: .9px; text-transform: uppercase; color: color-mix(in srgb, var(--navy-text) 65%, var(--navy)); }
+.nav-client { width: 100%; display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 8px; border-radius: 7px; font-size: 13px; color: #CDD2EA; text-align: left; transition: background .15s, color .15s; }
+.nav-client:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.nav-client.on { background: rgba(255, 255, 255, 0.12); color: #fff; font-weight: 600; box-shadow: inset 2px 0 0 var(--cyan); }
+.nav-client-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); flex: none; }
+.nav-client.on .nav-client-dot { background: var(--cyan); }
+.nav-client-mod { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--gold); }
+.app.collapsed .nav-clients { display: none; }

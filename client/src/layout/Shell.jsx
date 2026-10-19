@@ -4,7 +4,8 @@ import Icon from '../components/Icon.jsx';
 import { PageHead } from '../components/ui.jsx';
 import BrandMarks from './BrandMarks.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { MODULES, NAV, VIEW_LABEL, NOTIFS } from '../lib/nav.js';
+import { MODULES, NAV, VIEW_LABEL, VIEW_HOME, NOTIFS } from '../lib/nav.js';
+import { CLIENTES, CLIENTE, SEGMENTOS, clientePorModulo } from '../lib/clientes.js';
 import { hhmm, longDate, norm } from '../lib/format.js';
 import { useApi } from '../hooks/useApi.js';
 import VIEWS from '../views/index.js';
@@ -22,7 +23,10 @@ export default function Shell({ user, onLogout }) {
   const contentRef = useRef(null);
 
   const View = VIEWS[view] || VIEWS.inicio;
-  const navKey = view === 'analista' ? 'analistas' : view === 'cliente' ? 'clientes' : (VIEWS[view] ? view : 'inicio');
+  const home = VIEW_HOME[view];
+  const navKey = home && !home.startsWith('cliente/') ? home : (VIEWS[view] ? view : 'inicio');
+  // Cliente activo en el menú: /cliente/:k o el módulo especializado de un cliente (p. ej. /fincomercio).
+  const activeClient = view === 'cliente' ? sub : (clientePorModulo(view) && !NAV.some((g) => g[1].some((it) => it[0] === view)) ? clientePorModulo(view).key : null);
 
   // Cambio de vista: limpia el cliente en contexto fuera de los módulos, cierra menús y anima la entrada.
   useLayoutEffect(() => {
@@ -61,10 +65,10 @@ export default function Shell({ user, onLogout }) {
     setUserToggled(true); setCollapsed((c) => !c);
   };
 
-  const lbl = VIEW_LABEL[view] || (view === 'analista' ? ['Monitoreo', 'Analistas'] : view === 'cliente' ? ['Monitoreo', 'Clientes'] : ['Monitoreo', 'Tablero gerencial']);
+  const lbl = VIEW_LABEL[view] || (view === 'analista' ? ['Personas', 'Equipo de analistas'] : view === 'cliente' ? ['Clientes', 'Todos los clientes'] : ['Inicio', 'Tablero gerencial']);
   let extra = '';
   if (view === 'analista' && AN[sub]) extra = AN[sub].name;
-  if (view === 'cliente' && clients[sub]) extra = clients[sub].name;
+  if (view === 'cliente') extra = (CLIENTE[sub] && CLIENTE[sub].nombre) || (clients[sub] && clients[sub].name) || '';
   if (view === 'traza' && sub) extra = sub;
 
   return (
@@ -74,7 +78,7 @@ export default function Shell({ user, onLogout }) {
           <BrandMarks size="sm" />
           <div className="mono" aria-hidden="true">C<i /></div>
         </div>
-        <SideNav active={navKey} />
+        <SideNav active={activeClient ? null : navKey} activeClient={activeClient} />
         <div className="side-foot">
           <svg className="sf-rings" viewBox="0 0 200 200" aria-hidden="true"><circle cx="160" cy="160" r="120" /><circle cx="160" cy="160" r="88" /><circle cx="160" cy="160" r="56" /></svg>
           <div className="sf-user"><span className="avatar">{user.initials}</span><div className="sf-txt"><b>{user.name}</b><small>{user.role}</small></div></div>
@@ -128,13 +132,17 @@ export default function Shell({ user, onLogout }) {
   );
 }
 
-function SideNav({ active }) {
+function SideNav({ active, activeClient }) {
   const { go } = useApp();
   const [closed, setClosed] = useState({});
+  const [showClients, setShowClients] = useState(true);
+  const [q, setQ] = useState('');
+  const list = q.trim() ? CLIENTES.filter((c) => norm(c.nombre).includes(norm(q.trim()))) : CLIENTES;
   return (
     <nav className="nav" aria-label="Secciones">
       {NAV.map((g, gi) => {
-        const hasActive = g[1].some((it) => it[0] === active);
+        const isClients = g[2] === 'clientes';
+        const hasActive = g[1].some((it) => it[0] === active) || (isClients && !!activeClient);
         const isClosed = closed[gi] && !hasActive;
         return (
           <div key={g[0]} className={'nav-group' + (isClosed ? ' closed' : '')}>
@@ -144,8 +152,34 @@ function SideNav({ active }) {
                 <button key={it[0]} type="button" className={'nav-item ' + (active === it[0] ? 'on' : '')} title={it[1]} onClick={() => go(it[0], { client: null })}>
                   <Icon name={it[2]} /><span className="ni-l">{it[1]}</span>
                   {typeof it[3] === 'number' ? <span className="count">{it[3]}</span> : it[3] ? <span className="tag">{it[3]}</span> : null}
+                  {isClients && <span className="tag">{CLIENTES.length}</span>}
                 </button>
               ))}
+              {isClients && (
+                <div className={'nav-clients' + (showClients || activeClient ? ' open' : '')}>
+                  <button type="button" className="nav-sub-toggle" onClick={() => setShowClients((v) => !v)} aria-expanded={showClients || !!activeClient}>
+                    <Icon name="chevron" className="chev" /><span>Espacios por cliente</span>
+                  </button>
+                  <div className="nav-client-list">
+                    <label className="nav-client-q"><Icon name="search" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filtrar clientes" aria-label="Filtrar clientes" /></label>
+                    {SEGMENTOS.map((seg) => {
+                      const items = list.filter((c) => c.segmento === seg);
+                      if (!items.length) return null;
+                      return (
+                        <div key={seg} className="nav-seg">
+                          <div className="nav-seg-h">{seg}</div>
+                          {items.map((c) => (
+                            <button key={c.key} type="button" className={'nav-client' + (activeClient === c.key ? ' on' : '')} onClick={() => go('cliente/' + c.key, { client: null })} title={c.nombre}>
+                              <span className="nav-client-dot" /><span className="ni-l">{c.nombre}</span>{c.modulo && <span className="nav-client-mod" title={c.modulo.nombre}>+</span>}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })}
+                    {!list.length && <div className="nav-seg-h">Sin coincidencias</div>}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -165,7 +199,7 @@ function Search() {
   const [show, setShow] = useState(false);
   const inp = useRef(null);
   const idx = useMemo(() => D.analysts.map((a) => ['analista/' + a.id, a.name, 'Analista'])
-    .concat(Object.keys(clients).map((k) => ['cliente/' + k, clients[k].name, 'Cliente']))
+    .concat(CLIENTES.map((c) => ['cliente/' + c.key, c.nombre, 'Cliente · ' + c.segmento]))
     .concat(MODULES.map((m) => [m[0], m[2], 'Módulo ' + m[1]]))
     .concat([['catalogo', 'Catálogo de actividades', 'Las 104 actividades']])
     .concat((traza.data || []).map((t) => ['traza/' + t.id, t.id + ', ' + t.title, 'TRAZA'])), [D, clients, traza.data]);

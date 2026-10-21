@@ -1,35 +1,31 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { probarModulo } from '#coi/pruebas';
+import { probarModulo, requiereMySQL, USUARIO_PRUEBA } from '#coi/pruebas';
 
+// Las pruebas con datos usan una base MySQL temporal (COI_TEST_MYSQL_URL); sin ella se omiten.
 let m;
 before(async () => { m = await probarModulo(new URL('..', import.meta.url)); });
 after(() => m.cerrar());
 
-test('responde el estado del módulo', async () => {
-  const r = await m.pedir('GET', '/estado');
+test('arranca vacío: contadores en cero', { skip: requiereMySQL }, async () => {
+  const r = await m.pedir('GET', '/resumen');
   assert.equal(r.status, 200);
-  assert.equal(r.body.ok, true);
+  assert.deepEqual(r.body, { total: 0, hoy: 0 });
 });
 
-// Sin BD (motor "ninguna" o MySQL sin DB_<ID>_URL) se omiten las pruebas de datos.
-const sinBD = () => !m.db || m.db.configurada === false;
-
-test('crea y lista registros', async (t) => {
-  if (sinBD()) return t.skip('módulo sin base de datos');
+test('crea y lista registros', { skip: requiereMySQL }, async () => {
   const c = await m.pedir('POST', '/registros', { titulo: 'Primer registro' });
   assert.equal(c.status, 201);
+  assert.equal(c.body.creado_por, USUARIO_PRUEBA.nombre);
   const l = await m.pedir('GET', '/registros');
   assert.ok(l.body.some((r) => r.id === c.body.id));
 });
 
-test('valida los datos de entrada', async (t) => {
-  if (sinBD()) return t.skip('módulo sin base de datos');
-  const r = await m.pedir('POST', '/registros', { titulo: 'x' });
-  assert.equal(r.status, 400);
+test('valida los datos de entrada', { skip: requiereMySQL }, async () => {
+  assert.equal((await m.pedir('POST', '/registros', { titulo: 'x' })).status, 400);
+  assert.equal((await m.pedir('DELETE', '/registros/999999')).status, 404);
 });
 
 test('exige sesión', async () => {
-  const r = await m.pedir('GET', '/estado', undefined, { como: 'anonimo' });
-  assert.equal(r.status, 401);
+  assert.equal((await m.pedir('GET', '/registros', undefined, { como: 'anonimo' })).status, 401);
 });

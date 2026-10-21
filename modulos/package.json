@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#coi/pruebas": "@coi/server/src/modulos/pruebas.js"
+  }
+}

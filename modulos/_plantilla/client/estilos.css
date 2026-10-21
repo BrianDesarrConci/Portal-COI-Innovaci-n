@@ -1,4 +1,4 @@
-/* Estilos del módulo __NOMBRE__. Prefije todas las clases con "__ID__-" y use las variables del portal
-   (var(--navy), var(--green), var(--cyan), var(--line), var(--font-body)…). */
+/* Estilos del módulo __NOMBRE__. Prefije todas las clases con "__ID__-" y use solo las variables del
+   portal (var(--navy), var(--green), var(--cyan), var(--line), var(--muted), var(--font-body)…). */
 .__ID__-form { display: grid; gap: 14px; }
 .__ID__-form .btn { justify-self: start; }

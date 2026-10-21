@@ -15,7 +15,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Router } from 'express';
 import { puedeAcceder, tieneRol } from '../auth/roles.js';
-import { abrirBD } from './db.js';
+import { abrirBD, prefijoSugerido } from './db.js';
 import { migrar } from './migraciones.js';
 
 const RE_MIGRACION = /^(\d{3})_[a-z0-9_]+\.sql$/;
@@ -25,7 +25,9 @@ export function normalizar(man) {
   return {
     ...man,
     acceso: { roles: (man.acceso && man.acceso.roles) || [] },
-    db: man.db && man.db.motor ? man.db : { motor: 'ninguna', variable: null },
+    db: man.db && man.db.motor && man.db.motor !== 'ninguna'
+      ? { ...man.db, prefijo: man.db.prefijo || prefijoSugerido(man.id) }
+      : { motor: 'ninguna', variable: null },
   };
 }
 
@@ -58,12 +60,13 @@ function routerSeguro() {
 
 /**
  * Prepara un módulo. `entrada` = { manifiesto, registrar, migraciones: [{ nombre, url | ruta }] }.
+ * `opciones.url` fuerza la URL de MySQL (null = sin base; lo usan las pruebas).
  * Devuelve { manifiesto, db, manejador, migraciones: { aplicadas, total } }.
  */
-export async function montar(entrada, { memoria = false } = {}) {
+export async function montar(entrada, opciones = {}) {
   const man = normalizar(entrada.manifiesto);
   const log = crearLog(man.id);
-  const db = await abrirBD(man, { memoria, log });
+  const db = await abrirBD(man, { ...opciones, log });
   const migraciones = db && db.configurada !== false ? await migrar(db, man.id, entrada.migraciones || [], log) : { aplicadas: [], total: 0 };
   const router = routerSeguro();
   const pre = prefijoConfig(man.id);

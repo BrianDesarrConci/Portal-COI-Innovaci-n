@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { leerZip, escribirZip } from './zip.js';
-import { BASURA, DIR_CLIENT, DIR_SERVER, LIMITES } from './politica.js';
+import { BASURA, DIR_CLIENT, DIR_PLANTILLA, DIR_SERVER, LIMITES, prefijoSugerido } from './politica.js';
 
 function listar(dir, base = dir, out = []) {
   if (!fs.existsSync(dir)) return out;
@@ -98,4 +98,30 @@ export function instalados() {
 /** Empaqueta el módulo con la carpeta raíz <id>/ (lo que el analista entrega). */
 export function empaquetar(id, archivos = paqueteInstalado(id)) {
   return escribirZip([...archivos.keys()].sort().map((r) => [id + '/' + r, archivos.get(r)]));
+}
+
+/**
+ * Paquete nuevo a partir de modulos/_plantilla con los datos del módulo.
+ * opciones: { nombre, grupo, icono, autor, correo, motor ('mysql' | 'ninguna'), prefijo, nuevo }
+ */
+export function paqueteDesdePlantilla(id, o = {}) {
+  const motor = o.motor || 'mysql';
+  const prefijo = o.prefijo || prefijoSugerido(id);
+  const reemplazos = {
+    __ID__: id, __NOMBRE__: o.nombre || id, __GRUPO__: o.grupo || 'Operación', __ICONO__: o.icono || 'box',
+    __AUTOR__: o.autor || 'Nombre del analista', __CORREO__: o.correo || 'analista@reval.com.co', __PREFIJO__: prefijo,
+  };
+  const final = new Map();
+  for (const [ruta, buf] of leerCarpeta(DIR_PLANTILLA)) {
+    if (motor === 'ninguna' && ruta.startsWith('server/migraciones/')) continue;
+    let txt = buf.toString('utf8').replace(/__[A-Z]+__/g, (k) => (reemplazos[k] !== undefined ? reemplazos[k] : k));
+    if (ruta === 'module.json') {
+      const m = JSON.parse(txt);
+      if (motor === 'ninguna') m.db = { motor: 'ninguna' };
+      if (o.nuevo) m.nuevo = true;
+      txt = JSON.stringify(m, null, 2) + '\n';
+    }
+    final.set(ruta, Buffer.from(txt));
+  }
+  return final;
 }

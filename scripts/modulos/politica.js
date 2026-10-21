@@ -4,7 +4,7 @@
  *   <id>/module.json                     manifiesto (ver validarManifiesto)
  *   <id>/README.md                       descripción del módulo
  *   <id>/server/index.js                 export default async function registrar({ router, db, config, log, modulo, acceso })
- *   <id>/server/migraciones/NNN_x.sql    migraciones versionadas de la BD propia del módulo
+ *   <id>/server/migraciones/NNN_x.sql    migraciones MySQL de las tablas del módulo (todas con su prefijo)
  *   <id>/client/index.jsx                export default function Modulo({ sub, usuario, api })
  *   <id>/client/*.css, *.jsx, ...        resto de la interfaz (clases con el prefijo del módulo)
  *   <id>/test/*.test.js                  pruebas (node:test) que corre `npm test`
@@ -12,20 +12,43 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+// COI_MODULOS_RAIZ permite operar sobre otra copia del portal (pruebas del importador).
+export const RAIZ = path.resolve(process.env.COI_MODULOS_RAIZ || path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..'));
 export const DIR_SERVER = path.join(RAIZ, 'server', 'src', 'modulos');
 export const DIR_CLIENT = path.join(RAIZ, 'client', 'src', 'modulos');
 export const DIR_PLANTILLA = path.join(RAIZ, 'modulos', '_plantilla');
+export const DIR_EJEMPLO = path.join(RAIZ, 'modulos', '_ejemplo');
 export const DIR_RESPALDO = path.join(RAIZ, 'modulos', '.respaldos');
 
 export const RE_ID = /^[a-z][a-z0-9-]{1,30}$/;
 export const RE_SEMVER = /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?$/;
 export const RE_MIGRACION = /^(\d{3})_[a-z0-9_]+\.sql$/;
 export const RE_VARIABLE_BD = /^DB_[A-Z0-9_]+_URL$/;
-export const MOTORES = ['postgres', 'mysql', 'ninguna'];
+export const MOTORES = ['mysql', 'ninguna'];
+export { RE_PREFIJO, prefijoSugerido } from '../../server/src/modulos/db.js';
 
 /** Identificadores que no puede usar un módulo (rutas del portal fuera del registro de vistas). */
-export const RESERVADOS = ['api', 'm', 'junta', 'login', 'auth', 'sdk', 'modulos', 'plantilla'];
+export const RESERVADOS = ['api', 'm', 'junta', 'login', 'auth', 'sdk', 'modulos', 'plantilla', 'ejemplo', 'admin'];
+
+/** Tablas del portal que ningún módulo puede tocar. */
+export const TABLAS_PORTAL = ['coi_migraciones'];
+
+/** Sentencias prohibidas en las migraciones de un módulo: [patrón sobre la sentencia sin comentarios, motivo]. */
+export const SQL_PROHIBIDO = [
+  [/^(?:CREATE|DROP|ALTER)\s+(?:DATABASE|SCHEMA)\b/i, 'crear, cambiar o borrar bases de datos'],
+  [/^USE\s/i, 'cambiar de base (USE)'],
+  [/^(?:GRANT|REVOKE)\b/i, 'otorgar o quitar permisos (GRANT/REVOKE)'],
+  [/^(?:CREATE|DROP|ALTER|RENAME)\s+USER\b/i, 'crear o cambiar usuarios de MySQL'],
+  [/\bSET\s+(?:GLOBAL|PERSIST|PERSIST_ONLY)\b|@@global\./i, 'cambiar variables globales del servidor'],
+  [/^CREATE\s+(?:OR\s+REPLACE\s+)?(?:DEFINER\s*=\s*\S+\s+)?(?:AGGREGATE\s+)?(?:TRIGGER|PROCEDURE|FUNCTION|EVENT)\b/i, 'triggers, procedimientos, funciones o eventos (la lógica va en server/)'],
+  [/^(?:DROP|ALTER)\s+(?:TRIGGER|PROCEDURE|FUNCTION|EVENT)\b/i, 'triggers, procedimientos, funciones o eventos'],
+  [/\bLOAD\s+DATA\b|\bINTO\s+(?:OUT|DUMP)FILE\b/i, 'leer o escribir archivos del servidor'],
+  [/^(?:LOCK|UNLOCK)\s+TABLES?\b/i, 'bloquear tablas (LOCK TABLES)'],
+  [/^(?:START\s+TRANSACTION|BEGIN|COMMIT|ROLLBACK|SAVEPOINT)\b/i, 'controlar transacciones (el portal aplica cada migración en su transacción)'],
+];
+
+/** Sintaxis de PostgreSQL que no funciona en MySQL. */
+export const SQL_POSTGRES = /\bTIMESTAMPTZ\b|\b(?:BIG)?SERIAL\b|::\s*[a-z]|\bILIKE\b|\bRETURNING\b|\bJSONB\b/i;
 
 /**
  * Dependencias npm aprobadas para los módulos. Una dependencia que no esté aquí bloquea la importación
@@ -67,7 +90,7 @@ export const SECRETOS = [
   [/\b(?:postgres(?:ql)?|mysql|mariadb|mssql|sqlserver):\/\/[^\s:/@'"]+:[^\s@'"]+@/i, 'cadena de conexión con contraseña'],
 ];
 
-export const varBDSugerida = (id) => 'DB_' + id.toUpperCase().replace(/-/g, '_') + '_URL';
+export { varBD as varBDSugerida } from '../../server/src/modulos/db.js';
 export const varConfig = (id) => 'MOD_' + id.toUpperCase().replace(/-/g, '_') + '_';
 
 export function compararVersiones(a, b) {

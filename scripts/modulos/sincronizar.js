@@ -43,7 +43,7 @@ export function generarRegistros() {
   }
   server += '];\n';
 
-  let client = CABECERA + "import { lazy } from 'react';\n\nexport const MODULOS = [\n";
+  let client = CABECERA + (mods.length ? "import { lazy } from 'react';\n" : '') + '\nexport const MODULOS = [\n';
   for (const m of mods) {
     const { id, nombre, version, descripcion, autor, menu, acceso } = m.man;
     client += `  {\n    ...${json({ id, nombre, version, descripcion, autor, menu, acceso }, '    ')},\n`;

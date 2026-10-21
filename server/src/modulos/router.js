@@ -11,15 +11,19 @@ import { Router } from 'express';
 import { puedeAcceder, tieneRol, ROL_ADMIN } from '../auth/roles.js';
 import { montar, normalizar } from './montaje.js';
 import { estadoMigraciones } from './migraciones.js';
+import { origenURL } from './db.js';
 import { MODULOS } from './registro.generado.js';
 
-/** Crea el router para una lista de módulos (el registro generado o, en pruebas, módulos sueltos). */
-export function crearRouterModulos(modulos, { memoria = false } = {}) {
+/**
+ * Crea el router para una lista de módulos (el registro generado o, en pruebas, módulos sueltos).
+ * `opciones` pasa a montar(): { url } fuerza la base MySQL (pruebas).
+ */
+export function crearRouterModulos(modulos, opciones = {}) {
   const porId = new Map(modulos.map((m) => [m.manifiesto.id, { ...m, manifiesto: normalizar(m.manifiesto) }]));
   const listos = new Map();
   const preparar = (ent) => {
     const id = ent.manifiesto.id;
-    if (!listos.has(id)) listos.set(id, montar(ent, { memoria }).catch((e) => { listos.delete(id); throw e; }));
+    if (!listos.has(id)) listos.set(id, montar(ent, opciones).catch((e) => { listos.delete(id); throw e; }));
     return listos.get(id);
   };
 
@@ -29,7 +33,7 @@ export function crearRouterModulos(modulos, { memoria = false } = {}) {
     const admin = tieneRol(req.usuario, ROL_ADMIN);
     res.json([...porId.values()].filter((m) => puedeAcceder(req.usuario, m.manifiesto.acceso.roles)).map(({ manifiesto: m }) => ({
       id: m.id, nombre: m.nombre, version: m.version, descripcion: m.descripcion, autor: m.autor, menu: m.menu, acceso: m.acceso,
-      ...(admin ? { db: { motor: m.db.motor, variable: m.db.variable, configurada: !!(m.db.variable && process.env[m.db.variable]) } } : {}),
+      ...(admin ? { db: { motor: m.db.motor, prefijo: m.db.prefijo || null, origen: m.db.motor === 'ninguna' ? null : origenURL(m) } } : {}),
     })));
   });
 
@@ -49,8 +53,8 @@ export function crearRouterModulos(modulos, { memoria = false } = {}) {
       const { manifiesto: man, db } = m;
       return res.json({
         id: man.id, version: man.version, autor: man.autor,
-        db: { motor: man.db.motor, variable: man.db.variable, embebida: !!(db && db.embebida), configurada: !!(db && db.configurada !== false) },
-        migraciones: await estadoMigraciones(db),
+        db: { motor: man.db.motor, prefijo: man.db.prefijo || null, origen: man.db.motor === 'ninguna' ? null : origenURL(man), configurada: !!(db && db.configurada !== false) },
+        migraciones: await estadoMigraciones(db, man.id),
       });
     }
     m.manejador(req, res, next);

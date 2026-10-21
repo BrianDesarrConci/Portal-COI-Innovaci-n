@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Cell, CLIENTES, Field, HBars, Icon, Kpis, Loading, PageHead, Table, areaStyle, fieldStyle, useOverlay, useRecurso } from '@coi/sdk';
+import { Card, Cell, CLIENTES, ErrorModulo, Field, HBars, Icon, Kpis, Loading, PageHead, Table, Vacio, areaStyle, fieldStyle, useOverlay, useRecurso } from '@coi/sdk';
 import { ETQ, Estado, Prioridad, hace } from './comun.jsx';
 import Detalle from './Detalle.jsx';
 import './novedades-turno.css';
@@ -15,14 +15,18 @@ export default function Modulo({ usuario, api }) {
   const lista = useRecurso(api, `/novedades?estado=${estado}&q=${encodeURIComponent(q.trim())}`);
   const recargar = () => { resumen.reload(); lista.reload(); };
 
-  if (!resumen.data) return <Loading error={resumen.error} />;
+  const titulo = 'Novedades de turno';
+  const sub = 'Lo que pasó en cada turno de las oficinas, quién lo atiende y cómo se cerró.';
+  // 503: la base MySQL del portal aún no está configurada; el módulo lo explica en lugar de fallar.
+  if (resumen.error) return <div className="novedades-turno"><PageHead title={titulo} sub={sub} /><ErrorModulo error={resumen.error} reintentar={recargar} /></div>;
+  if (!resumen.data) return <Loading />;
   const r = resumen.data;
   const nueva = () => modal({ title: 'Registrar novedad de turno', body: <NuevaNovedad api={api} onListo={recargar} /> });
   const abrir = (n) => modal({ title: n.cliente + (n.oficina ? ' · ' + n.oficina : ''), body: <Detalle api={api} id={n.id} usuario={usuario} onCambio={recargar} /> });
 
   return (
     <div className="novedades-turno">
-      <PageHead title="Novedades de turno" sub="Lo que pasó en cada turno de las oficinas, quién lo atiende y cómo se cerró."
+      <PageHead title={titulo} sub={sub}
         right={<button className="btn btn-p" onClick={nueva}><Icon name="pen" />Registrar novedad</button>} />
       <Kpis items={[
         ['Abiertas', r.abiertas, 'Pendientes de gestión', 'inbox'],
@@ -36,9 +40,11 @@ export default function Modulo({ usuario, api }) {
           <div className="novedades-turno-seg" role="tablist" aria-label="Estado">
             {FILTROS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={estado === k} className={estado === k ? 'on' : ''} onClick={() => setEstado(k)}>{l}</button>)}
           </div>
-          {lista.error ? <p className="novedades-turno-vacio">{lista.error.message}</p>
+          {lista.error ? <ErrorModulo error={lista.error} reintentar={lista.reload} />
             : !lista.data ? <p className="novedades-turno-vacio">Cargando…</p>
-            : !lista.data.length ? <p className="novedades-turno-vacio">No hay novedades con este filtro.</p>
+            : !lista.data.length ? (r.total
+              ? <Vacio icono="search" titulo="No hay novedades con este filtro" texto="Cambie el estado o el texto de búsqueda." />
+              : <Vacio titulo="Aún no hay novedades registradas" texto="Registre la primera novedad del turno con el botón «Registrar novedad»." />)
             : <Table headers={['Novedad', 'Cliente y oficina', 'Prioridad', 'Estado', 'Registro']}
                 rows={lista.data.map((n) => ({
                   key: n.id, onClick: () => abrir(n),

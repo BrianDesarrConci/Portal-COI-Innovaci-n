@@ -1,0 +1,10 @@
+/* Estados comunes del SDK de módulos (prefijo coi-sdk-). Solo variables del portal. */
+.coi-sdk-vacio { display: grid; justify-items: center; gap: 6px; padding: 36px 20px; text-align: center; color: var(--ink-2); }
+.coi-sdk-vacio b { font-size: 14.5px; color: var(--ink); }
+.coi-sdk-vacio p, .coi-sdk-error p { margin: 0; max-width: 46ch; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.coi-sdk-vacio .btn { margin-top: 8px; }
+.coi-sdk-vacio-ic { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; background: var(--bg); color: var(--navy); flex: none; }
+.coi-sdk-error { display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border: 1px solid var(--line); border-left: 3px solid var(--red); border-radius: 10px; background: var(--surface); }
+.coi-sdk-error.info { border-left-color: var(--cyan); }
+.coi-sdk-error b { display: block; margin-bottom: 4px; color: var(--ink); }
+.coi-sdk-error .btn { margin-top: 10px; }

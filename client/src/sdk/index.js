@@ -20,5 +20,7 @@ export { useAuth, puedeAcceder } from '../context/AuthContext.jsx';
 export { fmt, pct, money, MONTHS, DAYS, longDate, shortDate, dshort, cap, norm, hhmm } from '../lib/format.js';
 // API del módulo.
 export { crearApi, useRecurso } from './api.js';
+// Estados de pantalla: sin datos, error (503 = base pendiente de configurar) y cargando.
+export { Vacio, ErrorModulo, Cargando } from './estados.jsx';
 // Clientes del portal (19, con su segmento) para listas y filtros.
 export { CLIENTES, SEGMENTOS } from '../lib/clientes.js';

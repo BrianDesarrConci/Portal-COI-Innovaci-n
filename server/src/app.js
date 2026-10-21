@@ -3,6 +3,9 @@ import cors from 'cors';
 import fs from 'node:fs';
 import trazaRouter from './routes/traza.js';
 import coiv1Router from './coiv1/router.js';
+import authRouter, { cargarSesion } from './auth/index.js';
+import { puedeAcceder } from './auth/roles.js';
+import { listarAccesos } from './auth/accesos.js';
 import { MODULE_DATA } from './data/modules/index.js';
 
 const catalog = JSON.parse(fs.readFileSync(new URL('./data/catalog.json', import.meta.url), 'utf8'));
@@ -14,7 +17,16 @@ const catalog = JSON.parse(fs.readFileSync(new URL('./data/catalog.json', import
 export function createApp() {
   const app = express();
   app.use(cors());
+  app.set('trust proxy', 1);
   app.use(express.json({ limit: '40mb' }));
+
+  // Sesión: carga req.usuario y, con el proveedor DA, exige sesión en todo /api salvo health y auth.
+  app.use(cargarSesion);
+  app.use('/api/auth', authRouter);
+  app.get('/api/admin/accesos', (req, res) => {
+    if (!puedeAcceder(req.usuario, ['admin'])) return res.status(403).json({ error: 'Solo administradores.' });
+    res.json(listarAccesos());
+  });
 
   app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'coi-api', time: new Date().toISOString() }));
 

@@ -190,3 +190,18 @@
   .lx *, .lx-curtain, .lx-curtain * { animation: none !important; transition: none !important; }
   .lx-check-ring, .lx-check-tick { stroke-dashoffset: 0; }
 }
+
+/* ---------- Credenciales (ingreso con DA) ---------- */
+.lx-field { display: grid; gap: 6px; margin-bottom: 14px; }
+.lx-field span { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.lx-field input {
+  height: 46px; width: 100%; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px;
+  background: #fff; color: var(--ink); font: inherit; font-size: 15px; transition: border-color .2s, box-shadow .2s;
+}
+.lx-field input:hover { border-color: color-mix(in srgb, var(--navy) 35%, var(--line)); }
+.lx-field input:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cyan) 35%, transparent); }
+.lx-field input[aria-invalid="true"] { border-color: #B0302A; }
+.lx-field input:disabled { background: var(--bg); color: var(--muted); }
+.lx-field + .lx-msg { margin-top: 0; }
+.lx-boot { min-height: 100vh; display: grid; place-items: center; background: linear-gradient(165deg, var(--navy) 0%, var(--navy-deep) 100%); }
+.lx-boot .lx-spin { width: 28px; height: 28px; border-width: 3px; }

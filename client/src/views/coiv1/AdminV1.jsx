@@ -273,7 +273,7 @@ function Outbox({ items, onReload }) {
   if (!items) return <div className="card v1p-pad"><Skeleton rows={5} h={40} /></div>;
   const cur = sel ? items.find((x) => x.id === sel) : items[0];
   return (
-    <Panel icon="mail" title="Bandeja de salida" sub="Correos que el sistema enviaría (en la demo no salen: quedan aquí)." flush
+    <Panel icon="mail" title="Bandeja de salida" sub="Correos que genera el sistema. Mientras no se configure el envío, quedan aquí." flush
       right={<button type="button" className="btn btn-o btn-sm" onClick={onReload}><PIcon name="refresh" />Actualizar</button>}>
       {!items.length ? <Empty icon="mail" title="No hay correos en la bandeja">Los códigos OTP de Arqueos y las constancias de PQR aparecerán aquí.</Empty> : (
         <div className="v1p-mail">

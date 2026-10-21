@@ -1,0 +1,30 @@
+/* Vista «En construcción» (prefijo obra-) */
+.obra-hero {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 22px; align-items: center;
+  padding: 28px 30px; margin-bottom: 20px; border-radius: var(--radius); color: #fff; overflow: hidden;
+  background: var(--grad-navy); box-shadow: var(--shadow);
+}
+.obra-hero::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6px;
+  background: repeating-linear-gradient(-45deg, var(--gold) 0 14px, var(--navy-deep) 14px 28px);
+}
+.obra-ic { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 14px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); color: var(--cyan); }
+.obra-ic .ic { width: 28px; height: 28px; }
+.obra-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); }
+.obra-t h1 { margin-top: 6px; font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
+.obra-t p { margin-top: 8px; max-width: 60ch; font-size: 14.5px; line-height: 1.55; color: var(--navy-text); }
+.obra-estado { display: flex; align-items: center; gap: 12px; max-width: 300px; padding: 14px 16px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); }
+.obra-estado b { display: block; font-family: var(--font-display); font-size: 15px; color: var(--gold); }
+.obra-estado.dev b { color: var(--cyan); }
+.obra-estado small { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.45; color: var(--navy-text); }
+.obra-cinta { flex: none; width: 34px; height: 34px; border-radius: 9px; background: repeating-linear-gradient(-45deg, var(--gold) 0 6px, var(--navy-deep) 6px 12px); }
+.obra-estado.dev .obra-cinta { background: repeating-linear-gradient(-45deg, var(--cyan) 0 6px, var(--navy-deep) 6px 12px); }
+.obra-vacio { padding: 22px; color: var(--muted); font-size: 14px; }
+.obra-nota { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.obra-nota .ic { width: 15px; height: 15px; color: var(--green); }
+@media (max-width: 900px) {
+  .obra-hero { grid-template-columns: minmax(0, 1fr); padding: 22px 20px 26px; }
+  .obra-ic { width: 48px; height: 48px; }
+  .obra-estado { max-width: none; }
+  .obra-t h1 { font-size: 23px; }
+}

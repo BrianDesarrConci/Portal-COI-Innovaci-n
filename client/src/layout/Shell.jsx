@@ -1,10 +1,11 @@
-import { Component, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Component, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import Icon from '../components/Icon.jsx';
 import { PageHead } from '../components/ui.jsx';
 import BrandMarks from './BrandMarks.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { MODULES, NAV, VIEW_LABEL, VIEW_HOME, NOTIFS } from '../lib/nav.js';
+import { ESTADO, MODULES, NAV, VIEW_LABEL, VIEW_HOME } from '../lib/nav.js';
+import Cinta, { CintaMenu } from '../components/Cinta.jsx';
 import { CLIENTES, CLIENTE, SEGMENTOS, clientePorModulo } from '../lib/clientes.js';
 import { hhmm, longDate, norm } from '../lib/format.js';
 import { useApi } from '../hooks/useApi.js';
@@ -71,7 +72,7 @@ export default function Shell({ user, onLogout }) {
     setUserToggled(true); setCollapsed((c) => !c);
   };
 
-  const lbl = VIEW_LABEL[view] || (view === 'analista' ? ['Monitoreo', 'Analistas'] : view === 'cliente' ? ['Monitoreo', 'Clientes'] : view === 'junta' ? ['Monitoreo', 'Modo Comité'] : ['Monitoreo', 'Tablero gerencial']);
+  const lbl = VIEW_LABEL[view] || (view === 'analista' ? ['Monitoreo', 'Analistas'] : view === 'cliente' ? ['Monitoreo', 'Clientes'] : ['Monitoreo', 'Tablero gerencial']);
   let extra = '';
   if (view === 'analista' && AN[sub]) extra = AN[sub].name;
   if (view === 'cliente') extra = (CLIENTE[sub] && CLIENTE[sub].nombre) || (clients[sub] && clients[sub].name) || '';
@@ -88,7 +89,7 @@ export default function Shell({ user, onLogout }) {
         <div className="side-foot">
           <svg className="sf-rings" viewBox="0 0 200 200" aria-hidden="true"><circle cx="160" cy="160" r="120" /><circle cx="160" cy="160" r="88" /><circle cx="160" cy="160" r="56" /></svg>
           <div className="sf-user"><span className="avatar">{user.initials}</span><div className="sf-txt"><b>{user.name}</b><small>{user.role}</small></div></div>
-          <div className="sf-meta"><span className="dot-ok" /><span className="sf-txt">Sincronizado hace 1 min, versión 1.0</span></div>
+          <div className="sf-meta"><span className="dot-ok" /><span className="sf-txt">COI versión 1.0 · Hito 1</span></div>
         </div>
       </aside>
       <div className="main">
@@ -103,7 +104,7 @@ export default function Shell({ user, onLogout }) {
           <div className="top-right">
             <Clock />
             <div className="dd">
-              <button className="icon-btn" aria-label="Notificaciones" onClick={() => setDd(dd === 'notif' ? null : 'notif')}><Icon name="bell" /><span className="pip">{NOTIFS.length}</span></button>
+              <button className="icon-btn" aria-label="Notificaciones" onClick={() => setDd(dd === 'notif' ? null : 'notif')}><Icon name="bell" /></button>
               <div className={'dd-menu' + (dd === 'notif' ? ' open' : '')}><Notifs /></div>
             </div>
             <div className="dd">
@@ -118,7 +119,6 @@ export default function Shell({ user, onLogout }) {
                     {Object.values(AN).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
                 </label>
-                <button className="ddu-item" onClick={() => go('junta')}><Icon name="sparkle" />Modo Comité (presentación)</button>
                 <button className="ddu-item" onClick={() => go('implementacion')}><Icon name="flag" />Plan de implementación</button>
                 <button className="ddu-item" onClick={() => go('traza')}><Icon name="message" />Soporte y solicitudes</button>
                 <button className="ddu-item danger" onClick={onLogout}><Icon name="logout" />Cerrar sesión</button>
@@ -127,6 +127,7 @@ export default function Shell({ user, onLogout }) {
           </div>
         </header>
         <main className="content" ref={contentRef}>
+          <Cinta estado={ESTADO[navKey]} clave={navKey} />
           <ClientCtxBar view={view} />
           <ViewBoundary key={view + '/' + (sub || '')}>
             <View sub={sub} />
@@ -156,12 +157,17 @@ function SideNav({ active, activeClient }) {
           <div key={g[0]} className={'nav-group' + (isClosed ? ' closed' : '')}>
             <button type="button" className="nav-gh" aria-expanded={!isClosed} onClick={() => setClosed((c) => ({ ...c, [g[0]]: !c[g[0]] }))}><span>{g[0]}</span><Icon name="chevron" className="chev" /></button>
             <div className="nav-items">
-              {g[1].map((it) => (
-                <button key={it[0]} type="button" className={'nav-item ' + (active === it[0] ? 'on' : '')} title={it[1]} onClick={() => go(it[0], { client: null })}>
-                  <Icon name={it[2]} /><span className="ni-l">{it[1]}</span>
-                  {typeof it[3] === 'number' ? <span className="count">{it[3]}</span> : it[3] ? <span className="tag">{it[3]}</span> : null}
-                  {isClients && <span className="tag">{CLIENTES.length}</span>}
-                </button>
+              {g[1].map((it, i) => (
+                <Fragment key={it[0]}>
+                  {it[4] === 'construccion' && (i === 0 || g[1][i - 1][4] !== 'construccion') && <div className="nav-sublbl">En construcción</div>}
+                  <button type="button" className={'nav-item ' + (active === it[0] ? 'on' : '') + (it[4] === 'construccion' ? ' wip' : '')}
+                    title={it[1] + (it[4] === 'construccion' ? ' · En construcción' : it[4] === 'desarrollo' ? ' · En desarrollo' : '')} onClick={() => go(it[0], { client: null })}>
+                    <Icon name={it[2]} /><span className="ni-l">{it[1]}</span>
+                    {typeof it[3] === 'number' ? <span className="count">{it[3]}</span> : it[3] ? <span className="tag">{it[3]}</span> : null}
+                    {isClients && <span className="tag">{CLIENTES.length}</span>}
+                    <CintaMenu estado={it[4]} />
+                  </button>
+                </Fragment>
               ))}
               {isClients && (
                 <div className={'nav-clients' + (showClients || activeClient ? ' open' : '')}>
@@ -239,17 +245,10 @@ function Search() {
 }
 
 function Notifs() {
-  const { go, toast } = useApp();
   return (
     <>
-      <div className="dd-h"><b>Notificaciones</b><button className="linkbtn" onClick={() => toast('Notificaciones marcadas como leídas.')}>Marcar como leídas</button></div>
-      {NOTIFS.map((n) => (
-        <button key={n[1]} className="ntf" onClick={() => go(n[3], { client: null })}>
-          <span className={'att-ic ' + n[0]}><Icon name={n[0] === 'ok' ? 'check' : n[0] === 'info' ? 'clock' : 'alert'} /></span>
-          <span className="grow"><b>{n[1]}</b><small>{n[2]}</small></span>
-        </button>
-      ))}
-      <button className="dd-f" onClick={() => go('bitacora')}>Ver toda la actividad</button>
+      <div className="dd-h"><b>Notificaciones</b></div>
+      <div className="ntf-empty"><Icon name="bell" /><b>Sin notificaciones</b><small>Las alertas de los módulos aparecerán aquí cuando entren en operación.</small></div>
     </>
   );
 }

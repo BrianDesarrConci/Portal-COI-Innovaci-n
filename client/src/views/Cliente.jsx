@@ -7,7 +7,6 @@ import { useApp } from '../context/AppContext.jsx';
 import { CLIENTE } from '../lib/clientes.js';
 import { fmt } from '../lib/format.js';
 import Clientes from './Clientes.jsx';
-import { useMonitoreoActions } from './monitoreo/actions.jsx';
 import Acuerdo, { useCatalogo } from './cliente360/Acuerdo.jsx';
 import ArqueosC from './cliente360/ArqueosC.jsx';
 import Modulo from './cliente360/Modulo.jsx';
@@ -74,7 +73,6 @@ function Workspace({ c }) {
 
 function Hero({ c, d, cat, onReload }) {
   const { go } = useApp();
-  const act = useMonitoreoActions();
   const k = d && d.kpis;
   const sub = !d ? 'Consolidando datos reales del cliente…'
     : k ? fmt(k.oficinas) + ' oficinas en ' + fmt(k.municipios) + ' municipios de ' + fmt(k.departamentos) + ' departamentos · ' + fmt(k.personas) + ' personas en la Granja'
@@ -86,7 +84,7 @@ function Hero({ c, d, cat, onReload }) {
   } else if (d && d.red && d.red.puntos) {
     figs.push(['Puntos habilitados', fmt(d.red.puntos)], ['Municipios', fmt(d.red.municipios)]);
   }
-  if (cat) figs.push(['Evaluación', fmt(cat.x.score[5], 1) + ' / 5'], ['ANS ' + cat.x.ans, cat.met + ' de ' + cat.x.clauses.length]);
+  if (cat) figs.push(['Servicios en COI', fmt(cat.lista.length)]);
   return (
     <section className="c360-hero">
       <div className="c360-hero-top">
@@ -102,7 +100,6 @@ function Hero({ c, d, cat, onReload }) {
             <span className="c360-hchip">{c.segmento}</span>
             {c.real && <span className="c360-hchip">Directorio: {c.real}</span>}
             {c.modulo && <span className="c360-hchip cy"><Icon name="layers" />{c.modulo.nombre}</span>}
-            {cat && <span className="c360-hchip gd"><Icon name="shield" />ANS {cat.x.ans}</span>}
             <span className="c360-hchip live"><i />Datos reales</span>
           </div>
         </div>
@@ -115,8 +112,6 @@ function Hero({ c, d, cat, onReload }) {
           {d ? figs.map((f) => <div key={f[0]}><b className="num"><CountUp value={f[1]} /></b><span>{f[0]}</span></div>) : [0, 1, 2].map((i) => <div key={i} className="sk-dark" />)}
         </div>
         <div className="c360-hero-act">
-          {cat && <button type="button" className="btn c360-btn-light" onClick={() => act.ans(c.key)}><Icon name="file" />ANS vigente</button>}
-          {cat && <button type="button" className="btn btn-p" onClick={() => act.evaluacion(c.key)}><Icon name="upload" />Registrar evaluación</button>}
           <button type="button" className="btn c360-btn-light btn-ic" onClick={onReload} title="Actualizar datos" aria-label="Actualizar datos"><Icon name="activity" /></button>
         </div>
       </div>

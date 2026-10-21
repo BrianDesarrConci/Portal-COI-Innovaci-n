@@ -29,9 +29,11 @@ test('catálogo con 16 clientes y 104 actividades', async () => {
   assert.equal(c.processes.length, 11);
 });
 
-test('módulo inexistente o con nombre inválido', async () => {
-  assert.equal((await fetch(base + '/api/modules/no-existe')).status, 404);
-  assert.equal((await fetch(base + '/api/modules/..%2Fcatalog')).status, 400);
+test('catálogo sin cifras simuladas', async () => {
+  const c = await (await fetch(base + '/api/catalog')).json();
+  for (const k of ['clientExtra', 'ansHistory', 'months', 'pulse']) assert.equal(c[k], undefined, k);
+  // Los datos de demostración por módulo ya no existen.
+  assert.equal((await fetch(base + '/api/modules/validacion')).status, 404);
 });
 
 test('ruta de API inexistente responde 404 en JSON', async () => {

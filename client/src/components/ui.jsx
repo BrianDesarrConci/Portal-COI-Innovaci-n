@@ -112,6 +112,7 @@ export function Avatar({ id, lg }) {
 }
 
 export function Spark({ values, w = 120, h = 32, color = 'var(--green)' }) {
+  if (!values || values.length < 2) return <span className="small muted">Sin datos</span>;
   const min = Math.min(...values), max = Math.max(...values);
   const pts = values.map((v, i) => [(i / (values.length - 1)) * w, h - 3 - ((v - min) / (max - min || 1)) * (h - 6)]);
   const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');

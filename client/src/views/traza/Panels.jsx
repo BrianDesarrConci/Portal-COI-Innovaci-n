@@ -134,7 +134,6 @@ export function Informe({ TZ }) {
     <div className="card">
       <div className="card-h">
         <div><h3>Informe de gestión de {MONTHS[NOW.getMonth()]}</h3><p>Base para la revisión semanal con la Gerencia</p></div>
-        <button className="btn btn-o btn-sm" onClick={() => toast('Informe de gestión de TRAZA descargado en PDF.')}><Icon name="download" />Descargar PDF</button>
       </div>
       <dl className="cm-stats">
         <div><dt>Recibidas</dt><dd className="num">{TZ.length}</dd></div>

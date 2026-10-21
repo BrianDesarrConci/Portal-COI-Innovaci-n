@@ -7,21 +7,7 @@ import Clientes from './Clientes.jsx';
 import Cliente from './Cliente.jsx';
 import Catalogo from './Catalogo.jsx';
 import Bitacora from './Bitacora.jsx';
-import Validacion from './Validacion.jsx';
-import Novedades from './Novedades.jsx';
 import Pqr from './Pqr.jsx';
-import Alertas from './Alertas.jsx';
-import Fincomercio from './Fincomercio.jsx';
-import Oficinas from './Oficinas.jsx';
-import Reporteria from './Reporteria.jsx';
-import Facturacion from './Facturacion.jsx';
-import Ptr from './Ptr.jsx';
-import Malas from './Malas.jsx';
-import Papeleria from './Papeleria.jsx';
-import Usuarios from './Usuarios.jsx';
-import Cheques from './Cheques.jsx';
-import Agrario from './Agrario.jsx';
-import Ingresos from './Ingresos.jsx';
 import Traza from './Traza.jsx';
 import Implementacion from './Implementacion.jsx';
 import Coiv1Inicio from './coiv1/Coiv1Inicio.jsx';
@@ -32,6 +18,8 @@ import Arqueos from './coiv1/Arqueos.jsx';
 import Brain from './coiv1/Brain.jsx';
 import AdminV1 from './coiv1/AdminV1.jsx';
 import { VISTAS_MODULOS } from '../modulos/vistas.jsx';
+import { crearEnConstruccion } from './construccion/EnConstruccion.jsx';
+import { PENDIENTES } from '../lib/estados.js';
 
 const VIEWS = {
   inicio: Inicio,
@@ -42,21 +30,7 @@ const VIEWS = {
   cliente: Cliente,
   catalogo: Catalogo,
   bitacora: Bitacora,
-  validacion: Validacion,
-  novedades: Novedades,
   pqr: Pqr,
-  alertas: Alertas,
-  fincomercio: Fincomercio,
-  oficinas: Oficinas,
-  reporteria: Reporteria,
-  facturacion: Facturacion,
-  ptr: Ptr,
-  malas: Malas,
-  papeleria: Papeleria,
-  usuarios: Usuarios,
-  cheques: Cheques,
-  agrario: Agrario,
-  ingresos: Ingresos,
   traza: Traza,
   implementacion: Implementacion,
   coiv1: Coiv1Inicio,
@@ -72,4 +46,6 @@ for (const [id, vista] of Object.entries(VISTAS_MODULOS)) {
   if (VIEWS[id]) console.error('[módulos] el id ' + id + ' choca con una vista del portal; se omite.');
   else VIEWS[id] = vista;
 }
+// Opciones del plan aún sin módulo instalado: vista «En construcción» (sin datos simulados).
+for (const clave of Object.keys(PENDIENTES)) if (!VIEWS[clave]) VIEWS[clave] = crearEnConstruccion(clave);
 export default VIEWS;

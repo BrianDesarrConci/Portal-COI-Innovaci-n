@@ -1,6 +1,5 @@
 // Catálogo de actividades: las 104 actividades con responsable, frecuencia y módulo en COI.
 import { useState } from 'react';
-import Icon from '../components/Icon.jsx';
 import { Avatar, Cell, Kpis, PageHead, StatusBadge, Table, Tag } from '../components/ui.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { norm } from '../lib/format.js';
@@ -12,7 +11,7 @@ const CAT = { who: '', q: '' };
 const modLabel = (m) => { const x = MODULES.find((k) => k[1] === m); return x ? x[2] + ' (' + m + ')' : m === 'Se mantiene' ? 'Tablero actual, monitoreado' : m; };
 
 export default function Catalogo() {
-  const { D, acts, AN, procName, isAuto, todayState, toast } = useApp();
+  const { D, acts, AN, procName, isAuto, todayState } = useApp();
   const [f, setF] = useState({ ...CAT });
   const upd = (p) => { Object.assign(CAT, p); setF({ ...CAT }); };
   const list = acts.filter((a) => (!f.who || a.a === f.who) && (!f.q || norm(a.d + ' ' + a.cl + ' ' + procName(a.p)).indexOf(norm(f.q)) >= 0));
@@ -27,13 +26,12 @@ export default function Catalogo() {
   const auto = acts.filter(isAuto).length;
   return (
     <>
-      <PageHead title="Catálogo de actividades" sub="Las 104 actividades levantadas con cada integrante del equipo, con su módulo en COI. Seleccione una fila para abrir el módulo."
-        right={<button className="btn btn-o" onClick={() => toast('Catálogo exportado a Excel.')}><Icon name="download" />Exportar</button>} />
+      <PageHead title="Catálogo de actividades" sub="Las actividades levantadas con cada integrante del equipo, con su módulo en COI. Seleccione una fila para abrir el módulo." />
       <Kpis items={[
-        ['Actividades en COI', '104 de 104', 'todas con responsable, frecuencia y evidencia', 'list'],
-        ['Automatizadas', auto, 'en los módulos de COI', 'sparkle'],
-        ['Monitoreadas sin automatizar', 104 - auto, 'tableros de analítica que se mantienen y base de indicadores', 'eye'],
-        ['Integrantes', 6, 'cinco analistas y un analista de datos', 'users']
+        ['Actividades del catálogo', acts.length, 'con responsable y frecuencia', 'list'],
+        ['Automatizables', auto, 'en los módulos de COI', 'sparkle'],
+        ['Monitoreadas sin automatizar', acts.length - auto, 'tableros de analítica que se mantienen y base de indicadores', 'eye'],
+        ['Integrantes', D.analysts.length, 'del equipo de Apoyo al Negocio', 'users']
       ]} />
       <div className="card mt">
         <div className="card-h">

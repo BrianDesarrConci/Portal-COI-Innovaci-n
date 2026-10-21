@@ -1,7 +1,7 @@
 /**
  * Entradas de menú de los módulos de los analistas (datos puros; lo usa lib/nav.js).
- * Cada módulo entra en su grupo (ordenado por "orden", después de las opciones propias del portal)
- * o crea un grupo nuevo antes de «Herramientas».
+ * Un módulo cuyo id es el de una opción en construcción (lib/estados.js) toma su lugar en el menú.
+ * Los demás entran en su grupo (ordenados por "orden") o crean un grupo nuevo antes de «Herramientas».
  */
 import { MODULOS } from './registro.generado.js';
 
@@ -15,6 +15,8 @@ export function fusionarMenu(nav) {
   for (const m of orden) {
     const item = [m.id, m.menu.etiqueta, m.menu.icono];
     if (m.menu.insignia !== undefined) item.push(m.menu.insignia);
+    const lugar = out.find((g) => g[1].some((it) => it[0] === m.id));
+    if (lugar) { lugar[1] = lugar[1].map((it) => (it[0] === m.id ? item : it)); continue; }
     let g = out.find((x) => x[0] === m.menu.grupo);
     if (!g) {
       g = [m.menu.grupo, []];

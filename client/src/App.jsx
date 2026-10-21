@@ -7,7 +7,6 @@ import { useApi } from './hooks/useApi.js';
 import { api } from './lib/api.js';
 import Login from './layout/Login.jsx';
 import Shell from './layout/Shell.jsx';
-import Junta from './views/Junta.jsx';
 import { V1SessionProvider } from './views/coiv1/V1Session.jsx';
 import './views/coiv1/v1.css';
 import './layout/login/login.css';
@@ -65,7 +64,6 @@ function Portal({ usuario, onLogout }) {
       <V1SessionProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/inicio" replace />} />
-          <Route path="/junta" element={<Junta />} />
           <Route path="/:view" element={<Shell user={user} onLogout={onLogout} />} />
           <Route path="/:view/:sub" element={<Shell user={user} onLogout={onLogout} />} />
         </Routes>

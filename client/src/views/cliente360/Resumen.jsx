@@ -1,7 +1,7 @@
 // Cliente 360 · Resumen: cifras clave, tendencia de arqueos, alertas y presencia nacional.
 import { useMemo } from 'react';
 import Icon from '../../components/Icon.jsx';
-import { Spark } from '../../components/ui.jsx';
+import { useApp } from '../../context/AppContext.jsx';
 import { fmt } from '../../lib/format.js';
 import Mapa from './Mapa.jsx';
 import { Barras, Empty, mesLargo, moneyCorto, Ring, SerieMeses, Tile, titulo, tono } from './shared.jsx';
@@ -109,15 +109,14 @@ export default function Resumen({ c, d, cat, setTab }) {
 }
 
 export function AcuerdoSnapshot({ cat, setTab }) {
-  const { x, met } = cat;
+  const { firstName } = useApp();
   return (
     <section className="card c360-card c360-note-card">
       <span className="ni gold"><Icon name="shield" /></span>
       <div className="grow">
-        <h4>Acuerdo de nivel de servicio {x.ans}</h4>
-        <p>{met} de {x.clauses.length} cláusulas cumplidas en la medición del mes. Evaluación vigente del cliente: <b>{fmt(x.score[5], 1)} / 5</b>.</p>
+        <h4>Servicios de Apoyo al Negocio</h4>
+        <p><b>{fmt(cat.lista.length)} actividades</b> del catálogo atienden a este cliente, a cargo de {cat.responsables.map(firstName).join(', ')}. El acuerdo de nivel de servicio y las evaluaciones se cargarán en su expediente.</p>
         <div className="c360-snap">
-          <Spark values={x.score} w={140} h={34} color="#242A54" />
           <button type="button" className="btn btn-o btn-sm" onClick={() => setTab('acuerdo')}>Ver acuerdo y operación</button>
         </div>
       </div>

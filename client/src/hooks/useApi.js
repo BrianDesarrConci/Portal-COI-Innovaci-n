@@ -16,6 +16,3 @@ export function useApi(url) {
   const reload = useCallback(() => setTick((t) => t + 1), []);
   return { ...state, reload };
 }
-
-/** Datos de un módulo operativo servidos por /api/modules/:view. */
-export const useModuleData = (view) => useApi('/api/modules/' + view);

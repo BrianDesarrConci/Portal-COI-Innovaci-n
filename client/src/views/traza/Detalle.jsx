@@ -1,7 +1,7 @@
 // Detalle de una solicitud (V.trazaDetalle): etapas, plan, bitácora real y acciones que escriben en el API.
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../components/Icon.jsx';
-import { Bar, Card, DocRow, Field, GoLink, Loading, PageHead, areaStyle, fieldStyle } from '../../components/ui.jsx';
+import { Bar, Card, Field, GoLink, Loading, PageHead, areaStyle, fieldStyle } from '../../components/ui.jsx';
 import { ModalBtn } from '../../components/Overlays.jsx';
 import { useApp } from '../../context/AppContext.jsx';
 import { useApi } from '../../hooks/useApi.js';
@@ -57,15 +57,15 @@ export default function Detalle({ id, onChanged }) {
   }
   const logModal = (kind) => {
     if (kind === 'horas') {
-      const v = { horas: '1.5', detalle: 'Conexión a la base de datos y ajuste de filtros.' };
+      const v = { horas: '', detalle: '' };
       formModal('Registrar horas', <>
-        <Field label="Horas invertidas"><input type="number" step="0.5" min="0.5" defaultValue={v.horas} onChange={(e) => { v.horas = e.target.value; }} style={{ ...fieldStyle, maxWidth: 140 }} /></Field>
-        <Field label="Qué se hizo"><textarea rows={3} defaultValue={v.detalle} onChange={(e) => { v.detalle = e.target.value; }} style={areaStyle} /></Field>
+        <Field label="Horas invertidas"><input type="number" step="0.5" min="0.5" placeholder="1,5" onChange={(e) => { v.horas = e.target.value; }} style={{ ...fieldStyle, maxWidth: 140 }} /></Field>
+        <Field label="Qué se hizo"><textarea rows={3} placeholder="Describa el trabajo realizado" onChange={(e) => { v.detalle = e.target.value; }} style={areaStyle} /></Field>
       </>, v, (x) => send('/api/traza/' + t.id + '/bitacora', { tipo: 'HORAS', horas: x.horas, detalle: x.detalle }, 'Horas registradas en la bitácora.'));
     } else {
-      const v = { detalle: 'Se validó el alcance con el solicitante.', notificar: 'Sí, por correo' };
+      const v = { detalle: '', notificar: 'Sí, por correo' };
       formModal('Agregar nota', <>
-        <Field label="Nota"><textarea rows={3} defaultValue={v.detalle} onChange={(e) => { v.detalle = e.target.value; }} style={areaStyle} /></Field>
+        <Field label="Nota"><textarea rows={3} placeholder="Escriba la nota para la bitácora" onChange={(e) => { v.detalle = e.target.value; }} style={areaStyle} /></Field>
         <Field label="Notificar al solicitante"><select defaultValue={v.notificar} onChange={(e) => { v.notificar = e.target.value; }} style={{ ...fieldStyle, maxWidth: 200 }}><option>Sí, por correo</option><option>No</option></select></Field>
       </>, v, (x) => send('/api/traza/' + t.id + '/bitacora', { tipo: 'NOTA', detalle: x.detalle, notificar: x.notificar !== 'No' }, 'Nota agregada a la bitácora.'));
     }
@@ -76,14 +76,6 @@ export default function Detalle({ id, onChanged }) {
       <Field label="Motivo del rechazo"><textarea rows={3} placeholder="Por qué no se atiende la solicitud" onChange={(e) => { v.motivo = e.target.value; }} style={areaStyle} /></Field>
     </>, v, (x) => send('/api/traza/' + t.id + '/rechazar', { motivo: x.motivo }, 'Solicitud ' + t.id + ' rechazada con motivo registrado.'));
   };
-  const viewEvidence = () => modal({
-    title: 'Soporte de cierre',
-    body: <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>{[0, 1, 2].map((i) => <div key={i} className="thumb" style={{ width: '100%', height: 160 }} />)}</div>
-      <p className="small muted" style={{ marginTop: 12 }}>Imágenes de demostración. Verificación automática: fecha, orientación, completitud y oficina conformes.</p>
-    </>
-  });
-
   const fi = TZ_FLOW.indexOf(t.state);
   const closed = t.state === 'Cerrada';
   const plan = [['Levantar requerimiento con el solicitante', true], ['Definir alcance, fuentes de datos y criterios de aceptación', fi >= 1 || closed], ['Desarrollo y pruebas internas', fi >= 3 || closed], ['Pruebas con el solicitante', closed], ['Documentación, despliegue en producción y cierre', closed]];
@@ -101,7 +93,7 @@ export default function Detalle({ id, onChanged }) {
     <button className="btn btn-o" onClick={() => logModal('horas')}><Icon name="clock" />Registrar horas</button>
     <button className="btn btn-o" onClick={rejectModal}><Icon name="x" />Rechazar</button>
     <button className="btn btn-p" onClick={advance} disabled={busy}>Avanzar etapa<Icon name="chevron" /></button>
-  </> : <button className="btn btn-o" onClick={() => toast('Documentación de ' + t.id + ' descargada.')}><Icon name="download" />Documentación</button>;
+  </> : null;
 
   return (
     <>
@@ -139,11 +131,6 @@ export default function Detalle({ id, onChanged }) {
             <Card title="Horas" sub="Invertidas frente a estimadas">
               <div className="big-num" style={{ fontSize: 34 }}>{fmt(t.inv, 1)} <span className="small muted">de {fmt(t.est, 0)} h</span></div>
               <div style={{ marginTop: 10 }}><Bar v={t.est ? Math.min(100, t.inv / t.est * 100) : 0} cls={t.inv > t.est ? 'gd' : 'cy'} /></div>
-            </Card>
-          </div>
-          <div className="mt">
-            <Card title="Adjuntos">
-              <DocRow title="Evidencia del solicitante" sub="Captura adjunta en la radicación" icon="file" right={<button className="btn btn-g btn-sm" onClick={viewEvidence}><Icon name="eye" />Ver</button>} />
             </Card>
           </div>
         </div>

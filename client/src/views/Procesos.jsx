@@ -1,15 +1,20 @@
 // Procesos transversales: las 104 actividades del área agrupadas por proceso.
-import { Avatar, Card, Cell, Kpis, Loading, PageHead, Table, Tag } from '../components/ui.jsx';
+import { Avatar, Card, Cell, Kpis, PageHead, Table, Tag } from '../components/ui.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { useModuleData } from '../hooks/useApi.js';
 import { PROC_VIEW } from '../lib/model.js';
+import { ESTADO } from '../lib/nav.js';
+
+// Filas adicionales: actividades fuera de los once procesos. [proceso, título, descripción, vista, módulos, etiqueta, clase]
+const EXTRA = [
+  ['P0', 'Tablero gerencial y control de ANS', 'Base de indicadores de la Gerencia y revisión de acuerdos de servicio.', 'inicio', 'N0', 'En operación', 'b-ok'],
+  ['M', 'Analítica que se mantiene', 'Tableros de Oracle y Power BI, control de apertura, informes mensuales y reportería bajo demanda. Se monitorean en COI sin automatizar.', 'analista/hernan', 'Monitoreo', 'Monitoreada', 'b-mute'],
+];
+const enOperacion = (p) => ESTADO[PROC_VIEW[p.id]] === 'activo';
 
 const Owners = ({ ids }) => ids.map((x) => <span key={x} style={{ marginRight: -6, display: 'inline-block' }}><Avatar id={x} /></span>);
 
 export default function Procesos() {
   const { D, acts, clients, PR } = useApp();
-  const { data, error } = useModuleData('procesos');
-  if (!data) return <Loading error={error} />;
   const people = (list) => Array.from(new Set(list.map((a) => a.a)));
   const clientsOf = (list) => Array.from(new Set(list.reduce((s, a) => s.concat(a.c), [])));
   const rows = D.processes.map((p) => {
@@ -20,11 +25,11 @@ export default function Procesos() {
         <Cell main={p.name} sub={p.summary} />, <Owners ids={people(list)} />,
         <span className="small">{cls.length ? cls.map((c) => clients[c].name).slice(0, 4).join(', ') + (cls.length > 4 ? ' y ' + (cls.length - 4) + ' más' : '') : 'Interno'}</span>,
         <span className="num">{list.length}</span>, <span className="small">{p.module.split(' ').join(', ')}</span>,
-        p.id === data.alertProcess ? <Tag cls="b-warn">Alerta abierta</Tag> : <Tag cls="b-ok">En operación</Tag>
+        enOperacion(p) ? <Tag cls="b-ok">En operación</Tag> : <Tag cls="b-warn">En construcción</Tag>
       ]
     };
   });
-  const extra = data.extra.map((e) => {
+  const extra = EXTRA.map((e) => {
     const list = acts.filter((x) => x.p === e[0]);
     const cls = clientsOf(list);
     return {
@@ -44,7 +49,7 @@ export default function Procesos() {
         ['Actividades del área', acts.length, 'el catálogo completo', 'list'],
         ['En procesos transversales', nAuto, 'automatizadas en once procesos', 'sparkle'],
         ['Monitoreadas', 104 - nAuto, '7 de analítica y 2 del tablero gerencial', 'eye'],
-        ['Procesos en operación', 11, '1 con alerta abierta', 'layers']
+        ['Procesos en operación', D.processes.filter(enOperacion).length, 'de ' + D.processes.length + '; los demás en construcción', 'layers']
       ]} />
       <div className="mt">
         <Card title="Procesos y actividades" flush>

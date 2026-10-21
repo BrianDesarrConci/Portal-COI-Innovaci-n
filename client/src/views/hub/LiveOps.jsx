@@ -1,6 +1,6 @@
 // Tablero gerencial · "Operación en vivo": banda con datos REALES de los libros de COI V1
 // (Google Sheets) — arqueos del mes, diferencias de caja, bajas y backups, PQR y la red de
-// oficinas — separada visualmente del índice de servicio simulado del catálogo.
+// oficinas.
 import { useCallback, useEffect, useState } from 'react';
 import Icon from '../../components/Icon.jsx';
 import CountUp from '../../components/CountUp.jsx';

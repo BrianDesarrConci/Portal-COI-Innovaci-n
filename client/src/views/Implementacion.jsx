@@ -1,9 +1,10 @@
 // Plan de implementación (V.implementacion del demo): hitos y avance comprometido por analista.
 import { Avatar, Bar, Card, PageHead, Table } from '../components/ui.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { fmt } from '../lib/format.js';
+import { fmt, shortDate } from '../lib/format.js';
+import { HITOS } from '../lib/plan.js';
 
-const MILESTONES = [['Hito 1', '30 oct 2026', 'COI en producción'], ['Hito 2', '27 nov 2026', 'Validación documental, PQR, gestión interna y analítica'], ['Hito 3', '18 dic 2026', 'Novedades, personal y valores, alertas'], ['Hito 4', '15 ene 2027', 'Reportería, Fincomercio, facturación y oficinas'], ['Hito 5', '22 ene 2027', 'Estabilización y entrega formal']];
+const MILESTONES = HITOS.map(([f, h, t]) => [h, shortDate(f), t]);
 /* [analista, actividades, acumuladas al hito 2, hito 3, hito 4] */
 const PLAN = [['monica', 6, 3, 4, 6], ['lina', 26, 7, 14, 25], ['jully', 13, 1, 13, 13], ['yesica', 24, 4, 14, 24], ['maira', 25, 2, 12, 25], ['hernan', 9, 2, 2, 2]];
 

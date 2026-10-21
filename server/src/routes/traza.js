@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { createStore } from '../store/jsonStore.js';
-import { buildSeed, FLOW, PRIOS, TYPES, OWNERS, elapsedHrs } from '../data/traza-seed.js';
+import { emptyDb, FLOW, PRIOS, TYPES, OWNERS, elapsedHrs } from '../data/traza-seed.js';
 
 // TRAZA: radicación de solicitudes, avance por etapas y bitácora (estado, horas, notas, cierre).
 // Persistencia en <DATA_DIR>/traza.json con la forma { solicitudes, bitacora, seqBitacora }.
 
 let store;
-const db = () => (store ||= createStore('traza', () => buildSeed()));
+const db = () => (store ||= createStore('traza', emptyDb));
 
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const isOpen = (t) => t.state !== 'Cerrada' && t.state !== 'Rechazada';

@@ -5,6 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'coi-traza-'));
+// El portal arranca TRAZA vacío; las pruebas cargan solicitudes de prueba en la base JSON.
+const { buildSeed } = await import('./fixtures/traza.js');
+fs.writeFileSync(path.join(process.env.DATA_DIR, 'traza.json'), JSON.stringify(buildSeed()));
 const { createApp } = await import('../src/app.js');
 
 let server, base;
@@ -21,7 +24,7 @@ const post = async (url, body) => {
   return [r.status, await r.json()];
 };
 
-test('lista las 21 solicitudes de la semilla con id y título', async () => {
+test('lista las 21 solicitudes de prueba con id y título', async () => {
   const [st, list] = await get('/api/traza');
   assert.equal(st, 200);
   assert.equal(list.length, 21);

@@ -39,14 +39,27 @@ local y en StackBlitz.
 
 ## Organización del portal
 
-| Grupo del menú | Opciones |
-| --- | --- |
-| Monitoreo | Tablero gerencial (con la franja «Operación en vivo» de datos reales), Analistas, Procesos, Clientes (portafolio y espacio Cliente 360 por cliente), Catálogo de actividades, Bitácora |
-| COI V1 Opciones | Inicio COI V1, Granja de Usuarios, Experiencia de Cliente, Centro de captura, Control de Arqueos, Brain RT, Administración |
-| Operación | Validación documental (N1), Novedades (N2), PQR y encuestas (N3), Alertas (N4), Fincomercio (N8), Oficinas (N7) |
-| Cifras | Reportería y comités (N5), Facturación (N6), Transacciones en vivo (N9) |
-| Módulos Apps Script | Malas prácticas (G1), Papelería (G2), Usuarios y planta (G3), Cheques y arqueos (G4), Banco Agrario (G5), Correo de ingresos (G6) |
-| Herramientas | TRAZA, Plan de implementación |
+El portal no muestra datos de demostración: lo que no tiene fuente real queda en cero o vacío.
+Cada opción del menú tiene un estado (`client/src/lib/estados.js`):
+
+| Estado | En el menú | En la vista |
+| --- | --- | --- |
+| En desarrollo | Grupo «En desarrollo», primero en el menú | Cinta cian «En desarrollo» con el responsable |
+| En funcionamiento | Primero dentro de su grupo | Datos reales |
+| En construcción | Al final del grupo, con cinta | Cinta «En construcción»; alcance según el catálogo y contadores en cero |
+
+| Grupo del menú | En funcionamiento | En construcción |
+| --- | --- | --- |
+| Monitoreo | Tablero gerencial, Clientes (Cliente 360), Catálogo de actividades | Analistas, Procesos, Bitácora (dependen de la bitácora de actividades) |
+| COI V1 Opciones | Inicio COI V1, Granja de Usuarios, Experiencia de Cliente, Centro de captura, Control de Arqueos, Brain RT, Administración | |
+| Operación | PQR y encuestas (radicación y libro PQR) | Validación documental, Novedades, Alertas, Fincomercio, Oficinas |
+| Herramientas | TRAZA, Plan de implementación | |
+| Cifras | | Reportería y comités, Facturación, Transacciones en vivo |
+| Módulos Apps Script | | Malas prácticas, Papelería, Usuarios y planta, Cheques y arqueos, Banco Agrario, Correo de ingresos |
+
+Las opciones en construcción las entregan los analistas como módulos: al integrar el `.zip`, el módulo
+toma el lugar de su opción y la cinta desaparece. Para marcar un módulo «En desarrollo», se agrega su
+clave y responsable en `EN_DESARROLLO` (`client/src/lib/estados.js`).
 
 Desde «Clientes» se abre el espacio Cliente 360 de cada uno de los 19 clientes (`client/src/lib/clientes.js`),
 con su red de oficinas, personal, arqueos, acuerdo de servicio y, si lo tiene, su módulo especializado.
@@ -76,16 +89,17 @@ Detalle, variables y preguntas pendientes para Tecnología: [`docs/acceso/INGRES
 
 ## Módulos de los analistas
 
-Cada analista desarrolla su módulo por separado, con su propia base de datos relacional (PostgreSQL o MySQL),
-y lo entrega como `.zip`. Para integrarlo:
+Cada analista desarrolla su módulo por separado, con sus propias tablas en MySQL, y lo entrega como
+`<id>-<version>.zip`. El `id` es la clave oficial de su opción en construcción (`PENDIENTES` en
+`client/src/lib/estados.js`). Proceso de integración:
 
-```bash
-npm run modulo:importar -- ruta/al/modulo.zip   # valida, instala y registra el módulo
-npm test && npm run build                        # pruebas del portal y del módulo
-```
+1. El `.zip` se carga en el chat de Claude Code.
+2. Claude lo revisa con `npm run modulo:validar`, ajusta lo necesario y lo instala con `npm run modulo:importar`.
+3. Corre `npm test` y `npm run build`, y hace el commit en la rama del portal.
 
-El módulo aparece en el menú según su `module.json`, responde en `/api/m/<id>` y solo lo ven los roles
-que declare. Su base se configura con la variable `DB_<ID>_URL`; las migraciones SQL se aplican solas.
+El módulo toma el lugar de su opción en el menú, responde en `/api/m/<id>` y solo lo ven los roles que
+declare. Todos los módulos usan la base MySQL del portal (`COI_MYSQL_URL`), cada uno con el prefijo de
+tablas de su `module.json`; las migraciones SQL se aplican solas.
 Guía completa: [`docs/modulos/GUIA-ANALISTAS.md`](docs/modulos/GUIA-ANALISTAS.md).
 
 ## Uso
@@ -127,7 +141,7 @@ en el cliente, `VITE_LOGO_REVAL_URL` / `VITE_LOGO_MULTIPAGAS_URL` para los logos
 
 ## Estado
 
-Fase 1: migración completa de la interfaz del demo y API base. Los módulos operativos aún sirven
-datos de demostración desde `server/src/data/modules`; TRAZA ya persiste solicitudes y bitácora.
-Fase 2 (hito del 30 de octubre): ingreso con DA y plataforma para integrar los módulos de COI V1 que
-desarrollan los analistas, cada uno con su base de datos. Pendiente: conectar DA real con su documentación.
+Fase 1: migración de COI V1 con datos reales de los Sheets, ingreso por API y plataforma de módulos.
+TRAZA persiste solicitudes y bitácora (arranca vacío).
+Fase 2 (hito del 30 de octubre): integrar los módulos que desarrollan los analistas (MySQL) y conectar
+DA real con su documentación.

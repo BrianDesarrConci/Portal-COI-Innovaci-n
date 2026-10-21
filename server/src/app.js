@@ -7,7 +7,6 @@ import authRouter, { cargarSesion } from './auth/index.js';
 import { puedeAcceder } from './auth/roles.js';
 import { listarAccesos } from './auth/accesos.js';
 import modulosRouter from './modulos/router.js';
-import { MODULE_DATA } from './data/modules/index.js';
 
 const catalog = JSON.parse(fs.readFileSync(new URL('./data/catalog.json', import.meta.url), 'utf8'));
 
@@ -33,18 +32,6 @@ export function createApp() {
 
   // Catálogo base del área: clientes, 104 actividades, analistas, procesos, ANS y pulso del día.
   app.get('/api/catalog', (_req, res) => res.json(catalog));
-
-  // Datos de cada módulo operativo (N1…N9, G1…G6). Un archivo por vista en data/modules.
-  app.get('/api/modules/:view', async (req, res, next) => {
-    const { view } = req.params;
-    if (!/^[a-z0-9-]+$/.test(view)) return res.status(400).json({ error: 'Nombre de módulo no válido' });
-    const load = Object.prototype.hasOwnProperty.call(MODULE_DATA, view) ? MODULE_DATA[view] : null;
-    if (!load) return res.status(404).json({ error: 'Módulo sin datos: ' + view });
-    try {
-      const mod = await load();
-      res.json(mod.default);
-    } catch (err) { next(err); }
-  });
 
   app.use('/api/traza', trazaRouter);
   app.use('/api/coiv1', coiv1Router);

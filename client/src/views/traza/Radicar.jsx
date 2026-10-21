@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import Icon from '../../components/Icon.jsx';
 import { Card } from '../../components/ui.jsx';
 import { useApp } from '../../context/AppContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../lib/api.js';
 import { dshort, norm } from '../../lib/format.js';
 import { TZ_APPS, TZ_TYPES, StateTag } from './shared.jsx';
@@ -14,8 +15,9 @@ export default function Radicar({ TZ, onCancel, onCreated }) {
   const [form, setForm] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [email, setEmail] = useState('jully@reval.com.co');
-  const [lookup, setLookup] = useState('jully@reval.com.co');
+  const { usuario } = useAuth();
+  const [email, setEmail] = useState(usuario?.correo || '');
+  const [lookup, setLookup] = useState(usuario?.correo || '');
   const mine = useMemo(() => TZ.filter((t) => norm(t.email) === norm(lookup.trim())), [TZ, lookup]);
 
   const bind = (k) => ({ value: form[k], onChange: (e) => setForm((f) => ({ ...f, [k]: e.target.value })) });
@@ -27,7 +29,7 @@ export default function Radicar({ TZ, onCancel, onCreated }) {
     setBusy(true); setErr('');
     try {
       const t = await api.post('/api/traza', form);
-      toast('Solicitud ' + t.id + ' radicada. Se envió confirmación al correo del solicitante.');
+      toast('Solicitud ' + t.id + ' radicada.');
       setForm(EMPTY);
       onCreated(t);
     } catch (e) {

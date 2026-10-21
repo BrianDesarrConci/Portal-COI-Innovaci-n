@@ -13,14 +13,14 @@ import { Barras, buscar, Empty, mesLargo, mono, Ring, Search, Seg, Skel, useC360
 const SEG_COLOR = { Bancos: '#242A54', 'Fondos de pensiones': '#21BBEA', 'Cooperativas y financieras': '#048C38', 'Sector público': '#F6CF46', 'Red propia': '#8B91BC' };
 const ORDEN = [['oficinas', 'Más oficinas'], ['personas', 'Más personas'], ['pct', 'Mejor cumplimiento'], ['pend', 'Más pendientes'], ['alertas', 'Más alertas'], ['nombre', 'Nombre']];
 
-function filas(res, D) {
+function filas(res, clientActs) {
   const porReal = {}; (res.clientes || []).forEach((r) => { porReal[r.cliente] = r; });
   return CLIENTES.map((c) => {
     const r = c.real ? porReal[c.real] || null : null;
     const red = res.red ? res.red[c.key] : null;
-    const x = D && D.clientExtra ? D.clientExtra[c.key] : null;
+    const servicios = clientActs(c.key).length;
     const alertas = r ? r.novedadesAbiertas + r.faltantesMes + r.oficinasSinPersonal : 0;
-    return { c, r, red, x, oficinas: r ? r.oficinas : 0, puntos: red ? red.puntos : 0, personas: r ? r.personas : 0, pct: r && r.oficinas ? r.pctMes : null, pend: r ? r.pendientesMes : 0, alertas };
+    return { c, r, red, servicios, oficinas: r ? r.oficinas : 0, puntos: red ? red.puntos : 0, personas: r ? r.personas : 0, pct: r && r.oficinas ? r.pctMes : null, pend: r ? r.pendientesMes : 0, alertas };
   });
 }
 
@@ -31,7 +31,7 @@ const ordenar = (rows, by) => rows.slice().sort((a, b) => {
 });
 
 export default function Clientes() {
-  const { D, go } = useApp();
+  const { go, clientActs } = useApp();
   const { data: res, error, reload } = useC360('resumenClientes');
   const [q, setQ] = useState('');
   const [seg, setSeg] = useState('Todos');
@@ -39,7 +39,7 @@ export default function Clientes() {
   const [modo, setModo] = useState(() => { try { return localStorage.getItem('coi.c360.vista') || 'tarjetas'; } catch { return 'tarjetas'; } });
   const cambiarModo = (m) => { setModo(m); try { localStorage.setItem('coi.c360.vista', m); } catch { /* sin almacenamiento */ } };
 
-  const rows = useMemo(() => (res ? filas(res, D) : []), [res, D]);
+  const rows = useMemo(() => (res ? filas(res, clientActs) : []), [res, clientActs]);
   const vis = useMemo(() => ordenar(rows.filter((x) => (seg === 'Todos' || x.c.segmento === seg) && buscar(q, x.c.nombre, x.c.real, x.c.segmento)), by), [rows, seg, q, by]);
   const tot = useMemo(() => {
     const conRed = rows.filter((x) => x.r && x.r.oficinas);
@@ -149,7 +149,7 @@ function Tarjeta({ x, open }) {
       </div>
       <div className="c360-cl-f">
         <span className="c360-tags">{chips.slice(0, 3).map((ch) => <span key={ch[1]} className={'badge b-' + ch[0]}>{ch[1]}</span>)}</span>
-        {x.x ? <span className="c360-ans"><Icon name="star" />{fmt(x.x.score[5], 1)} · ANS {x.x.ans}</span> : <span className="c360-ans muted">Sin catálogo</span>}
+        {x.servicios ? <span className="c360-ans"><Icon name="list" />{fmt(x.servicios)} servicios en COI</span> : <span className="c360-ans muted">Sin catálogo</span>}
       </div>
     </button>
   );
@@ -161,7 +161,7 @@ function TablaClientes({ rows, open, by, setBy }) {
     <section className="card c360-card">
       <div className="c360-cb flush scroll-x">
         <table className="t c360-ptable">
-          <thead><tr>{th('nombre', 'Cliente')}<th>Segmento</th>{th('oficinas', 'Oficinas', 'r')}<th className="r">Puntos habilitados</th>{th('personas', 'Personas', 'r')}{th('pct', 'Arqueos del mes', 'r')}{th('pend', 'Pendientes', 'r')}{th('alertas', 'Alertas', 'r')}<th>ANS</th></tr></thead>
+          <thead><tr>{th('nombre', 'Cliente')}<th>Segmento</th>{th('oficinas', 'Oficinas', 'r')}<th className="r">Puntos habilitados</th>{th('personas', 'Personas', 'r')}{th('pct', 'Arqueos del mes', 'r')}{th('pend', 'Pendientes', 'r')}{th('alertas', 'Alertas', 'r')}<th className="r">Servicios en COI</th></tr></thead>
           <tbody>
             {rows.map((x) => (
               <tr key={x.c.key} className="click" onClick={() => open(x.c.key)}>
@@ -173,7 +173,7 @@ function TablaClientes({ rows, open, by, setBy }) {
                 <td data-label="Arqueos del mes" className="r">{x.pct === null ? <span className="muted">—</span> : <span className="c360-pctcell"><span className="c360-mini"><i style={{ width: x.pct + '%' }} className={'t-' + (x.pct >= 90 ? 'ok' : x.pct >= 60 ? 'info' : 'warn')} /></span><b className="num">{fmt(x.pct)} %</b></span>}</td>
                 <td data-label="Pendientes" className="r num">{x.r ? fmt(x.pend) : '—'}</td>
                 <td data-label="Alertas" className="r">{x.alertas ? <span className="badge b-warn">{fmt(x.alertas)}</span> : x.r ? <span className="badge b-ok">0</span> : <span className="muted">—</span>}</td>
-                <td data-label="ANS"><span className="small">{x.x ? x.x.ans + ' · ' + fmt(x.x.score[5], 1) : 'Sin catálogo'}</span></td>
+                <td data-label="Servicios en COI" className="r num">{x.servicios ? fmt(x.servicios) : '—'}</td>
               </tr>
             ))}
           </tbody>

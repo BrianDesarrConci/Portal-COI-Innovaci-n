@@ -12,7 +12,9 @@ Es la migración a **React + Node.js** del demo construido en Google Apps Script
 ```
 .
 ├── server/                 API en Node.js (Express, ESM)
-│   ├── src/app.js          Rutas: /api/health, /api/catalog, /api/modules/:vista, /api/traza
+│   ├── src/app.js          Rutas: /api/health, /api/auth, /api/catalog, /api/modules/:vista, /api/traza, /api/m
+│   ├── src/auth/           Ingreso: sesión firmada, proveedores DA y demo, registro de accesos
+│   ├── src/modulos/        Módulos de los analistas (uno por carpeta) y su capa de base de datos
 │   ├── src/data/           Catálogo (clientes, actividades, analistas, procesos, ANS) y datos por módulo
 │   ├── src/routes/         Rutas con persistencia (TRAZA)
 │   ├── src/store/          Almacén JSON en disco (fase inicial, sin motor de base de datos)
@@ -23,8 +25,12 @@ Es la migración a **React + Node.js** del demo construido en Google Apps Script
 │       ├── components/     Librería de UI (KPI, tarjetas, tablas, gráficos, modales, avisos)
 │       ├── context/        Estado global: modelo del día, navegación y cliente en contexto
 │       ├── lib/            Formato, simulación determinística, menú y cliente HTTP
-│       └── views/          Una vista por módulo (N0…N9, G1…G6, TRAZA)
-└── docs/referencia-gas/    Demo original en Apps Script
+│       ├── views/          Una vista por módulo (N0…N9, G1…G6, TRAZA)
+│       ├── modulos/        Interfaz de los módulos de los analistas
+│       └── sdk/            @coi/sdk: lo que un módulo puede usar del portal (UI, API, sesión)
+├── modulos/_plantilla/     Plantilla del .zip que entrega cada analista
+├── scripts/modulos/        Crear, validar, importar y empaquetar módulos
+└── docs/                   Guía de analistas, ingreso con DA y referencias de Apps Script
 ```
 
 Node sirve el API y la interfaz desde **un solo puerto** (4000): en desarrollo monta Vite como
@@ -60,6 +66,27 @@ Los módulos de COI V1 conservan sus bases de Google Sheets y su lógica de Apps
   generados se sirven desde `/api/coiv1/files`.
 - Permisos como en V1: los usuarios no ADMIN ven todo; a los ADMIN se les ocultan los módulos en NO de la
   hoja PERMISOS. Control de Arqueos también admite la entrada propia con la llave de arqueos.
+
+## Ingreso (API DA)
+
+El ingreso lo valida el servidor (`/api/auth`) y abre una sesión en una cookie firmada de 8 horas.
+Con `AUTH_PROVEEDOR=da` (o `DA_BASE_URL` definida) se ingresa con usuario y clave de DA y, si DA lo pide,
+un código de verificación; todo `/api` exige sesión. Sin DA configurado se usa el ingreso de demostración.
+Detalle, variables y preguntas pendientes para Tecnología: [`docs/acceso/INGRESO-DA.md`](docs/acceso/INGRESO-DA.md).
+
+## Módulos de los analistas
+
+Cada analista desarrolla su módulo por separado, con su propia base de datos relacional (PostgreSQL o MySQL),
+y lo entrega como `.zip`. Para integrarlo:
+
+```bash
+npm run modulo:importar -- ruta/al/modulo.zip   # valida, instala y registra el módulo
+npm test && npm run build                        # pruebas del portal y del módulo
+```
+
+El módulo aparece en el menú según su `module.json`, responde en `/api/m/<id>` y solo lo ven los roles
+que declare. Su base se configura con la variable `DB_<ID>_URL`; las migraciones SQL se aplican solas.
+Guía completa: [`docs/modulos/GUIA-ANALISTAS.md`](docs/modulos/GUIA-ANALISTAS.md).
 
 ## Uso
 
@@ -102,5 +129,5 @@ en el cliente, `VITE_LOGO_REVAL_URL` / `VITE_LOGO_MULTIPAGAS_URL` para los logos
 
 Fase 1: migración completa de la interfaz del demo y API base. Los módulos operativos aún sirven
 datos de demostración desde `server/src/data/modules`; TRAZA ya persiste solicitudes y bitácora.
-Próximos pasos: autenticación corporativa, base de datos (MySQL/PostgreSQL), conexión con PTR,
-Google Sheets/Drive y automatizaciones n8n.
+Fase 2 (hito del 30 de octubre): ingreso con DA y plataforma para integrar los módulos de COI V1 que
+desarrollan los analistas, cada uno con su base de datos. Pendiente: conectar DA real con su documentación.

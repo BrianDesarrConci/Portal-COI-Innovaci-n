@@ -6,6 +6,7 @@ import coiv1Router from './coiv1/router.js';
 import authRouter, { cargarSesion } from './auth/index.js';
 import { puedeAcceder } from './auth/roles.js';
 import { listarAccesos } from './auth/accesos.js';
+import modulosRouter from './modulos/router.js';
 import { MODULE_DATA } from './data/modules/index.js';
 
 const catalog = JSON.parse(fs.readFileSync(new URL('./data/catalog.json', import.meta.url), 'utf8'));
@@ -47,6 +48,8 @@ export function createApp() {
 
   app.use('/api/traza', trazaRouter);
   app.use('/api/coiv1', coiv1Router);
+  // Módulos de los analistas (modulos/<id>): /api/m/<id>/..., cada uno con su propia base de datos.
+  app.use('/api/m', modulosRouter);
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 

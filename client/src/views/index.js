@@ -31,6 +31,7 @@ import Captura from './coiv1/Captura.jsx';
 import Arqueos from './coiv1/Arqueos.jsx';
 import Brain from './coiv1/Brain.jsx';
 import AdminV1 from './coiv1/AdminV1.jsx';
+import { VISTAS_MODULOS } from '../modulos/vistas.jsx';
 
 const VIEWS = {
   inicio: Inicio,
@@ -66,4 +67,9 @@ const VIEWS = {
   brain: Brain,
   adminv1: AdminV1,
 };
+// Módulos de los analistas (npm run modulos:sync). El importador impide ids repetidos; aquí no se pisan vistas propias.
+for (const [id, vista] of Object.entries(VISTAS_MODULOS)) {
+  if (VIEWS[id]) console.error('[módulos] el id ' + id + ' choca con una vista del portal; se omite.');
+  else VIEWS[id] = vista;
+}
 export default VIEWS;

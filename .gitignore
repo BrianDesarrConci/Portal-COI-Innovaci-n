@@ -5,3 +5,7 @@ server/var/
 *.log
 .DS_Store
 var/
+
+modulos/.respaldos/
+modulos/*.zip
+/*.zip

@@ -8,11 +8,20 @@
     "client"
   ],
   "scripts": {
+    "predev": "node scripts/modulos/cli.js sync --silencioso",
     "dev": "npm run dev -w server",
+    "prebuild": "node scripts/modulos/cli.js sync --silencioso",
     "build": "npm run build -w client",
     "prestart": "npm run build",
     "start": "npm start -w server",
-    "test": "npm test -w server"
+    "test": "npm test -w server",
+    "modulo:nuevo": "node scripts/modulos/cli.js nuevo",
+    "modulo:validar": "node scripts/modulos/cli.js validar",
+    "modulo:importar": "node scripts/modulos/cli.js importar",
+    "modulo:empaquetar": "node scripts/modulos/cli.js empaquetar",
+    "modulos:sync": "node scripts/modulos/cli.js sync",
+    "modulos:migrar": "node scripts/modulos/cli.js migrar",
+    "modulos:listar": "node scripts/modulos/cli.js listar"
   },
   "engines": {
     "node": ">=18.18"

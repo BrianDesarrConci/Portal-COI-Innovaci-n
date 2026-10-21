@@ -10,6 +10,12 @@ import { hhmm, longDate, norm } from '../lib/format.js';
 import { useApi } from '../hooks/useApi.js';
 import VIEWS from '../views/index.js';
 import ClientCtxBar from '../views/ClientCtxBar.jsx';
+import { puedeAcceder, useAuth } from '../context/AuthContext.jsx';
+import { ACCESO_MODULOS } from '../modulos/menu.js';
+import { MODULOS as MODULOS_ANALISTAS } from '../modulos/registro.generado.js';
+
+/** ¿El usuario ve esta entrada del menú? Solo los módulos de los analistas exigen rol. */
+const visible = (usuario, id) => !ACCESO_MODULOS[id] || puedeAcceder(usuario, ACCESO_MODULOS[id]);
 
 /** Marco de la aplicación: menú lateral, barra superior y vista activa. */
 export default function Shell({ user, onLogout }) {
@@ -134,19 +140,21 @@ export default function Shell({ user, onLogout }) {
 
 function SideNav({ active, activeClient }) {
   const { go } = useApp();
+  const { usuario } = useAuth();
+  const nav = useMemo(() => NAV.map((g) => [g[0], g[1].filter((it) => visible(usuario, it[0])), ...g.slice(2)]).filter((g) => g[1].length || g[2] === 'clientes'), [usuario]);
   const [closed, setClosed] = useState({});
   const [showClients, setShowClients] = useState(false);
   const [q, setQ] = useState('');
   const list = q.trim() ? CLIENTES.filter((c) => norm(c.nombre).includes(norm(q.trim()))) : CLIENTES;
   return (
     <nav className="nav" aria-label="Secciones">
-      {NAV.map((g, gi) => {
+      {nav.map((g) => {
         const isClients = g[2] === 'clientes';
         const hasActive = g[1].some((it) => it[0] === active) || (isClients && !!activeClient);
-        const isClosed = closed[gi] && !hasActive;
+        const isClosed = closed[g[0]] && !hasActive;
         return (
           <div key={g[0]} className={'nav-group' + (isClosed ? ' closed' : '')}>
-            <button type="button" className="nav-gh" aria-expanded={!isClosed} onClick={() => setClosed((c) => ({ ...c, [gi]: !c[gi] }))}><span>{g[0]}</span><Icon name="chevron" className="chev" /></button>
+            <button type="button" className="nav-gh" aria-expanded={!isClosed} onClick={() => setClosed((c) => ({ ...c, [g[0]]: !c[g[0]] }))}><span>{g[0]}</span><Icon name="chevron" className="chev" /></button>
             <div className="nav-items">
               {g[1].map((it) => (
                 <button key={it[0]} type="button" className={'nav-item ' + (active === it[0] ? 'on' : '')} title={it[1]} onClick={() => go(it[0], { client: null })}>
@@ -190,6 +198,7 @@ function SideNav({ active, activeClient }) {
 
 function Search() {
   const { go, D, clients } = useApp();
+  const { usuario } = useAuth();
   const traza = useApi('/api/traza');
   const { pathname } = useLocation();
   const { reload } = traza;
@@ -201,8 +210,9 @@ function Search() {
   const idx = useMemo(() => D.analysts.map((a) => ['analista/' + a.id, a.name, 'Analista'])
     .concat(CLIENTES.map((c) => ['cliente/' + c.key, c.nombre, 'Cliente · ' + c.segmento]))
     .concat(MODULES.map((m) => [m[0], m[2], 'Módulo ' + m[1]]))
+    .concat(MODULOS_ANALISTAS.filter((m) => visible(usuario, m.id)).map((m) => [m.id, m.menu.etiqueta, m.menu.grupo + ' · ' + m.nombre]))
     .concat([['catalogo', 'Catálogo de actividades', 'Las 104 actividades']])
-    .concat((traza.data || []).map((t) => ['traza/' + t.id, t.id + ', ' + t.title, 'TRAZA'])), [D, clients, traza.data]);
+    .concat((traza.data || []).map((t) => ['traza/' + t.id, t.id + ', ' + t.title, 'TRAZA'])), [D, clients, traza.data, usuario]);
   const res = q.trim() ? idx.filter((r) => norm(r[1]).includes(norm(q.trim()))).slice(0, 8) : [];
   const pick = (to) => { setQ(''); setShow(false); go(to, { client: null }); };
 

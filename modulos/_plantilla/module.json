@@ -1,0 +1,11 @@
+{
+  "id": "__ID__",
+  "nombre": "__NOMBRE__",
+  "version": "0.1.0",
+  "descripcion": "Describa en una frase qué resuelve el módulo.",
+  "autor": { "nombre": "__AUTOR__", "correo": "analista@reval.com.co" },
+  "menu": { "grupo": "__GRUPO__", "etiqueta": "__NOMBRE__", "icono": "box", "orden": 100 },
+  "acceso": { "roles": [] },
+  "db": { "motor": "__MOTOR__", "variable": "__VARIABLE__" },
+  "dependencias": { "server": {}, "client": {} }
+}
